@@ -3,7 +3,7 @@ import Cards from "./Cards/Cards";
 
 const Journey = () => {
   return (
-    <section id="journey">
+    <section id="jornada">
       <div className="container mx-auto">
         <AnimatedText
           text="My Professional Journey"

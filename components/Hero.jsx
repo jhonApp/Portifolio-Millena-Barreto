@@ -16,10 +16,10 @@ const Hero = () => {
       <div className="container mx-auto h-full">
         <div className="relative z-20 h-full w-full xl:max-w-[768px] flex flex-col items-center xl:items-start justify-center text-center xl:text-left pt-10">
           <h1 className="h1 mb-2 max-w-[320px] xl:max-w-none">
-            <span className="text-accent">I Build And</span> Design Powerful
+            <span className="text-accent">Sou consultora de Imagem</span> e Estilo
             <TypeAnimation
               preRenderFirstString={true}
-              sequence={["Websites", 2000, "Apps", 2000]}
+              sequence={["Imagem", 2000, "Estilo", 2000]}
               speed={50}
               repeat={Infinity}
               wrapper="span"
@@ -39,9 +39,9 @@ const Hero = () => {
         </div>
         {/* image */}
         <div className="hidden xl:flex w-[55vw] h-[800px] absolute top-0 right-0 bg-accent">
-          <div className="absolute w-[558px] h-[642px] bottom-0 z-40 left-[6.5vw]">
+          <div className="absolute w-[658px] h-[742px] bottom-0 z-40 left-[0.5vw]">
             <Image
-              src="/assets/hero/dev.png"
+              src="/assets/hero/mihOficial.png"
               fill
               quality="100"
               priority
@@ -64,7 +64,7 @@ const Hero = () => {
           </div>
           {/* shape 1 */}
           <div
-            className="absolute top-[600px] left-[3vw]"
+            className="absolute top-[600px] left-[6vw]"
             data-scroll
             data-scroll-speed="0.2"
           >
@@ -83,7 +83,7 @@ const Hero = () => {
           </div>
           {/* shape 2 */}
           <div
-            className="absolute top-[240px] xl:left-[30vw]"
+            className="absolute top-[240px] xl:left-[33vw]"
             data-scroll
             data-scroll-speed="0.1"
           >

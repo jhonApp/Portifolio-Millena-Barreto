@@ -6,16 +6,16 @@ const links = [
     name: "home",
   },
   {
-    name: "about",
+    name: "sombre mim",
   },
   {
-    name: "journey",
+    name: "jornada",
   },
   {
-    name: "work",
+    name: "trabalhos",
   },
   {
-    name: "contact",
+    name: "contate-me",
   },
 ];
 

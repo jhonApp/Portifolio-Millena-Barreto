@@ -5,7 +5,7 @@ import AnimatedText from "./AnimatedText";
 
 const About = () => {
   return (
-    <section className="relative pt-12 pb-24" id="about">
+    <section className="relative pt-12 pb-24" id="sombre mim">
       <div className="container mx-auto h-full">
         <div className="h-full flex items-center justify-center">
           {/* image + shapes */}
