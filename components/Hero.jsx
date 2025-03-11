@@ -1,12 +1,10 @@
 "use client";
 import Image from "next/image";
-import { TypeAnimation } from "react-type-animation";
 import { Link as ScrollLink } from "react-scroll";
 
 // components
 import RotatingShape from "./RotatingShape";
 import Header from "./Header";
-import Stats from "./Stats/Stats";
 
 const Hero = () => {
   return (
@@ -15,30 +13,19 @@ const Hero = () => {
       <Header />
       <div className="container mx-auto h-full">
         <div className="relative z-20 h-full w-full xl:max-w-[768px] flex flex-col items-center xl:items-start justify-center text-center xl:text-left pt-10">
-          <h1 className="h1 mb-2 max-w-[320px] xl:max-w-none">
+          <h1 className="h1 mb-2 max-w-[120px] xl:max-w-none">
             <span className="text-accent">Sou consultora de Imagem</span> e Estilo
-            <TypeAnimation
-              preRenderFirstString={true}
-              sequence={["Imagem", 2000, "Estilo", 2000]}
-              speed={50}
-              repeat={Infinity}
-              wrapper="span"
-              cursor={false}
-              className="ml-2 xl:ml-4"
-            />
           </h1>
           <p className="lead max-w-[476px] mb-7">
-            Delivering powerful, custom websites that blend aesthetics with
-            performance.
+            O meu trabalho com a consultoria de imagem é voltado para desenvolver 
+            estratégias assertivas de imagem para mulheres e empresas que desejam o sucesso!
           </p>
           <ScrollLink to="contact" smooth>
-            <button className="btn btn-accent mb-8">Contact me</button>
+            <button className="btn btn-accent mb-8">Entre em contato comigo</button>
           </ScrollLink>
-          {/* stats */}
-          <Stats />
         </div>
         {/* image */}
-        <div className="hidden xl:flex w-[55vw] h-[800px] absolute top-0 right-0 bg-accent">
+        <div className="hidden xl:flex w-[55vw] h-[800px] absolute top-0 right-0 bg-violet-300">
           <div className="absolute w-[658px] h-[742px] bottom-0 z-40 left-[0.5vw]">
             <Image
               src="/assets/hero/mihOficial.png"
