@@ -3,23 +3,23 @@ import Image from "next/image";
 const services = [
   {
     icon: "assets/services/icon-1.svg",
-    title: "UI UX Design",
-    description: "Designing compelling engaging user experiences.",
-  },
-  {
-    icon: "assets/services/icon-2.svg",
-    title: "Web Development",
-    description: "Developing robust, scalable websites for all devices.",
+    title: "Estilo e Confiança",
+    description: "Transforme sua maneira de se vestir com confiança. Descubra como otimizar seu guarda-roupa e criar looks únicos a partir das peças que você já possui.",
   },
   {
     icon: "assets/services/icon-3.svg",
-    title: "E-commerce Solutions",
-    description: "Building secure, user-friendly online stores to drive sales.",
+    title: "Compras Assertivas",
+    description: "Torne suas compras mais inteligentes e assertivas. Aprenda como escolher as peças certas, economizando e evitando desperdício de dinheiro.",
+  },
+  {
+    icon: "assets/services/icon-2.svg",
+    title: "Autenticidade",
+    description: "Projete uma imagem única e autêntica, alinhada à sua personalidade. Seja moderno, sofisticado ou simplesmente verdadeiro com seu estilo.",
   },
   {
     icon: "assets/services/icon-4.svg",
-    title: "Care & Support",
-    description: "Providing updates, security and support for performance",
+    title: "Suporte Personalizado",
+    description: "Acabe com a frustração de não saber o que vestir. Receba suporte completo para renovar seu guarda-roupa e encontrar seu estilo ideal.",
   },
 ];
 
