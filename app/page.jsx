@@ -27,7 +27,7 @@ const Home = () => {
       <FixedMenu />
       <Services />
       <About />
-      <Journey />
+      {/* <Journey /> */}
       <Work />
       <Testimonial />
       <Contact />

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
-// components
-import AnimatedText from "./AnimatedText";
+import { FaInstagram } from "react-icons/fa";
+
 
 const About = () => {
   return (
@@ -9,19 +9,21 @@ const About = () => {
       <div className="container mx-auto h-full">
         <div className="h-full flex items-center justify-center">
           {/* image + shapes */}
-          <div className="hidden xl:flex flex-1 pl-8">
+          <div className="hidden xl:flex flex-1 pl-10">
             <div className="relative w-full max-w-[380px]">
               {/* shape */}
-              <div className="w-[160px] h-[160px] bg-accent absolute -left-5 -top-5 -z-10"></div>
+              <div className="w-[160px] h-[160px] bg-[#e5f8f6] absolute -left-5 -top-5 -z-10"></div>
               {/* image */}
-              <div className="rounded-tl-[8px] rounded-tr-[120px] w-full bg-[#e5f8f6] min-h-[480px] flex items-end justify-center">
+              <div className="flex items-end justify-center">
                 <Image
-                  src="/assets/about/img.png"
+                  src="/assets/about/img.JPEG"
                   width={350}
                   height={478}
                   quality={100}
+                  unoptimized={true}
                   priority
                   alt=""
+                  className="object-cover rounded-tl-[8px] rounded-tr-[120px] min-h-[480px]"
                 />
               </div>
               {/* rotating shape */}
@@ -44,49 +46,48 @@ const About = () => {
                   />
                 </motion.div>
                 <div className="absolute text-center text-white">
-                  <div className="text-5xl font-bold leading-none">10+</div>
+                  <div className="text-5xl font-bold leading-none">5+</div>
                   <div className="leading-none text-center">
-                    Years of <br /> Experience
+                    Anos de <br /> Experiência
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          {/* text */}
-          <div className="text-center xl:text-left w-full xl:w-[50%] mx-auto xl:mx-0 flex flex-col gap-6">
-            <div>
-              <AnimatedText text="Me siga nas redes sociais" textStyles="h2 mb-2" />
-              <p className="text-lg">Tenha acesso a promoções exclusivas </p>
-            </div>
-            <p className="max-w-[680px] mx-auto xl:mx-0 mb-2">
-              I create visually stunning and functional websites using modern
-              frontend technologies and design principles. Explore my work to
-              see how I combine creativity with technical skill to deliver
-              exceptional digital experiences.
+          {/* Conteúdo de Redes Sociais */}
+          <div className="text-center lg:text-left max-w-lg">
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
+              Me Siga nas Redes Sociais
+            </h2>
+            <p className="text-gray-600 text-lg mb-6">
+              Descubra dicas exclusivas de moda, autoestima, maquiagem e consultoria de imagem! No meu Instagram, você encontra inspirações diárias para destacar seu estilo único e elevar sua confiança.
             </p>
-            {/* info items */}
-            <div className="flex flex-col lg:flex-row gap-8 xl:gap-12 max-w-max mx-auto xl:mx-0 items-center">
-              {/* item 1 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Age</div>
-                <p>30 Years</p>
+
+            {/* Benefícios com ícones */}
+            <div className="space-y-3 text-gray-700 text-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-primary text-2xl">✨</span> Dicas diárias de estilo e tendências
               </div>
-              {/* item 2 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Born in</div>
-                <p>New York, USA</p>
+              <div className="flex items-center gap-2">
+                <span className="text-primary text-2xl">💖</span> Promoções e cupons exclusivos
               </div>
-              {/* item 3 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Phone</div>
-                <p>+123-456-789</p>
+              <div className="flex items-center gap-2">
+                <span className="text-primary text-2xl">💄</span> Aprenda a usar maquiagem com auxilio da sua coloração pessoal
               </div>
-              {/* item 4 */}
-              <div className="max-w-max">
-                <div className="uppercase font-bold text-primary">Email</div>
-                <p>email@email.com</p>
+              <div className="flex items-center gap-2">
+                <span className="text-primary text-2xl">📸</span> Veja antes e depois de clientes que passaram pela consultoria e descobriram seu estilo ideal.
               </div>
             </div>
+
+            {/* Botão para seguir no Instagram */}
+            <a
+              href="https://www.instagram.com/millenabarreto.mb"
+              target="_blank"
+              className="mt-6 inline-flex items-center gap-2 bg-violet-300 text-white font-bold text-lg px-6 py-3 rounded-full shadow-lg hover:bg-violet-400 transition-all"
+            >
+              <FaInstagram className="text-2xl" />
+              Siga no Instagram
+            </a>
           </div>
         </div>
       </div>
