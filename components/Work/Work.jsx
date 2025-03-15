@@ -3,52 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AnimatedText from "../AnimatedText";
 import WorkItem from "./WorkItem";
-
-// sample data for projects with various categories
-const data = [
-  {
-    href: "",
-    category: "design",
-    img: "/assets/work/thumb-1.png",
-    title: "Luminex UI Kit",
-  },
-  {
-    href: "",
-    category: "design",
-    img: "/assets/work/thumb-2.png",
-    title: "Nebula Dashboard",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-3.png",
-    title: "Velox App",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-4.png",
-    title: "Quantum Portfolio",
-  },
-  {
-    href: "",
-    category: "frontend",
-    img: "/assets/work/thumb-5.png",
-    title: "Synergy App UI",
-  },
-  {
-    href: "",
-    category: "fullstack",
-    img: "/assets/work/thumb-6.png",
-    title: "Apollo Travel Platform",
-  },
-  {
-    href: "",
-    category: "fullstack",
-    img: "/assets/work/thumb-7.png",
-    title: "Horizon SaaS Dashboard",
-  },
-];
+import {data} from "./data/workCategories";
 
 const Work = () => {
   // extract unique categpries from the data
