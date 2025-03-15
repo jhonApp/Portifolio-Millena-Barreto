@@ -21,9 +21,7 @@ const Hero = () => {
             O meu trabalho com a consultoria de imagem é voltado para desenvolver 
             estratégias assertivas de imagem para mulheres e empresas que desejam o sucesso!
           </p>
-          <ScrollLink to="contact" smooth>
-            <ButtonWhatsApp />
-          </ScrollLink>
+          <ButtonWhatsApp />
         </div>
         {/* image */}
         <div className="hidden xl:flex w-[55vw] h-[800px] absolute top-0 right-0 bg-violet-300">
