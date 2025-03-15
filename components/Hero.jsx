@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import { Link as ScrollLink } from "react-scroll";
+import ButtonWhatsApp from "./ButtonBusiness/ButtonWhatsApp";
 
 // components
 import RotatingShape from "./RotatingShape";
@@ -21,7 +22,7 @@ const Hero = () => {
             estratégias assertivas de imagem para mulheres e empresas que desejam o sucesso!
           </p>
           <ScrollLink to="contact" smooth>
-            <button className="btn btn-accent mb-8">Entre em contato comigo</button>
+            <ButtonWhatsApp />
           </ScrollLink>
         </div>
         {/* image */}

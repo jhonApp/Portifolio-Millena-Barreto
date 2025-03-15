@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { FaInstagram } from "react-icons/fa";
+import ButtonWhatsApp from "./ButtonBusiness/ButtonWhatsApp";
+import ButtonInstagram from "./ButtonBusiness/ButtonInstagram";
 
 
 const About = () => {
@@ -79,15 +80,12 @@ const About = () => {
               </div>
             </div>
 
-            {/* Botão para seguir no Instagram */}
-            <a
-              href="https://www.instagram.com/millenabarreto.mb"
-              target="_blank"
-              className="mt-6 inline-flex items-center gap-2 bg-violet-300 text-white font-bold text-lg px-6 py-3 rounded-full shadow-lg hover:bg-violet-400 transition-all"
-            >
-              <FaInstagram className="text-2xl" />
-              Siga no Instagram
-            </a>
+            {/* Container para os botões */}
+            <div className="mt-6 flex gap-4">
+              <ButtonInstagram />
+              <ButtonWhatsApp />
+            </div>
+
           </div>
         </div>
       </div>
