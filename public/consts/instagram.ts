@@ -1,0 +1,1 @@
+export const instagram = { conta: 'millenabarreto.mb' };  

@@ -58,19 +58,19 @@ const Work = () => {
 
   // create tab data with "all" category and unique categories from data
   const tabData = [
-    { category: "all" },
+    { category: "todos" },
     ...uniqueCategories.map((category) => ({ category })),
   ];
 
   // state to manage the currently selected tab
-  const [tabValue, setTabValue] = useState("all");
+  const [tabValue, setTabValue] = useState("todos");
   // number of items to show initially
   const [visibleItems, setVIsibleItems] = useState(6);
 
   // filter work items based on the selected tab
   const filterWork =
-    tabValue === "all"
-      ? data.filter((item) => item.category !== "all")
+    tabValue === "todos"
+      ? data.filter((item) => item.category !== "todos")
       : data.filter((item) => item.category === tabValue);
 
   // handle loading more items
@@ -82,10 +82,10 @@ const Work = () => {
   return (
     <section className="pt-24 min-h-[1000px]" id="trabalhos">
       <div className="container mx-auto">
-        <Tabs defaultValue="all" className="w-full flex flex-col">
+        <Tabs defaultValue="todos" className="w-full flex flex-col">
           <div className="flex flex-col xl:flex-row items-center xl:items-start xl:justify-between mb-[30px]">
             <AnimatedText
-              text="My Latest Work"
+              text="Meus trabalhos"
               textStyles="h2 mb-[30px] xl:mb-0"
             />
             {/* render tab triggers */}
@@ -125,7 +125,7 @@ const Work = () => {
             {visibleItems < filterWork.length && (
               <div className="flex justify-center mt-12">
                 <button onClick={loadMoreItems} className="btn btn-accent">
-                  Load more
+                  Veja mais
                 </button>
               </div>
             )}
