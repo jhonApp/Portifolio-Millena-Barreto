@@ -6,13 +6,13 @@ const links = [
     name: "home",
   },
   {
-    name: "sombre mim",
-  },
-  {
-    name: "jornada",
+    name: "redes sociais",
   },
   {
     name: "trabalhos",
+  },
+  {
+    name: "clientes",
   },
   {
     name: "contate-me",

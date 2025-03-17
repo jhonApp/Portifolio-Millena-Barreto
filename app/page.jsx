@@ -1,10 +1,8 @@
 "use client";
 import { useEffect } from "react";
-
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import About from "@/components/About";
-import Journey from "@/components/Journey";
 import Work from "@/components/Work/Work";
 import Contact from "@/components/Contact";
 import FixedMenu from "@/components/FixedMenu";
@@ -27,13 +25,10 @@ const Home = () => {
       <FixedMenu />
       <Services />
       <About />
-      {/* <Journey /> */}
       <Work />
       <Testimonial />
       <Contact />
       <Footer />
-      {/* temporary div */}
-      {/* <div className="h-[3000px]"></div> */}
     </>
   );
 };
