@@ -12,7 +12,7 @@ const ButtonInstagram = () => {
       className="inline-flex items-center gap-2 bg-violet-300 text-white font-bold text-lg px-3 py-3 rounded-full shadow-lg hover:bg-violet-400 transition-all"
     >
       <FaInstagram className="text-2xl" />
-      siga no Instagram
+      Siga no Instagram
     </a>
   );
 };

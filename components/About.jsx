@@ -6,7 +6,7 @@ import ButtonInstagram from "./ButtonBusiness/ButtonInstagram";
 
 const About = () => {
   return (
-    <section className="relative pt-12 pb-24" id="sombre mim">
+    <section className="relative pt-12 xl:pb-24" id="redes sociais">
       <div className="container mx-auto h-full">
         <div className="h-full flex items-center justify-center">
           {/* image + shapes */}
@@ -81,10 +81,11 @@ const About = () => {
             </div>
 
             {/* Container para os botões */}
-            <div className="mt-6 flex gap-4">
-              <ButtonInstagram />
-              <ButtonWhatsApp />
-            </div>
+            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+  <ButtonInstagram />
+  <ButtonWhatsApp />
+</div>
+
 
           </div>
         </div>
