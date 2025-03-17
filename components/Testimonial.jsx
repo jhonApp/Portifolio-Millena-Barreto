@@ -18,39 +18,31 @@ import Image from "next/image";
 const slides = [
   {
     img: "/assets/testimonial/img-1.png",
-    name: "Emma Johnson",
+    name: "Roselaine",
     message:
-      "The service was fantastic! Highly recommend it to anyone looking for top noth design.",
+      "Ótimo atendimento, amei.",
   },
   {
     img: "/assets/testimonial/img-2.png",
-    name: "Sophia Martinezs",
+    name: "Duda Trindade",
     message:
-      "I couldn't be happier with the results. The website is both beutiful and functional!",
+      "Apenas façam, vale muito a pena.",
   },
   {
     img: "/assets/testimonial/img-3.png",
-    name: "James Smith",
-    message:
-      "Excellent work! The project was handled professionally from start to finish!",
+    name: "Marcia",
+    message: "Muito top a coloração pessoal que a millena, fez em mim, eu amei e super indico.",
   },
   {
     img: "/assets/testimonial/img-4.png",
-    name: "Olivia Williams",
-    message:
-      "Everything was delivered on time, and the design exceeded my exepectations.",
+    name: "Cintia",
+    message: "Amei.",
   },
   {
     img: "/assets/testimonial/img-5.png",
-    name: "Isabella Brown",
+    name: "Juliana",
     message:
-      "Amazing attention to detail. My site looks professional and user-friendly.",
-  },
-  {
-    img: "/assets/testimonial/img-6.png",
-    name: "Liam Davis",
-    message:
-      "The team truly understood my needs. My website is faster and looks great!",
+      "Amei nosso bate papo, amei descobrir meu estilo e fazer a 'mescla', dos 3 vai ser muito a minha cara é o que eu quero de proposta.  .",
   },
 ];
 
@@ -71,7 +63,7 @@ const Testimonial = () => {
     <div className="py-24 overflow-hidden">
       <div className="container mx-auto">
         <AnimatedText
-          text="What Clients Say"
+          text="O que os clientes estão dizendo.."
           textStyles="h2 mb-[30px] xl:mb-[60px] text-center"
         />
         <div className="flex flex-col lg:flex-row gap-12">
