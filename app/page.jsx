@@ -10,7 +10,6 @@ import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
 
 const Home = () => {
-  // implement locomotive scroll
   useEffect(() => {
     const loadLocomotiveScroll = async () => {
       const LocomotiveScroll = (await import("locomotive-scroll")).default;
