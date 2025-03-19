@@ -8,6 +8,7 @@ import Contact from "@/components/Contact";
 import FixedMenu from "@/components/FixedMenu";
 import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
+import Palestra from "@/components/Palestra";
 
 const Home = () => {
   useEffect(() => {
@@ -26,6 +27,7 @@ const Home = () => {
       <About />
       <Work />
       <Testimonial />
+      <Palestra />
       <Contact />
       <Footer />
     </>
