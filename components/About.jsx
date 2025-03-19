@@ -82,11 +82,9 @@ const About = () => {
 
             {/* Container para os botões */}
             <div className="mt-6 flex flex-col sm:flex-row gap-4">
-  <ButtonInstagram />
-  <ButtonWhatsApp />
-</div>
-
-
+              <ButtonInstagram />
+              <ButtonWhatsApp />
+            </div>
           </div>
         </div>
       </div>
