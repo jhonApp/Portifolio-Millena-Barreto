@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "sitemap",
     "start": "next start",
     "lint": "next lint"
   },
