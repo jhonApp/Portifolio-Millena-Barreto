@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import Head from 'next/head';
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
 import About from "@/components/About";
@@ -21,6 +22,13 @@ const Home = () => {
 
   return (
     <>
+      <Head>
+        <title>Consultoria de Estilo - Millena Barreto</title>
+        <meta name="description" content="Consultoria de imagem e estilo para mulheres que querem se vestir com confiança." />
+        <meta name="keywords" content="consultoria de estilo, moda, imagem pessoal, coloração pessoal" />
+        <meta name="author" content="Millena Barreto" />
+        <meta name="robots" content="index, follow" />
+      </Head>
       <Hero />
       <FixedMenu />
       <Services />
