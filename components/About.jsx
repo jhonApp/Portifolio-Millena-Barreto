@@ -6,7 +6,7 @@ import ButtonInstagram from "./ButtonBusiness/ButtonInstagram";
 
 const About = () => {
   return (
-    <section className="relative pt-12 xl:pb-24" id="redes sociais">
+    <section className="relative pt-12 xl:pb-24" id="redes-sociais">
       <div className="container mx-auto h-full">
         <div className="h-full flex items-center justify-center">
           {/* image + shapes */}
