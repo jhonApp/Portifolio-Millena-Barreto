@@ -14,7 +14,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata = {
-  title: "Millena Barreto",
+  title: "Millena Barreto | Consultoria de imagem e estilo",
   description: "Consultoria de imagem e estilo, personalizado.",
   icons: {
     icon: "./favicon.ico",

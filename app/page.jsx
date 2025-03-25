@@ -23,7 +23,7 @@ const Home = () => {
   return (
     <>
       <Head>
-        <title>Consultoria de Estilo - Millena Barreto</title>
+        <title>Millena Barreto - Consultoria de Imagem e Estilo</title>
         <meta name="description" content="Consultoria de imagem e estilo para mulheres que querem se vestir com confiança." />
         <meta name="keywords" content="consultoria de estilo, moda, imagem pessoal, coloração pessoal" />
         <meta name="author" content="Millena Barreto" />
