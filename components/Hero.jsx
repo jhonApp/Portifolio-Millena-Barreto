@@ -20,7 +20,7 @@ const Hero = () => {
             estratégias assertivas de imagem para mulheres e empresas que desejam o sucesso!
           </p>
 
-          <div className="mt-6 flex flex-col sm:flex-row gap-4">
+          <div className="z-[99] mt-6 flex flex-col sm:flex-row gap-4">
             <ButtonInstagram />
             <ButtonWhatsApp />
           </div>
