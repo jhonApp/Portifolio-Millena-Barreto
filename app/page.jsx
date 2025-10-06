@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import Head from "next/head";
+"use client";
 import Script from "next/script";
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
@@ -12,30 +11,8 @@ import Footer from "@/components/Footer";
 import Palestra from "@/components/Palestra";
 
 const Home = () => {
-  useEffect(() => {
-    const loadLocomotiveScroll = async () => {
-      const LocomotiveScroll = (await import("locomotive-scroll")).default;
-      new LocomotiveScroll();
-    };
-    loadLocomotiveScroll();
-  }, []);
-
   return (
     <>
-      <Head>
-        <title>Millena Barreto - Consultoria de Imagem e Estilo</title>
-        <meta
-          name="description"
-          content="Consultoria de imagem e estilo para mulheres que querem se vestir com confiança."
-        />
-        <meta
-          name="keywords"
-          content="consultoria de estilo, moda, imagem pessoal, coloração pessoal"
-        />
-        <meta name="author" content="Millena Barreto" />
-        <meta name="robots" content="index, follow" />
-      </Head>
-
       {/* Google Analytics - GA4 */}
       <Script
         strategy="afterInteractive"
@@ -53,7 +30,6 @@ const Home = () => {
           `,
         }}
       />
-
       <Hero />
       <FixedMenu />
       <Services />

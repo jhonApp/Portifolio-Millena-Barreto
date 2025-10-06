@@ -2,6 +2,42 @@ export const data = [
     {
       href: "",
       category: "coloração",
+      img: "/assets/work/coloracao-emily.jpg",
+      title: "Análise Coloração Pessoal - Emily",
+    },
+    {
+      href: "",
+      category: "coloração",
+      img: "/assets/work/coloracao-fabiana.jpg",
+      title: "Análise Coloração Pessoal - Fabiana",
+    },
+    {
+      href: "",
+      category: "coloração",
+      img: "/assets/work/coloracao-helen.jpg",
+      title: "Análise Coloração Pessoal - Helen",
+    },
+    {
+      href: "",
+      category: "coloração",
+      img: "/assets/work/coloracao-julia.jpg",
+      title: "Análise Coloração Pessoal - Julia",
+    },
+    {
+      href: "",
+      category: "coloração",
+      img: "/assets/work/coloracao-laiane.jpg",
+      title: "Análise Coloração Pessoal - Laiane",
+    },
+    {
+      href: "",
+      category: "coloração",
+      img: "/assets/work/coloracao-larissa.jpg",
+      title: "Análise Coloração Pessoal - Larissa",
+    },
+    {
+      href: "",
+      category: "coloração",
       img: "/assets/work/thumb-1.JPEG",
       title: "Análise Coloração Pessoal - Roselaine",
     },

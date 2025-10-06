@@ -1,24 +1,6 @@
 "use client";
 import { Link as ScrollLink } from "react-scroll";
 
-const links = [
-  {
-    name: "home",
-  },
-  {
-    name: "redes sociais",
-  },
-  {
-    name: "trabalhos",
-  },
-  {
-    name: "clientes",
-  },
-  {
-    name: "contate-me",
-  },
-];
-
 const Nav = ({ containerStyles, listStyles, linkStyles, spy }) => {
   return (
     <nav className={containerStyles}>

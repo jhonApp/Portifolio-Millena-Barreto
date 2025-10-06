@@ -28,8 +28,8 @@ const Hero = () => {
           <div className="w-full flex justify-center h-[500px] mt-[-60px] top-0 right-0 xl:hidden">
             <Image
               src="/assets/hero/mihOficial.png"
-              width={500}
-              height={400}
+              width={700}
+              height={500}
               quality="100"
               priority
               className="object-contain"
