@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import ButtonWhatsApp from "./ButtonBusiness/ButtonWhatsApp";
 import ButtonInstagram from "./ButtonBusiness/ButtonInstagram";
 
-
 const About = () => {
   return (
     <section className="relative pt-12 xl:pb-24" id="redes-sociais">
@@ -61,22 +60,45 @@ const About = () => {
               Me Siga nas Redes Sociais
             </h2>
             <p className="text-gray-600 text-lg mb-6">
-              Descubra dicas exclusivas de moda, autoestima, maquiagem e consultoria de imagem! No meu Instagram, você encontra inspirações diárias para destacar seu estilo único e elevar sua confiança.
+              No meu Instagram, compartilho diariamente conteúdos sobre{" "}
+              <strong>consultoria de imagem</strong>,{" "}
+              <strong>colorimetria</strong> e <strong>autoconhecimento</strong>{" "}
+              através do estilo. Descubra como a{" "}
+              <strong>coloração pessoal</strong> pode transformar a forma como
+              você se vê e se apresenta, destacando suas{" "}
+              <strong>melhores cores e traços</strong>. Aprenda a criar um{" "}
+              <strong>guarda-roupa inteligente</strong>, escolher tons que
+              harmonizam com sua pele e refletir a melhor versão de si mesma.
             </p>
 
             {/* Benefícios com ícones */}
             <div className="space-y-3 text-gray-700 text-lg">
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">✨</span> Dicas diárias de estilo e tendências
+                <span className="text-primary text-2xl">✨</span>
+                Dicas diárias de <strong>estilo pessoal</strong>,{" "}
+                <strong>moda consciente</strong> e tendências para realçar sua
+                imagem.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">💖</span> Promoções e cupons exclusivos
+                <span className="text-primary text-2xl">💖</span>
+                Promoções exclusivas e{" "}
+                <strong>
+                  cupons de consultoria de imagem e coloração pessoal
+                </strong>{" "}
+                para transformar seu visual.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">💄</span> Aprenda a usar maquiagem com auxilio da sua coloração pessoal
+                <span className="text-primary text-2xl">💄</span>
+                Aprenda a escolher{" "}
+                <strong>maquiagem de acordo com sua coloração pessoal</strong> e
+                realce sua <strong>beleza natural</strong> com as cores certas.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">📸</span> Veja antes e depois de clientes que passaram pela consultoria e descobriram seu estilo ideal.
+                <span className="text-primary text-2xl">📸</span>
+                Inspire-se com o <strong>antes e depois de clientes</strong> que
+                descobriram sua <strong>paleta de cores pessoal</strong> e um{" "}
+                <strong>estilo autêntico</strong> através da{" "}
+                <strong>consultoria de imagem</strong>.
               </div>
             </div>
 

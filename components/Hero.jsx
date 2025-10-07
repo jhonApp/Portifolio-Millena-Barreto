@@ -16,8 +16,12 @@ const Hero = () => {
             <span className="text-accent">Sou consultora <br></br> de Estilo</span> e Coloração Pessoal
           </h1>
           <p className="lead max-w-[476px] mb-7">
-            O meu trabalho com a consultoria de imagem é voltado para desenvolver 
-            estratégias assertivas de imagem para mulheres e empresas que desejam o sucesso!
+            Sou <strong>consultora de imagem e estilo</strong> especializada em{" "}
+            <strong>análise de coloração pessoal</strong>, ajudando mulheres a
+            descobrirem suas melhores cores, roupas e combinações. Crio{" "}
+            <strong>estratégias de imagem e estilo</strong> para que você se
+            vista com confiança, autenticidade e propósito — seja no dia a dia,
+            no trabalho ou em eventos especiais.
           </p>
 
           <div className="z-[99] mt-6 flex flex-col sm:flex-row gap-4">
@@ -33,7 +37,7 @@ const Hero = () => {
               quality="100"
               priority
               className="object-contain"
-              alt="Consultora de Imagem"
+              alt="Consultora de imagem e coloração pessoal em São Paulo"
             />
           </div>
         </div>
@@ -47,7 +51,7 @@ const Hero = () => {
               quality="100"
               priority
               className="object-contain"
-              alt="Consultora de Imagem"
+              alt="Consultora de imagem e estilo para mulheres"
             />
           </div>
           {/* arrow shape */}
