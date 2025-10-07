@@ -21,7 +21,7 @@ const Palestra = () => {
                   quality={100}
                   unoptimized={true}
                   priority
-                  alt="Palestra sobre consultoria de estilo para empresas"
+                  alt="Palestra de consultoria de imagem corporativa com foco em estilo profissional"
                   className="object-cover rounded-tl-[8px] rounded-tr-[120px] min-h-[480px]"
                 />
               </div>
@@ -31,32 +31,50 @@ const Palestra = () => {
           {/* Conteúdo da palestra */}
           <div className="text-center lg:text-left max-w-lg">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-4">
-              Transforme a imagem da sua equipe com minhas palestras
+              Palestras de{" "}
+              <span className="text-accent">
+                Imagem Corporativa e Estilo Profissional
+              </span>
             </h2>
             <p className="text-gray-600 text-lg mb-6">
-              A consultoria de estilo e coloração pessoal ajudam empresas a fortalecer a identidade visual de suas equipes, elevando a confiança e profissionalismo no ambiente de trabalho.
+              Leve para sua empresa uma palestra transformadora sobre{" "}
+              <strong>consultoria de imagem corporativa</strong>,{" "}
+              <strong>análise de estilo profissional</strong> e{" "}
+              <strong>expressão pessoal no ambiente de trabalho</strong>.
+              Fortaleça a presença e a confiança da sua equipe com conteúdos
+              práticos e inspiradores.
             </p>
 
             {/* Benefícios corporativos */}
             <div className="space-y-3 text-gray-700 text-lg">
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">🎯</span> Dress code alinhado à identidade da empresa
+                <span className="text-primary text-2xl">🎯</span>{" "}
+                <strong>Dress code corporativo</strong> alinhado à identidade da
+                marca e à cultura da empresa.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">💼</span> Profissionalismo e credibilidade para equipes
+                <span className="text-primary text-2xl">💼</span> Aumento da{" "}
+                <strong>credibilidade profissional</strong> e fortalecimento da
+                imagem institucional.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">🌟</span> Melhoria na autoestima e produtividade
+                <span className="text-primary text-2xl">🌟</span>
+                Melhoria na{" "}
+                <strong>autoestima, engajamento e produtividade</strong> das
+                equipes.
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">🎤</span> Conteúdo dinâmico e prático para sua equipe
+                <span className="text-primary text-2xl">🎤</span>{" "}
+                <strong>Palestras dinâmicas e personalizadas</strong> para
+                empresas, eventos e treinamentos internos.
               </div>
             </div>
 
             {/* Chamadas para ação */}
             <div className="mt-6 pb-10">
               <p className="text-gray-700 mb-4">
-                Entre em contato e leve essa experiência para sua empresa!
+                Solicite uma palestra personalizada e transforme a imagem da sua
+                equipe.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <ButtonInstagram />
