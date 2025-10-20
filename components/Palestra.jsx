@@ -49,24 +49,32 @@ const Palestra = () => {
             <div className="space-y-3 text-gray-700 text-lg">
               <div className="flex items-center gap-2">
                 <span className="text-primary text-2xl">🎯</span>{" "}
-                <strong>Dress code corporativo</strong> alinhado à identidade da
-                marca e à cultura da empresa.
+                <span>
+                  <strong>Dress code corporativo</strong> alinhado à identidade
+                  da marca e à cultura da empresa.
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-primary text-2xl">💼</span> Aumento da{" "}
-                <strong>credibilidade profissional</strong> e fortalecimento da
-                imagem institucional.
+                <span className="text-primary text-2xl">💼</span>
+                <span>
+                  Aumento da <strong>credibilidade profissional</strong> e
+                  fortalecimento da imagem institucional.
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-primary text-2xl">🌟</span>
-                Melhoria na{" "}
-                <strong>autoestima, engajamento e produtividade</strong> das
-                equipes.
+                <span>
+                  Melhoria na{" "}
+                  <strong>autoestima, engajamento e produtividade</strong> das
+                  equipes.
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-primary text-2xl">🎤</span>{" "}
-                <strong>Palestras dinâmicas e personalizadas</strong> para
-                empresas, eventos e treinamentos internos.
+                <span>
+                  <strong>Palestras dinâmicas e personalizadas</strong> para
+                  empresas, eventos e treinamentos internos.
+                </span>
               </div>
             </div>
 
