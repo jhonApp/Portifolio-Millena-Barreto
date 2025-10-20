@@ -37,7 +37,7 @@ export const metadata = {
     siteName: "Millena Barreto",
     images: [
       {
-        url: "/og-image.png",
+        url: "https://millenabarreto.com.br/assets/about/img.JPEG",
         width: 1200,
         height: 630,
         alt: "Imagem de destaque da consultoria de imagem de Millena Barreto",
@@ -51,14 +51,14 @@ export const metadata = {
     title: "Millena Barreto | Consultoria de Imagem e Estilo",
     description:
       "Descubra sua melhor versão com a consultoria de imagem e estilo de Millena Barreto.",
-    images: ["/og-image.png"],
+    images: ["https://millenabarreto.com.br/assets/about/img.JPEG"],
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "https://millenabarreto.com.br/favicon.ico",
   },
 };
 
@@ -74,8 +74,8 @@ export default function RootLayout({ children }) {
               "@type": "LocalBusiness",
               name: "Millena Barreto | Consultoria de Imagem e Estilo",
               url: "https://millenabarreto.com.br",
-              logo: "https://millenabarreto.com.br/logo.png",
-              image: "https://millenabarreto.com.br/og-image.png",
+              logo: "https://millenabarreto.com.br/favicon.ico",
+              image: "https://millenabarreto.com.br/assets/about/img.JPEG",
               description:
                 "Consultoria de imagem e estilo personalizada. Análise de coloração pessoal e estilo para mulheres que desejam destacar sua autenticidade.",
               address: {
