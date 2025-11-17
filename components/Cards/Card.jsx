@@ -22,7 +22,7 @@ const Card = ({
                 src="/assets/journey/shape.svg"
                 width={16}
                 height={16}
-                alt=""
+                alt="Ícone decorativo da seção de jornada"
               />
               <h3 className="text-lg font-semibold text-primary">
                 {type === "experience"
@@ -46,7 +46,12 @@ const Card = ({
               ) : (
                 // render the logo for experience & education
                 <div className="relative w-[300px] h-[38px] xl:h-[44px]">
-                  <Image src={logoUrl} fill alt="" className="object-contain" />
+                  <Image
+                    src={logoUrl}
+                    fill
+                    alt={company || institution || name || "Logotipo da empresa"}
+                    className="object-contain"
+                  />
                 </div>
               )}
 

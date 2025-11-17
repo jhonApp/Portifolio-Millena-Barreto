@@ -24,7 +24,7 @@ const Contact = () => {
               className="object-cover"
               fill
               quality={100}
-              alt=""
+              alt="Cliente sorrindo após consultoria de estilo"
             />
           </div>
         </div>

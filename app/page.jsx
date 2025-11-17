@@ -30,14 +30,16 @@ const Home = () => {
           `,
         }}
       />
-      <Hero />
-      <FixedMenu />
-      <Services />
-      <About />
-      <Work />
-      <Testimonial />
-      <Palestra />
-      <Contact />
+      <main id="inicio">
+        <Hero />
+        <FixedMenu />
+        <Services />
+        <About />
+        <Work />
+        <Testimonial />
+        <Palestra />
+        <Contact />
+      </main>
       <Footer />
     </>
   );

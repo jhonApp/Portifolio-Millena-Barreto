@@ -31,8 +31,12 @@ const getLetter = (name) => {
   return letters;
 };
 
-const AnimatedText = ({ text, textStyles }) => {
-  return <div className={`${textStyles}`}>{getLetter(text)}</div>;
+const AnimatedText = ({ text, textStyles, ...props }) => {
+  return (
+    <div className={`${textStyles}`} {...props}>
+      {getLetter(text)}
+    </div>
+  );
 };
 
 export default AnimatedText;
