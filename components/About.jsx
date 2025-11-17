@@ -22,7 +22,7 @@ const About = () => {
                   quality={100}
                   unoptimized={true}
                   priority
-                  alt=""
+                  alt="Consultora de imagem Millena Barreto sorrindo para a câmera"
                   className="object-cover rounded-tl-[8px] rounded-tr-[120px] min-h-[480px]"
                 />
               </div>
@@ -42,7 +42,7 @@ const About = () => {
                     src="/assets/about/shape-1.svg"
                     width={160}
                     height={160}
-                    alt=""
+                    alt="Selo decorativo giratório destacando experiência"
                   />
                 </motion.div>
                 <div className="absolute text-center text-white">

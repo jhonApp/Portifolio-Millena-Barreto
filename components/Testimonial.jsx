@@ -60,11 +60,12 @@ const Testimonial = () => {
   }, [swiperRef]);
 
   return (
-    <div className="py-24 overflow-hidden">
+    <section className="py-24 overflow-hidden" id="depoimentos" aria-labelledby="depoimentos-heading">
       <div className="container mx-auto">
         <AnimatedText
           text="O que os clientes estão dizendo.."
           textStyles="h2 mb-[30px] xl:mb-[60px] text-center"
+          id="depoimentos-heading"
         />
         <div className="flex flex-col lg:flex-row gap-12">
           {/* slider info */}
@@ -122,7 +123,7 @@ const Testimonial = () => {
                         className="object-cover object-center"
                         quality={100}
                         fill
-                        alt=""
+                        alt={`Foto de ${slide.name} que avaliou a consultoria de imagem`}
                       />
                     </div>
                   </div>
@@ -132,7 +133,7 @@ const Testimonial = () => {
           </Swiper>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

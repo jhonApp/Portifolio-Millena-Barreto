@@ -14,6 +14,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://millenabarreto.com.br"),
   title: "Millena Barreto | Consultoria de Imagem e Estilo",
   description:
     "Consultoria de imagem e estilo personalizada. Descubra sua melhor versão com análise de coloração pessoal e styling individual.",

@@ -64,7 +64,7 @@ const Hero = () => {
               src="/assets/hero/arrow.svg"
               width={160}
               height={160}
-              alt="Seta indicando destaque"
+              alt="Seta decorativa indicando destaque visual"
             />
           </div>
           {/* shape 1 */}
@@ -79,7 +79,7 @@ const Hero = () => {
                   src="assets/hero/shape-1.svg"
                   width={38}
                   height={38}
-                  alt=""
+                  alt="Detalhe geométrico complementar"
                 />
               }
               direction="left"
@@ -98,7 +98,7 @@ const Hero = () => {
                   src="assets/hero/shape-2.svg"
                   width={34}
                   height={34}
-                  alt=""
+                  alt="Elemento gráfico circular em movimento"
                 />
               }
               direction="right"
@@ -117,7 +117,7 @@ const Hero = () => {
                   src="assets/hero/shape-3.svg"
                   width={36}
                   height={36}
-                  alt=""
+                  alt="Ícone ornamental giratório"
                 />
               }
               direction="left"

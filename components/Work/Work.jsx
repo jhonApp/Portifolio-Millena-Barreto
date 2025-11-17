@@ -35,13 +35,18 @@ const Work = () => {
   };
 
   return (
-    <section className="pt-24 min-h-[1000px]" id="trabalhos">
+    <section
+      className="pt-24 min-h-[1000px]"
+      id="trabalhos"
+      aria-labelledby="trabalhos-heading"
+    >
       <div className="container mx-auto">
         <Tabs defaultValue="todos" className="w-full flex flex-col">
           <div className="flex flex-col xl:flex-row items-center xl:items-start xl:justify-between mb-[30px]">
             <AnimatedText
               text="Meus trabalhos"
               textStyles="h2 mb-[30px] xl:mb-0"
+              id="trabalhos-heading"
             />
             {/* render tab triggers */}
             <TabsList className="max-w-max h-full mb-[30px] flex flex-col md:flex-row gap-4 md:gap-0">

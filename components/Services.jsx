@@ -25,8 +25,11 @@ const services = [
 
 const Services = () => {
   return (
-    <section className="relative z-40" id="trabalhos">
+    <section className="relative z-40" id="trabalhos" aria-labelledby="servicos-heading">
       <div className="container mx-auto">
+        <h2 id="servicos-heading" className="sr-only">
+          Serviços de consultoria de imagem e estilo
+        </h2>
         <ul className="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-[20px] -top-12 place-items-center lg:place-items-stretch">
           {services.map((service, index) => {
             return (
@@ -38,7 +41,7 @@ const Services = () => {
                   src={service.icon}
                   width={48}
                   height={48}
-                  alt=""
+                  alt={`Ícone de ${service.title.toLowerCase()}`}
                   className="mb-4"
                 />
                 <h3 className="text-[20px] text-primary font-semibold mb-3">
