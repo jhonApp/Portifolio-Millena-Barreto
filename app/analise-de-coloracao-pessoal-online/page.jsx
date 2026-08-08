@@ -1,6 +1,7 @@
 import ColoracaoHero from "@/components/Coloracao/ColoracaoHero";
 import ComoFunciona from "@/components/Coloracao/ComoFunciona";
 import OQueRecebe from "@/components/Coloracao/OQueRecebe";
+import Investimento from "@/components/Coloracao/Investimento";
 import FixedMenu from "@/components/FixedMenu";
 import Footer from "@/components/Footer";
 
@@ -87,6 +88,7 @@ const AnaliseColoracaoPessoalOnline = () => {
         <ColoracaoHero />
         <ComoFunciona />
         <OQueRecebe />
+        <Investimento />
         <FixedMenu />
       </main>
       <Footer />
