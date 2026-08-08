@@ -23,7 +23,7 @@ Hoje o site é uma página única ([app/page.jsx](../../../app/page.jsx)). Esta 
 | Decisão | Escolha | Motivo |
 |---|---|---|
 | Destino dos CTAs | Link de checkout externo | Compra direta, sem intermediação por conversa |
-| URL do checkout | Ainda não existe | Placeholder com fallback pro WhatsApp |
+| URL do checkout | Kiwify — `https://pay.kiwify.com.br/z9aVhTY` | Fornecida pela cliente durante a implementação |
 | "Por tempo limitado" | Selo estático | Sem JS, sem manutenção, sem risco de contador zerado matar a conversão |
 | Visual | Página clara + bloco de preço escuro | Mantém a identidade do site; contraste só onde converte |
 | Rota | `/analise-de-coloracao-pessoal-online` | Slug com a palavra-chave que o site já trabalha no SEO |
@@ -63,19 +63,19 @@ A página nova é **server component**: exporta `metadata` própria e o JSON-LD,
 
 ### `ButtonCheckout`
 
-Props: `label` (string), `variant` (`"primary" | "secondary"`), `className` opcional.
+Prop: `label` (string).
 
-Comportamento: lê `checkout.url` de `public/consts/checkout.ts`. Se a string estiver vazia, o `href` cai para `https://wa.me/{whatsApp.telefone}?text=...` com a mensagem "Olá! Quero fazer a Análise de Coloração Pessoal Online por R$ 99,99".
+Comportamento: renderiza um `<a>` para `checkout.url`, com `target="_blank"` e `rel="noopener noreferrer"`.
 
-Isso permite publicar a página antes de existir checkout, sem link morto. Quando a URL chegar, muda-se uma linha em `checkout.ts`.
+A URL vive em um único lugar, então trocar de oferta ou de plataforma de pagamento é uma linha — nenhum componente muda.
 
 `public/consts/checkout.ts`:
 
 ```ts
 export const checkout = {
-  url: "", // cole aqui a URL do checkout (Hotmart, Kiwify, Mercado Pago...)
-  mensagemWhatsApp:
-    "Olá! Quero fazer a Análise de Coloração Pessoal Online por R$ 99,99",
+  // Link de pagamento do Kiwify. Para trocar de oferta ou de plataforma,
+  // altere só esta URL.
+  url: "https://pay.kiwify.com.br/z9aVhTY",
 };
 ```
 
@@ -168,6 +168,6 @@ Os `<Script>` vão para [app/layout.jsx](../../../app/layout.jsx) (dentro do `<b
 - `npm run build` conclui sem erro
 - `npm run lint` sem novos avisos
 - `/analise-de-coloracao-pessoal-online` renderiza as quatro seções em 375px, 768px e 1440px
-- Com `checkout.url` vazia, os CTAs abrem o WhatsApp; com URL preenchida, abrem o checkout
+- O CTA "Quero minha análise" abre o checkout do Kiwify em nova aba
 - A home continua renderizando e o link novo leva à página
 - `/sitemap.xml` lista as duas rotas

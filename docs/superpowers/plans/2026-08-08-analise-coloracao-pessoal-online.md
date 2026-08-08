@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Criar a landing page de venda em `/analise-de-coloracao-pessoal-online`, seguindo a identidade visual do site, com CTA para checkout externo e fallback para WhatsApp.
+**Goal:** Criar a landing page de venda em `/analise-de-coloracao-pessoal-online`, seguindo a identidade visual do site, com CTA para o checkout do Kiwify.
 
 **Architecture:** Primeira rota secundária do site. A página é um **server component** (exporta `metadata` e JSON-LD) que compõe quatro componentes de seção em `components/Coloracao/`. A home ganha dois pontos de entrada para ela. Nenhuma seção existente da home é refatorada.
 
@@ -497,9 +497,9 @@ Entrega o bloco de preço escuro, o CTA com fallback e faz a âncora do Hero fun
 - Modify: `app/layout.jsx:68`
 
 **Interfaces:**
-- Consumes: `whatsApp` de `public/consts/whatsApp.ts` (formato `{ telefone: string, mensagem: string }`)
+- Consumes: nada de tarefas anteriores
 - Produces:
-  - `checkout` — objeto `{ url: string, mensagemWhatsApp: string }`
+  - `checkout` — objeto `{ url: string }`
   - `ButtonCheckout` — default export, prop `{ label: string }`
   - `Investimento` — default export, sem props, renderiza `<section id="investimento">`
 
@@ -509,39 +509,27 @@ Create `public/consts/checkout.ts`:
 
 ```ts
 export const checkout = {
-  // Cole aqui a URL do checkout (Hotmart, Kiwify, Mercado Pago, link de Pix...).
-  // Enquanto estiver vazia, os botões de compra abrem o WhatsApp.
-  url: "",
-  mensagemWhatsApp:
-    "Olá! Quero fazer a Análise de Coloração Pessoal Online por R$ 99,99",
+  // Link de pagamento do Kiwify. Para trocar de oferta ou de plataforma,
+  // altere só esta URL.
+  url: "https://pay.kiwify.com.br/z9aVhTY",
 };
 ```
 
-- [ ] **Step 2: Criar o botão de checkout com fallback**
+- [ ] **Step 2: Criar o botão de checkout**
 
 Create `components/Coloracao/ButtonCheckout.jsx`:
 
 ```jsx
-import { FaWhatsapp } from "react-icons/fa";
 import { checkout } from "@/public/consts/checkout";
-import { whatsApp } from "@/public/consts/whatsApp";
 
 const ButtonCheckout = ({ label }) => {
-  const temCheckout = checkout.url.trim().length > 0;
-  const href = temCheckout
-    ? checkout.url
-    : `https://wa.me/${whatsApp.telefone}?text=${encodeURIComponent(
-        checkout.mensagemWhatsApp
-      )}`;
-
   return (
     <a
-      href={href}
+      href={checkout.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center justify-center gap-2 bg-accent text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg hover:brightness-110 transition-all"
+      className="inline-flex items-center justify-center bg-accent text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg hover:brightness-110 transition-all"
     >
-      {!temCheckout && <FaWhatsapp className="text-2xl" />}
       {label}
     </a>
   );
@@ -549,8 +537,6 @@ const ButtonCheckout = ({ label }) => {
 
 export default ButtonCheckout;
 ```
-
-Enquanto não há checkout, o ícone do WhatsApp aparece para deixar claro para onde o clique leva. Quando `url` for preenchida, o ícone some sozinho.
 
 - [ ] **Step 3: Criar o bloco de investimento**
 
@@ -635,15 +621,13 @@ Confira:
 - Clicar em "Quero descobrir minha cartela" no Hero rola suavemente até o bloco escuro
 - O bloco é escuro (`#10151f`) com `R$ 99,99` grande em Bebas Neue
 - `R$ 247,00` aparece riscado e mais apagado
-- Com `checkout.url` vazia, o botão "Quero minha análise" mostra o ícone do WhatsApp e abre `wa.me/5511988652315` com a mensagem sobre os R$ 99,99
-
-Depois teste o outro caminho: preencha temporariamente `url: "https://exemplo.com/checkout"` em `public/consts/checkout.ts`, recarregue e confirme que o ícone do WhatsApp some e o link aponta para `exemplo.com`. **Reverta a URL para `""` antes do commit.**
+- O botão "Quero minha análise" aponta para `https://pay.kiwify.com.br/z9aVhTY`, com `target="_blank"` e `rel="noopener noreferrer"`
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add public/consts/checkout.ts components/Coloracao/ButtonCheckout.jsx components/Coloracao/Investimento.jsx app/analise-de-coloracao-pessoal-online/page.jsx app/layout.jsx
-git commit -m "feat: bloco de investimento com checkout e fallback para whatsapp"
+git commit -m "feat: bloco de investimento com link de checkout do kiwify"
 ```
 
 ---
@@ -898,7 +882,7 @@ Depois da Task 6, rode a checagem completa da spec:
 
 - [ ] `npm run build` termina sem erro nem aviso novo
 - [ ] `/analise-de-coloracao-pessoal-online` renderiza as quatro seções em 375px, 768px e 1440px, sem scroll horizontal
-- [ ] Com `checkout.url` vazia, os CTAs abrem o WhatsApp com a mensagem correta
+- [ ] O CTA "Quero minha análise" aponta para `https://pay.kiwify.com.br/z9aVhTY`
 - [ ] A âncora "Quero descobrir minha cartela" do Hero rola até o bloco de preço
 - [ ] A home continua renderizando todas as seções antigas
 - [ ] `/sitemap.xml` lista as duas rotas
@@ -906,6 +890,6 @@ Depois da Task 6, rode a checagem completa da spec:
 - [ ] `<title>` da página nova é "Análise de Coloração Pessoal Online | Millena Barreto"
 - [ ] Só uma requisição ao `googletagmanager.com` por página
 
-## Pendência conhecida
+## Manutenção
 
-`public/consts/checkout.ts` vai para produção com `url: ""`. Enquanto isso, todo CTA de compra cai no WhatsApp. Assim que a URL do checkout existir, basta preencher essa linha — nenhum outro arquivo muda.
+O link de pagamento vive só em `public/consts/checkout.ts`. Trocar de oferta ou de plataforma é uma linha; nenhum componente muda.
