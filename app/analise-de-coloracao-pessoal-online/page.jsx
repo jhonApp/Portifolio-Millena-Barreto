@@ -1,4 +1,5 @@
 import ColoracaoHero from "@/components/Coloracao/ColoracaoHero";
+import ComoFunciona from "@/components/Coloracao/ComoFunciona";
 import FixedMenu from "@/components/FixedMenu";
 import Footer from "@/components/Footer";
 
@@ -83,6 +84,7 @@ const AnaliseColoracaoPessoalOnline = () => {
       />
       <main>
         <ColoracaoHero />
+        <ComoFunciona />
         <FixedMenu />
       </main>
       <Footer />
