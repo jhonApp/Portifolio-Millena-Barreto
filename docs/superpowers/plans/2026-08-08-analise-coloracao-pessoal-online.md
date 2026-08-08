@@ -500,7 +500,7 @@ Entrega o bloco de preço escuro, o CTA com fallback e faz a âncora do Hero fun
 - Consumes: `whatsApp` de `public/consts/whatsApp.ts` (formato `{ telefone: string, mensagem: string }`)
 - Produces:
   - `checkout` — objeto `{ url: string, mensagemWhatsApp: string }`
-  - `ButtonCheckout` — default export, props `{ label: string, variant?: "primary" | "secondary", className?: string }`
+  - `ButtonCheckout` — default export, prop `{ label: string }`
   - `Investimento` — default export, sem props, renderiza `<section id="investimento">`
 
 - [ ] **Step 1: Criar a constante de checkout**
@@ -526,12 +526,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import { checkout } from "@/public/consts/checkout";
 import { whatsApp } from "@/public/consts/whatsApp";
 
-const variantes = {
-  primary: "bg-accent text-white hover:brightness-110",
-  secondary: "bg-white text-primary hover:bg-white/90",
-};
-
-const ButtonCheckout = ({ label, variant = "primary", className = "" }) => {
+const ButtonCheckout = ({ label }) => {
   const temCheckout = checkout.url.trim().length > 0;
   const href = temCheckout
     ? checkout.url
@@ -544,7 +539,7 @@ const ButtonCheckout = ({ label, variant = "primary", className = "" }) => {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center justify-center gap-2 font-bold text-lg px-8 py-4 rounded-full shadow-lg transition-all ${variantes[variant]} ${className}`}
+      className="inline-flex items-center justify-center gap-2 bg-accent text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg hover:brightness-110 transition-all"
     >
       {!temCheckout && <FaWhatsapp className="text-2xl" />}
       {label}
@@ -587,7 +582,7 @@ const Investimento = () => {
             R$ 99,99
           </p>
           <p className="text-white/70 mb-10">Pix ou cartão de crédito</p>
-          <ButtonCheckout label="Quero minha análise" variant="primary" />
+          <ButtonCheckout label="Quero minha análise" />
         </div>
       </div>
     </section>
