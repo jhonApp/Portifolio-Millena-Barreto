@@ -66,7 +66,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" className="scroll-smooth">
+    <html lang="pt-BR" className="scroll-smooth motion-reduce:scroll-auto">
       <head>
         <script
           type="application/ld+json"
@@ -74,6 +74,7 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "LocalBusiness",
+              "@id": "https://millenabarreto.com.br/#business",
               name: "Millena Barreto | Consultoria de Imagem e Estilo",
               url: "https://millenabarreto.com.br",
               logo: "https://millenabarreto.com.br/favicon.ico",

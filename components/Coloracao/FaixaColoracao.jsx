@@ -10,14 +10,14 @@ const FaixaColoracao = () => {
               Análise de Coloração Pessoal Online
             </h2>
             <p className="text-[15px]">
-              De <span className="line-through">R$ 247,00</span> por{" "}
-              <strong className="text-accent text-lg">R$ 99,99</strong> · oferta
+              De <s className="line-through">R$ 247,00</s> por{" "}
+              <strong className="text-accent text-xl">R$ 99,99</strong> · oferta
               por tempo limitado
             </p>
           </div>
           <Link
             href="/analise-de-coloracao-pessoal-online"
-            className="inline-flex items-center justify-center bg-accent text-white font-bold text-lg px-6 py-3 rounded-full shadow-lg hover:brightness-110 transition-all whitespace-nowrap"
+            className="inline-flex items-center justify-center bg-accent text-white font-bold text-xl px-6 py-3 rounded-full shadow-lg hover:brightness-110 transition-all whitespace-nowrap"
           >
             Quero descobrir minha cartela
           </Link>

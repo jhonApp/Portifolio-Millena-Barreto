@@ -22,7 +22,7 @@ const ColoracaoHero = () => {
             </p>
             <a
               href="#investimento"
-              className="inline-flex items-center justify-center bg-accent text-white font-bold text-lg px-8 py-4 rounded-full shadow-lg hover:brightness-110 transition-all"
+              className="inline-flex items-center justify-center bg-accent text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg hover:brightness-110 transition-all"
             >
               Quero descobrir minha cartela
             </a>
@@ -33,8 +33,8 @@ const ColoracaoHero = () => {
             <Image
               src="/assets/hero/mihOficial.png"
               width={620}
-              height={720}
-              quality={100}
+              height={881}
+              sizes="(max-width: 1199px) 80vw, 620px"
               priority
               className="object-contain max-h-[400px] xl:max-h-full"
               alt="Millena Barreto, consultora de imagem e coloração pessoal"

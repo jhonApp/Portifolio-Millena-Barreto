@@ -35,7 +35,7 @@ export const metadata = {
       {
         url: IMAGEM_OG,
         width: 1200,
-        height: 630,
+        height: 1600,
         alt: "Resultado de uma análise de coloração pessoal online",
       },
     ],
@@ -43,7 +43,7 @@ export const metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: TITULO,
     description: DESCRICAO,
     images: [IMAGEM_OG],
@@ -64,9 +64,7 @@ const jsonLd = {
   image: IMAGEM_OG,
   areaServed: "BR",
   provider: {
-    "@type": "LocalBusiness",
-    name: "Millena Barreto | Consultoria de Imagem e Estilo",
-    url: "https://millenabarreto.com.br",
+    "@id": "https://millenabarreto.com.br/#business",
   },
   offers: {
     "@type": "Offer",

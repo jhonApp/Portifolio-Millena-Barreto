@@ -4,7 +4,7 @@ const Investimento = () => {
   return (
     <section
       id="investimento"
-      className="py-16 xl:py-24 scroll-mt-8"
+      className="pt-16 pb-28 xl:pt-24 xl:pb-32 scroll-mt-8"
       aria-labelledby="investimento-heading"
     >
       <div className="container mx-auto">
@@ -16,7 +16,7 @@ const Investimento = () => {
             Investimento
           </h2>
           <p className="text-white/60 text-xl mb-1">
-            De <span className="line-through">R$ 247,00</span>
+            De <s className="line-through">R$ 247,00</s>
           </p>
           <p className="text-white/80 text-lg mb-2">Por apenas</p>
           <p className="font-primary text-white text-[72px] xl:text-[110px] leading-none mb-3">
