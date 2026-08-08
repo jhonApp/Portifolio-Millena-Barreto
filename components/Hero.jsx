@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import ButtonWhatsApp from "./ButtonBusiness/ButtonWhatsApp";
 import ButtonInstagram from "./ButtonBusiness/ButtonInstagram";
 import RotatingShape from "./RotatingShape";
@@ -24,7 +25,13 @@ const Hero = () => {
             no trabalho ou em eventos especiais.
           </p>
 
-          <div className="z-[99] mt-6 flex flex-col sm:flex-row gap-4">
+          <div className="z-[99] mt-6 flex flex-col sm:flex-row sm:flex-wrap justify-center xl:justify-start gap-4">
+            <Link
+              href="/analise-de-coloracao-pessoal-online"
+              className="inline-flex items-center justify-center bg-accent text-white font-bold text-lg px-3 py-3 rounded-full shadow-lg hover:brightness-110 transition-all"
+            >
+              Quero descobrir minha cartela
+            </Link>
             <ButtonInstagram />
             <ButtonWhatsApp />
           </div>

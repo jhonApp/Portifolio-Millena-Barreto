@@ -1,6 +1,7 @@
 "use client";
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
+import FaixaColoracao from "@/components/Coloracao/FaixaColoracao";
 import About from "@/components/About";
 import Work from "@/components/Work/Work";
 import Contact from "@/components/Contact";
@@ -16,6 +17,7 @@ const Home = () => {
         <Hero />
         <FixedMenu />
         <Services />
+        <FaixaColoracao />
         <About />
         <Work />
         <Testimonial />
