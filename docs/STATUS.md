@@ -10,7 +10,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 9d11d05 |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | yes | 4/4 | 8/8 | n/a | implemented | 2026-11-20 b317eb6 |
 | RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | yes | 4/4 | 7/8 | pending | implemented | 2026-11-20 42fec83 |
-| RF-06 | Payment Confirmation | 5 | RF-05 | yes | 3/4 | 0/8 | pending | in progress | none |
+| RF-06 | Payment Confirmation | 5 | RF-05 | yes | 4/4 | 6/8 | pending | implemented | 2026-11-20 c6d2ea1 |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | no | none | none | none | not started | none |
 | RF-08 | Result Screen and E-mail Delivery | 7 | RF-06, RF-07 | no | none | none | none | not started | none |
 | RF-09 | Privacy and LGPD Compliance | 7 | RF-02, RF-07 | no | none | none | none | not started | none |
@@ -68,4 +68,15 @@ Last run: 2026-11-20, commit 42fec83
 - ✓ No card fields and no payment instrument data stored (checkout-route.test.ts::the payments table holds identifiers, amount, code, image and times only, the checkout answer carries no payment instrument data; abacatepay-gateway.test.ts::the request body has no customer or card data; browser script step 5)
 - ✓ Hand-off RF-02 + RF-04 to RF-05: a real registration with 15 saved answers opens a checkout whose order belongs to that customer (checkout-handoff.test.ts::a real registration with 15 saved answers opens a checkout whose order belongs to that customer)
 - ✓ Hand-off RF-04 to RF-05: an incomplete answer set sends RF-05 back to the questionnaire (checkout-handoff.test.ts::answers saved by the RF-04 route with one question missing send RF-05 back to the questionnaire)
+
+### RF-06. Payment Confirmation
+Last run: 2026-11-20, commit c6d2ea1
+- — A paid notification approves the PENDING order after verifying status and amount (live pending): fake proof passes (webhook-route.test.ts::a paid notification approves the PENDING order after verifying status and amount, the order is not approved when the provider says PENDING, an event amount different from 990 is not approved; payment-sql.test.ts::approve_order approves a PENDING order and sets paid_at), but the real AbacatePay v2 answers are not verified: live check L1 (tests/live/abacatepay-pix.live.test.ts) needs the owner's approval and a development-mode key
+- ✓ A notification without valid authentication returns 401 and the order is unchanged (webhook-route.test.ts::a notification without proof returns 401 and changes nothing, a wrong secret returns 401, a wrong signature returns 401, a signature over a different body returns 401, a missing secret configuration never accepts a request; webhook-auth.test.ts)
+- ✓ The same notification sent 5 times approves once and starts one generation (webhook-route.test.ts::the same notification sent five times approves once and starts one generation; payment-sql.test.ts::record_webhook_event answers duplicate_processed for a repeated id, approve_order called twice approves once and creates one token)
+- ✓ "Já paguei" before paying shows "Ainda não identificamos seu pagamento" and the order stays PENDING (payment-check-route.test.ts::an unpaid charge answers pending and leaves the order PENDING, a second call within 5 seconds does not call the provider; checkout-state.test.ts::the not-paid message matches the PRD text; browser script steps 1, 2)
+- — "Já paguei" after paying approves the order and the screen moves forward (live pending): fake proof passes (payment-check-route.test.ts::a paid charge approves the order and answers approved, an already approved order answers approved without calling the provider; checkout-state.test.ts::the view moves to confirmed on an approved answer; browser script steps 3, 4, 5: "Pagamento confirmado!" then "Estamos preparando seu diagnóstico…", one token), but live checks L1 and L2 have not run
+- ✓ A notification and a "Já paguei" click at the same moment approve once (payment-check-route.test.ts::a notification and a check at the same moment approve once; payment-sql.test.ts::concurrent approve_order calls approve once and create one token)
+- ✓ An order that is not APPROVED cannot be used to generate or deliver (order-guard.test.ts::assertOrderApproved refuses PENDING and FAILED orders, assertOrderApproved accepts APPROVED PROCESSING and DELIVERED, a result cannot be inserted for a PENDING order, a delivery cannot be inserted for a FAILED order)
+- ✓ Hand-off RF-05 to RF-06: the notification of a charge created by RF-05 approves that order, matched by charge identifier (payment-handoff.test.ts::a real registration, saved answers and checkout produce a charge whose notification approves that order)
 
