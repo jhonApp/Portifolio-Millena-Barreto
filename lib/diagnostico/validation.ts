@@ -32,3 +32,13 @@ export async function readJson(
     throw new ApiError("INVALID_JSON", "JSON inválido.", 400);
   }
 }
+
+/** Like readJson, but an empty body is accepted and read as an empty object. */
+export async function readOptionalJson(
+  request: Request,
+  maxBytes: number = DEFAULT_MAX_BODY_BYTES,
+): Promise<unknown> {
+  const text = await request.clone().text();
+  if (text.trim() === "") return {};
+  return readJson(request, maxBytes);
+}
