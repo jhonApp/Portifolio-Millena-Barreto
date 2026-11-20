@@ -8,7 +8,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-01 | Platform Foundation and Data Model | 1 | none | yes | 5/5 | 4/4 | n/a | implemented | 2026-11-20 4e6a8e1 |
 | RF-02 | Customer Identification | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 f5f5630 |
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 9d11d05 |
-| RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | yes | 3/4 | 0/8 | n/a | in progress | none |
+| RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | yes | 4/4 | 8/8 | n/a | implemented | 2026-11-20 b317eb6 |
 | RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | no | none | none | none | not started | none |
 | RF-06 | Payment Confirmation | 5 | RF-05 | no | none | none | none | not started | none |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | no | none | none | none | not started | none |
@@ -46,3 +46,14 @@ Last run: 2026-11-20, commit 9d11d05
 - ✓ A tie still equal after questions 11 to 15 falls to the fixed order (scoring.test.ts::tie still equal falls to the fixed order, fixed order is elegante tradicional romantico esportivo criativo dramatico)
 - ✓ The same answers scored 100 times give identical results (scoring.test.ts::same answers scored 100 times give identical results, answer order does not change the result)
 - ✓ Past answers are scored with the version stored on them after a new version is published (question-bank.test.ts::past answers are scored with the version stored on them)
+
+### RF-04. Interactive Questionnaire
+Last run: 2026-11-20, commit b317eb6
+- ✓ Question 1: "Anterior" hidden, "Próxima" disabled, label "Pergunta 1 de 15" (questionnaire-state.test.ts::canAdvance is false until the question has a saved answer, progressPercent for question 1 of 15; browser script steps 2, 3)
+- ✓ Selecting and tapping "Próxima" shows the next question with a 300 ms transition and advances the progress bar (questionnaire-state.test.ts::transition is 300 ms, progressPercent grows by one fifteenth per question; browser script step 5: full opacity at about 245 ms)
+- ✓ Returning to question 3 shows the chosen alternative, and changing it replaces the saved answer (answers-route.test.ts::changing an answer replaces the saved one, answeredCount does not grow when an answer is replaced; browser script step 6)
+- ✓ Reloading at question 8 shows the first unanswered question with earlier answers kept (answers-lib.test.ts::firstUnansweredPosition is the first gap, not the count; questionnaire-handoff.test.ts::loadQuestionnaire starts at the first unanswered question and returns the saved answers; browser script step 7)
+- ✓ A save failure shows "Não conseguimos salvar sua resposta. Tentando de novo…" and runs 3 retries (questionnaire-state.test.ts::retry delays are 500 1500 and 3000 ms; browser script step 8: 4 requests, then the offline message and the retry button)
+- ✓ Opening the questionnaire without the attempt cookie sends the visitor to the registration (answers-lib.test.ts::no cookie yields no active attempt, a tampered cookie yields no active attempt, an expired attempt yields no active attempt; answers-route.test.ts::request without cookie gets 403; browser script steps 1, 10)
+- ✓ Hand-off RF-02 to RF-04: a customer registered through RF-02 saves answers only to that attempt (questionnaire-handoff.test.ts::answers saved with the cookie of a real registration belong only to that attempt)
+- ✓ Hand-off RF-03 to RF-04: the question shown carries no style or weight (questionnaire-handoff.test.ts::the page state carries the public question set without style or weight; browser script step 11)
