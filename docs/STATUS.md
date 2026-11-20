@@ -5,7 +5,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Platform Foundation and Data Model | 1 | none | yes | 5/5 | 0/4 | n/a | in progress | none |
+| RF-01 | Platform Foundation and Data Model | 1 | none | yes | 5/5 | 4/4 | n/a | implemented | 2026-11-20 4e6a8e1 |
 | RF-02 | Customer Identification | 2 | RF-01 | no | none | none | none | not started | none |
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | no | none | none | none | not started | none |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | no | none | none | none | not started | none |
@@ -21,8 +21,8 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 ## Criteria
 
 ### RF-01. Platform Foundation and Data Model
-Last run: none
-- — Given the database is set up, when any table is queried from a browser with the public key, then no rows are returned and no write is possible (no run yet)
-- — Given a missing required credential, when the application starts or a dependent route is called, then it fails with a clear message naming the missing setting and never uses a hard-coded value (no run yet)
-- — Given the site design tokens, when a diagnosis page renders, then it uses the existing theme tokens, Bebas Neue for headings and Inter for body text, and loads no additional font or color set (no run yet)
-- — Given the production configuration, when any route is called, then no payment simulation is available (no run yet)
+Last run: 2026-11-20, commit 4e6a8e1
+- ✓ Given the database is set up, when any table is queried from a browser with the public key, then no rows are returned and no write is possible (rls.test.ts::anon role cannot read any diagnostico table, anon role cannot insert update or delete, authenticated role cannot read or write; storage.test.ts::anon cannot list or download from diagnostics)
+- ✓ Given a missing required credential, when the application starts or a dependent route is called, then it fails with a clear message naming the missing setting and never uses a hard-coded value (env.test.ts, no-hardcoded-secrets.test.ts)
+- ✓ Given the site design tokens, when a diagnosis page renders, then it uses the existing theme tokens, Bebas Neue for headings and Inter for body text, and loads no additional font or color set (design-tokens.test.ts; browser check at 360 px)
+- ✓ Given the production configuration, when any route is called, then no payment simulation is available (payment-simulation.test.ts, no-hardcoded-secrets.test.ts::no simulation route exists under app/api)
