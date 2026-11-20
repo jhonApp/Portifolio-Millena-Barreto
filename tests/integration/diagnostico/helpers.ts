@@ -119,3 +119,52 @@ export const validPoints = {
   criativo: 1,
   dramatico: 1,
 };
+
+/**
+ * Throwaway questionnaire version with 15 questions x 4 alternatives (styles from `styleFor`).
+ * Returns the version and its questions with their alternatives.
+ */
+export async function createFullVersion(
+  db: SupabaseClient<Database>,
+  status: "draft" | "published" | "archived" = "archived",
+  styleFor: (questionPosition: number, alternativePosition: number) => Database["public"]["Tables"]["alternatives"]["Row"]["style"] = (_, alt) =>
+    (["elegante", "tradicional", "romantico", "esportivo_natural"] as const)[alt - 1],
+) {
+  const version = await createVersion(db, status);
+  const { data: questions, error } = await db
+    .from("questions")
+    .insert(
+      Array.from({ length: 15 }, (_, i) => ({
+        version_id: version.id,
+        position: i + 1,
+        text: `Pergunta de teste ${i + 1}`,
+      })),
+    )
+    .select();
+  if (error) throw new Error(`createFullVersion: ${error.message}`);
+  const rows = questions!.flatMap((question) =>
+    [1, 2, 3, 4].map((position) => ({
+      question_id: question.id,
+      position,
+      text: `Alternativa ${question.position}.${position}`,
+      style: styleFor(question.position, position),
+      weight: 1,
+    })),
+  );
+  const { error: altError } = await db.from("alternatives").insert(rows);
+  if (altError) throw new Error(`createFullVersion: ${altError.message}`);
+  const { data: alternatives } = await db
+    .from("alternatives")
+    .select("id, question_id, position")
+    .in("question_id", questions!.map((q) => q.id))
+    .order("position");
+  return {
+    version,
+    questions: questions!
+      .sort((a, b) => a.position - b.position)
+      .map((question) => ({
+        ...question,
+        alternatives: (alternatives ?? []).filter((alt) => alt.question_id === question.id),
+      })),
+  };
+}
