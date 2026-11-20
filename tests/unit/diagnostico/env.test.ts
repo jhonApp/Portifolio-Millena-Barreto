@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConfigError, getDatabaseEnv, getPaymentEnv } from "@/lib/diagnostico/env";
+import { ConfigError, getDatabaseEnv, getPaymentApiEnv, getPaymentEnv } from "@/lib/diagnostico/env";
 
 const KEYS = [
   "SUPABASE_URL",
@@ -68,5 +68,22 @@ describe("environment configuration", () => {
       SUPABASE_ANON_KEY: "anon-placeholder",
       SUPABASE_SERVICE_ROLE_KEY: "service-placeholder",
     });
+  });
+
+  it("getPaymentApiEnv names the missing ABACATEPAY_API_KEY", () => {
+    let error: unknown;
+    try {
+      getPaymentApiEnv();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(ConfigError);
+    expect((error as ConfigError).message).toContain("ABACATEPAY_API_KEY");
+  });
+
+  it("getPaymentApiEnv does not require the webhook secret", () => {
+    process.env.ABACATEPAY_API_KEY = "key-placeholder";
+    expect(() => getPaymentApiEnv()).not.toThrow();
+    expect(() => getPaymentEnv()).toThrow(ConfigError);
   });
 });

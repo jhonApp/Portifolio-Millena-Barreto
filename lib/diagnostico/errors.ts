@@ -7,6 +7,9 @@ export type ErrorCode =
   | "RATE_LIMITED"
   | "CONFIG_ERROR"
   | "UPSTREAM_ERROR"
+  | "ANSWERS_INCOMPLETE"
+  | "CHECKOUT_IN_PROGRESS"
+  | "PIX_UNAVAILABLE"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

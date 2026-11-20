@@ -168,3 +168,38 @@ export async function createFullVersion(
       })),
   };
 }
+
+/**
+ * Saves answers (first alternative of each question) for an attempt on the published version.
+ * `count` limits how many of the 15 questions are answered, in question order.
+ */
+export async function fillAnswers(db: SupabaseClient<Database>, attemptId: string, count = 15) {
+  const { data: published, error } = await db
+    .from("questionnaire_versions")
+    .select("id")
+    .eq("status", "published")
+    .single();
+  if (error) throw new Error(`fillAnswers: ${error.message}`);
+  const { data: questions } = await db
+    .from("questions")
+    .select("id, position")
+    .eq("version_id", published.id)
+    .order("position");
+  const picked = (questions ?? []).slice(0, count);
+  for (const question of picked) {
+    const { data: alternative } = await db
+      .from("alternatives")
+      .select("id")
+      .eq("question_id", question.id)
+      .order("position")
+      .limit(1)
+      .single();
+    const { error: insertError } = await db.from("answers").insert({
+      attempt_id: attemptId,
+      version_id: published.id,
+      question_id: question.id,
+      alternative_id: alternative!.id,
+    });
+    if (insertError) throw new Error(`fillAnswers: ${insertError.message}`);
+  }
+}

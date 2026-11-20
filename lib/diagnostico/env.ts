@@ -52,6 +52,13 @@ export function getPaymentEnv() {
   });
 }
 
+// RF-05 only creates charges, so it needs the API key alone (the webhook secret belongs to RF-06).
+export function getPaymentApiEnv() {
+  return readGroup("payment-api", {
+    ABACATEPAY_API_KEY: required,
+  });
+}
+
 export function getEmailEnv() {
   return readGroup("email", {
     RESEND_API_KEY: required,

@@ -383,7 +383,16 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "create_purchase_attempt":
+            "abort_checkout":
+{ Args: { "p_order": string }; Returns: undefined
+                           },
+"attach_charge":
+{ Args: { "p_br_code": string,"p_charge_id": string,"p_expires_at": string,"p_order": string,"p_qr_image": string }; Returns: undefined
+                           },
+"begin_checkout":
+{ Args: { "p_amount": number,"p_attempt": string,"p_renew": boolean }; Returns: Json
+                           },
+"create_purchase_attempt":
 { Args: { "p_consent_text": string,"p_consent_version": string,"p_email": string,"p_idempotency_key": string,"p_ip_hash": string,"p_name": string,"p_preference": string,"p_whatsapp": string }; Returns: string
                            },
 "hit_rate_limit":
