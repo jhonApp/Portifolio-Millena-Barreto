@@ -3,12 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  CONFIRMED_DELAY_MS,
   COPY_CONFIRMATION,
   COPY_CONFIRMATION_MS,
   IN_PROGRESS_MAX_RETRIES,
   IN_PROGRESS_RETRY_MS,
+  MESSAGE_CHECK_FAILED,
+  MESSAGE_NOT_PAID,
+  PAYMENT_CHECK_INTERVAL_MS,
+  TITLE_CONFIRMED,
+  TITLE_PREPARING,
   formatCountdown,
   secondsLeft,
+  viewAfterCheck,
 } from "@/lib/diagnostico/checkout-state";
 import { EXPIRED_PATH, INCOMPLETE_PATH } from "@/lib/diagnostico/paths";
 
@@ -18,11 +25,13 @@ type View =
   | { kind: "loading" }
   | { kind: "pending"; pix: Pix }
   | { kind: "expired" }
-  | { kind: "paid" }
+  | { kind: "confirmed" }
+  | { kind: "preparing" }
   | { kind: "error"; message: string };
 
 const CHECKOUT_URL = "/api/diagnostico/checkout";
 const RENEW_URL = "/api/diagnostico/checkout/renew";
+const CHECK_URL = "/api/diagnostico/payment/check";
 const GENERIC_ERROR = "Não conseguimos gerar o Pix agora. Tente novamente em instantes.";
 
 const STEPS = [
@@ -38,6 +47,8 @@ export default function Checkout() {
   const [view, setView] = useState<View>({ kind: "loading" });
   const [left, setLeft] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [notice, setNotice] = useState<"" | "notPaid" | "failed">("");
   const started = useRef(false);
   const expiring = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -83,7 +94,8 @@ export default function Checkout() {
         } else if (body.state === "expired") {
           setView({ kind: "expired" });
         } else {
-          setView({ kind: "paid" });
+          // The attempt already has a paid order (the customer came back after paying).
+          setView({ kind: "preparing" });
         }
         return;
       }
@@ -98,6 +110,69 @@ export default function Checkout() {
     started.current = true;
     void request(CHECKOUT_URL);
   }, [request]);
+
+  // "Já paguei" (manual) and the silent automatic check run the same server verification.
+  async function checkPayment(manual: boolean) {
+    if (manual) {
+      setChecking(true);
+      setNotice("");
+    }
+    try {
+      const response = await fetch(CHECK_URL, { method: "POST" });
+      if (response.status === 403) {
+        router.replace(EXPIRED_PATH);
+        return;
+      }
+      if (response.status === 404) {
+        void request(CHECKOUT_URL);
+        return;
+      }
+      if (!response.ok) {
+        if (manual) setNotice("failed");
+        return;
+      }
+      const next = viewAfterCheck(await response.json());
+      if (next === "confirmed") setView({ kind: "confirmed" });
+      else if (next === "expired") void request(CHECKOUT_URL);
+      else if (manual) setNotice("notPaid");
+    } catch {
+      if (manual) setNotice("failed");
+    } finally {
+      if (manual) setChecking(false);
+    }
+  }
+
+  // While the Pix is valid the screen also asks by itself, without messages.
+  const waiting = view.kind === "pending";
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setInterval(() => void checkPayment(false), PAYMENT_CHECK_INTERVAL_MS);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting]);
+
+  // "Pagamento confirmado!" gives way to "Estamos preparando seu diagnóstico…".
+  const confirmed = view.kind === "confirmed";
+  useEffect(() => {
+    if (!confirmed) return;
+    const timer = setTimeout(() => setView({ kind: "preparing" }), CONFIRMED_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [confirmed]);
+
+  // After approval the status keeps being followed (the result screen of RF-08 builds on it).
+  const preparing = view.kind === "preparing";
+  useEffect(() => {
+    if (!preparing) return;
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch(CHECK_URL, { method: "POST" });
+        if (response.status === 403) router.replace(EXPIRED_PATH);
+      } catch {
+        // Silent: the next tick asks again.
+      }
+    }, PAYMENT_CHECK_INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [preparing, router]);
 
   // Countdown from the expiry time; at zero the server is asked once, which expires the order.
   const expiresAt = view.kind === "pending" ? view.pix.expiresAt : null;
@@ -183,11 +258,11 @@ export default function Checkout() {
     );
   }
 
-  if (view.kind === "paid") {
+  if (view.kind === "confirmed" || view.kind === "preparing") {
     return (
-      <div className="text-center">
+      <div className="text-center" role="status">
         <h2 ref={headingRef} tabIndex={-1} className="text-[22px] font-semibold text-primary outline-none">
-          Seu pagamento já foi identificado.
+          {view.kind === "confirmed" ? TITLE_CONFIRMED : TITLE_PREPARING}
         </h2>
       </div>
     );
@@ -235,10 +310,26 @@ export default function Checkout() {
         ))}
       </ol>
 
-      {/* The behavior of this button belongs to RF-06; it stays disabled until then. */}
-      <button type="button" disabled className="btn border border-neutral-300 w-full text-sm font-semibold uppercase tracking-wider text-primary disabled:opacity-50">
-        Já paguei
+      <button
+        type="button"
+        onClick={() => void checkPayment(true)}
+        disabled={checking}
+        className="btn w-full border border-neutral-300 text-sm font-semibold uppercase tracking-wider text-primary disabled:opacity-50"
+      >
+        {checking ? "Verificando…" : "Já paguei"}
       </button>
+      <div className="min-h-[20px] w-full text-center text-sm" aria-live="polite">
+        {notice === "notPaid" ? (
+          <p role="status" className="text-secondary">
+            {MESSAGE_NOT_PAID}
+          </p>
+        ) : null}
+        {notice === "failed" ? (
+          <p role="alert" className="text-red-600">
+            {MESSAGE_CHECK_FAILED}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
