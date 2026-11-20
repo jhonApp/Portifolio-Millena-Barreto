@@ -9,7 +9,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-02 | Customer Identification | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 f5f5630 |
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 9d11d05 |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | yes | 4/4 | 8/8 | n/a | implemented | 2026-11-20 b317eb6 |
-| RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | yes | 3/4 | 0/8 | pending | in progress | none |
+| RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | yes | 4/4 | 0/8 | pending | in progress | none |
 | RF-06 | Payment Confirmation | 5 | RF-05 | no | none | none | none | not started | none |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | no | none | none | none | not started | none |
 | RF-08 | Result Screen and E-mail Delivery | 7 | RF-06, RF-07 | no | none | none | none | not started | none |
