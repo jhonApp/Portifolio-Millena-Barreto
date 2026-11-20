@@ -7,7 +7,7 @@ const INPUT = {
   orderId: "5d7f0c1e-2b4a-4c8e-9a31-0f6b7e2d9a44",
   amountCents: 990,
   expiresInSeconds: 1800,
-  description: "Diagnóstico de Estilo Pessoal — Millena Barreto",
+  description: "Diagnostico de Estilo Pessoal - Millena Barreto",
 };
 
 let saved: string | undefined;
@@ -39,18 +39,66 @@ function gatewayWith(fetchMock: unknown, timeoutMs?: number) {
 }
 
 describe("AbacatePay gateway", () => {
-  it("sends the amount expiresIn description and externalId", async () => {
+  it("createCharge uses the v2 endpoint and sends amount expiry description and the order id", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(okBody));
     await gatewayWith(fetchMock).createCharge(INPUT);
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://api.abacatepay.com/v1/pixQrCode/create");
+    expect(url).toBe("https://api.abacatepay.com/v2/transparents/create");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual({
-      amount: 990,
-      expiresIn: 1800,
-      description: INPUT.description,
-      metadata: { externalId: INPUT.orderId },
+      method: "PIX",
+      data: {
+        amount: 990,
+        expiresIn: 1800,
+        description: INPUT.description,
+        externalId: INPUT.orderId,
+        metadata: { orderId: INPUT.orderId },
+      },
     });
+  });
+
+  it("getCharge sends the id as a query parameter and the bearer key", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: "pix_char_1", status: "PAID", expiresAt: null }, error: null }));
+    await gatewayWith(fetchMock).getCharge("pix_char_1");
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.abacatepay.com/v2/transparents/check?id=pix_char_1");
+    expect(init.method).toBe("GET");
+    expect(init.headers.Authorization).toBe(`Bearer ${KEY}`);
+  });
+
+  it("getCharge maps PAID PENDING EXPIRED CANCELLED REFUNDED and unknown statuses", async () => {
+    const seen: string[] = [];
+    for (const status of ["PAID", "PENDING", "EXPIRED", "CANCELLED", "REFUNDED", "UNDER_DISPUTE", "APPROVED"]) {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: "x", status, expiresAt: null }, error: null }));
+      seen.push((await gatewayWith(fetchMock).getCharge("x")).status);
+    }
+    expect(seen).toEqual(["PAID", "PENDING", "EXPIRED", "CANCELLED", "REFUNDED", "OTHER", "OTHER"]);
+  });
+
+  it("a failing check becomes GATEWAY_UNAVAILABLE", async () => {
+    await expect(gatewayWith(vi.fn().mockRejectedValue(new TypeError("x"))).getCharge("x")).rejects.toMatchObject({
+      code: "GATEWAY_UNAVAILABLE",
+    });
+    await expect(gatewayWith(vi.fn().mockResolvedValue(jsonResponse({}, 502))).getCharge("x")).rejects.toMatchObject({
+      code: "GATEWAY_UNAVAILABLE",
+    });
+  });
+
+  it("a check without a status becomes GATEWAY_BAD_RESPONSE", async () => {
+    await expect(gatewayWith(vi.fn().mockResolvedValue(jsonResponse({ data: {} }))).getCharge("x")).rejects.toMatchObject({
+      code: "GATEWAY_BAD_RESPONSE",
+    });
+  });
+
+  it("the key never appears in an error", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({}, 401));
+    let error: unknown;
+    try {
+      await gatewayWith(fetchMock).getCharge("x");
+    } catch (e) {
+      error = e;
+    }
+    expect((error as Error).message).not.toContain(KEY);
   });
 
   it("the request body has no customer or card data", async () => {
@@ -58,6 +106,7 @@ describe("AbacatePay gateway", () => {
     await gatewayWith(fetchMock).createCharge(INPUT);
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body).not.toHaveProperty("customer");
+    expect(body.data).not.toHaveProperty("customer");
     expect(JSON.stringify(body)).not.toMatch(/card|cpf|taxId|email|cellphone/i);
   });
 

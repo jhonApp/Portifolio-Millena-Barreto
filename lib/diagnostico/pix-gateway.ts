@@ -13,6 +13,8 @@ export type PixCharge = {
   expiresAt: string | null;
 };
 
+export type ChargeStatus = "PENDING" | "PAID" | "EXPIRED" | "CANCELLED" | "REFUNDED" | "OTHER";
+
 export interface PixGateway {
   createCharge(input: {
     orderId: string;
@@ -20,6 +22,8 @@ export interface PixGateway {
     expiresInSeconds: number;
     description: string;
   }): Promise<PixCharge>;
+  /** The provider's own view of a charge. Never trust a notification without asking this. */
+  getCharge(chargeId: string): Promise<{ status: ChargeStatus; expiresAt: string | null }>;
 }
 
 export type PixGatewayErrorCode = "GATEWAY_UNAVAILABLE" | "GATEWAY_REJECTED" | "GATEWAY_BAD_RESPONSE";

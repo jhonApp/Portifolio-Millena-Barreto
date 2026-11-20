@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { getDatabaseEnv } from "@/lib/diagnostico/env";
 import type { Database } from "@/lib/diagnostico/database.types";
+import { PixGatewayError, type ChargeStatus, type PixCharge, type PixGateway } from "@/lib/diagnostico/pix-gateway";
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
 
@@ -202,4 +203,64 @@ export async function fillAnswers(db: SupabaseClient<Database>, attemptId: strin
     });
     if (insertError) throw new Error(`fillAnswers: ${insertError.message}`);
   }
+}
+
+type GatewayCall = { orderId: string; amountCents: number; expiresInSeconds: number };
+
+/**
+ * A gateway that records its calls. `status` is what getCharge reports for every charge
+ * (change it per test); `failCreate` / `failCheck` make the matching call throw.
+ */
+export function recordingGateway(
+  options: { failCreate?: boolean; failCheck?: boolean; delayMs?: number; status?: ChargeStatus } = {},
+) {
+  const calls: GatewayCall[] = [];
+  const checks: string[] = [];
+  const state = { status: options.status ?? ("PENDING" as ChargeStatus), failCheck: options.failCheck ?? false };
+  let counter = 0;
+  const gateway: PixGateway = {
+    async createCharge(input): Promise<PixCharge> {
+      calls.push({ orderId: input.orderId, amountCents: input.amountCents, expiresInSeconds: input.expiresInSeconds });
+      if (options.delayMs) await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+      if (options.failCreate) throw new PixGatewayError("GATEWAY_UNAVAILABLE");
+      counter += 1;
+      return {
+        chargeId: `test_${input.orderId}_${counter}`,
+        pixCode: `CODE-${counter}`,
+        qrImage: "data:image/png;base64,AAA",
+        expiresAt: new Date(Date.now() + input.expiresInSeconds * 1000).toISOString(),
+      };
+    },
+    async getCharge(chargeId) {
+      checks.push(chargeId);
+      if (state.failCheck) throw new PixGatewayError("GATEWAY_UNAVAILABLE");
+      return { status: state.status, expiresAt: null };
+    },
+  };
+  return { gateway, calls, checks, state };
+}
+
+/** An order in the given status with a PENDING payment of 990 cents. */
+export async function createOrderWithPayment(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+  status: "PENDING" | "FAILED" | "APPROVED" = "PENDING",
+  amountCents = 990,
+) {
+  const order = await createOrder(db, attemptId, status);
+  const chargeId = `test_${randomUUID()}`;
+  const { data: payment, error } = await db
+    .from("payments")
+    .insert({
+      order_id: order.id,
+      provider_charge_id: chargeId,
+      amount_cents: amountCents,
+      pix_br_code: "CODE",
+      pix_qr_image: "data:image/png;base64,AAA",
+      expires_at: new Date(Date.now() + 1800_000).toISOString(),
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createOrderWithPayment: ${error.message}`);
+  return { order, payment, chargeId };
 }

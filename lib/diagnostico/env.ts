@@ -59,6 +59,15 @@ export function getPaymentApiEnv() {
   });
 }
 
+// RF-06 webhook: the shared secret (32 characters or more, an AbacatePay rule) and the public key
+// AbacatePay signs every delivery with (copied from its security page into the environment).
+export function getWebhookEnv() {
+  return readGroup("webhook", {
+    ABACATEPAY_WEBHOOK_SECRET: z.string().trim().min(32),
+    ABACATEPAY_WEBHOOK_PUBLIC_KEY: required,
+  });
+}
+
 export function getEmailEnv() {
   return readGroup("email", {
     RESEND_API_KEY: required,

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConfigError, getDatabaseEnv, getPaymentApiEnv, getPaymentEnv } from "@/lib/diagnostico/env";
+import { ConfigError, getDatabaseEnv, getPaymentApiEnv, getPaymentEnv, getWebhookEnv } from "@/lib/diagnostico/env";
 
 const KEYS = [
   "SUPABASE_URL",
@@ -7,6 +7,7 @@ const KEYS = [
   "SUPABASE_SERVICE_ROLE_KEY",
   "ABACATEPAY_API_KEY",
   "ABACATEPAY_WEBHOOK_SECRET",
+  "ABACATEPAY_WEBHOOK_PUBLIC_KEY",
 ];
 let saved: Record<string, string | undefined>;
 
@@ -85,5 +86,26 @@ describe("environment configuration", () => {
     process.env.ABACATEPAY_API_KEY = "key-placeholder";
     expect(() => getPaymentApiEnv()).not.toThrow();
     expect(() => getPaymentEnv()).toThrow(ConfigError);
+  });
+
+  it("getWebhookEnv names both missing variables", () => {
+    let error: unknown;
+    try {
+      getWebhookEnv();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(ConfigError);
+    const message = (error as ConfigError).message;
+    expect(message).toContain("ABACATEPAY_WEBHOOK_SECRET");
+    expect(message).toContain("ABACATEPAY_WEBHOOK_PUBLIC_KEY");
+  });
+
+  it("getWebhookEnv rejects a secret shorter than 32 characters", () => {
+    process.env.ABACATEPAY_WEBHOOK_SECRET = "short";
+    process.env.ABACATEPAY_WEBHOOK_PUBLIC_KEY = "public-key-placeholder";
+    expect(() => getWebhookEnv()).toThrow(ConfigError);
+    process.env.ABACATEPAY_WEBHOOK_SECRET = "x".repeat(32);
+    expect(() => getWebhookEnv()).not.toThrow();
   });
 });

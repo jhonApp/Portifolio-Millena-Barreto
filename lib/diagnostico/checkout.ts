@@ -10,7 +10,8 @@ import { PixGatewayError, type PixGateway } from "./pix-gateway";
 type Db = SupabaseClient<Database>;
 type CookieStore = { get(name: string): { value: string } | undefined };
 
-export const CHECKOUT_DESCRIPTION = "Diagnóstico de Estilo Pessoal — Millena Barreto";
+// Plain characters only: the provider rejects some special characters in descriptions.
+export const CHECKOUT_DESCRIPTION = "Diagnostico de Estilo Pessoal - Millena Barreto";
 
 export type CheckoutAccess = { ok: true; attemptId: string } | { ok: false; redirectTo: string };
 

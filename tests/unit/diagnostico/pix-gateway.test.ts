@@ -38,15 +38,52 @@ describe("Pix gateway selection", () => {
   });
 
   it("the simulated gateway never reports a payment", async () => {
+    vi.stubEnv("PAYMENT_SIMULATION_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_PAID_AFTER_SECONDS", "");
     const gateway = createSimulatedGateway();
-    expect(Object.keys(gateway)).toEqual(["createCharge"]);
+    expect(Object.keys(gateway).sort()).toEqual(["createCharge", "getCharge"]);
     const charge = await gateway.createCharge(INPUT);
     expect(Object.keys(charge).sort()).toEqual(["chargeId", "expiresAt", "pixCode", "qrImage"]);
+    expect((await gateway.getCharge(charge.chargeId)).status).toBe("PENDING");
   });
 
   it("PAYMENT_SIMULATION_FAIL makes the simulated gateway fail", async () => {
     vi.stubEnv("PAYMENT_SIMULATION_FAIL", "true");
     await expect(createSimulatedGateway().createCharge(INPUT)).rejects.toMatchObject({
+      code: "GATEWAY_UNAVAILABLE",
+    });
+  });
+
+  it("a simulated charge is PENDING before PAYMENT_SIMULATION_PAID_AFTER_SECONDS", async () => {
+    vi.stubEnv("PAYMENT_SIMULATION_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_CHECK_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_PAID_AFTER_SECONDS", "3600");
+    const gateway = createSimulatedGateway();
+    const charge = await gateway.createCharge(INPUT);
+    expect((await gateway.getCharge(charge.chargeId)).status).toBe("PENDING");
+  });
+
+  it("a simulated charge is PAID after it", async () => {
+    vi.stubEnv("PAYMENT_SIMULATION_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_CHECK_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_PAID_AFTER_SECONDS", "0");
+    const gateway = createSimulatedGateway();
+    const charge = await gateway.createCharge(INPUT);
+    expect((await gateway.getCharge(charge.chargeId)).status).toBe("PAID");
+  });
+
+  it("without the variable a simulated charge is never PAID", async () => {
+    vi.stubEnv("PAYMENT_SIMULATION_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_CHECK_FAIL", "");
+    vi.stubEnv("PAYMENT_SIMULATION_PAID_AFTER_SECONDS", "");
+    const gateway = createSimulatedGateway();
+    const charge = await gateway.createCharge(INPUT);
+    expect((await gateway.getCharge(charge.chargeId)).status).toBe("PENDING");
+  });
+
+  it("PAYMENT_SIMULATION_CHECK_FAIL makes getCharge fail", async () => {
+    vi.stubEnv("PAYMENT_SIMULATION_CHECK_FAIL", "true");
+    await expect(createSimulatedGateway().getCharge("sim_1_x")).rejects.toMatchObject({
       code: "GATEWAY_UNAVAILABLE",
     });
   });

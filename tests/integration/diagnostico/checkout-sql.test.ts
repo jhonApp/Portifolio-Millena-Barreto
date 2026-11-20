@@ -1,33 +1,9 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { ensureCheckout, CheckoutError } from "@/lib/diagnostico/checkout";
-import { PixGatewayError, type PixCharge, type PixGateway } from "@/lib/diagnostico/pix-gateway";
-import { adminClient, createAttempt, createCustomer, createOrder, fillAnswers } from "./helpers";
+import { adminClient, createAttempt, createCustomer, createOrder, fillAnswers, recordingGateway } from "./helpers";
 
 const db = adminClient();
 const customerIds: string[] = [];
-
-type Call = { orderId: string; amountCents: number; expiresInSeconds: number };
-
-/** A gateway that records its calls and can be made to fail. */
-function recordingGateway(options: { fail?: boolean; delayMs?: number } = {}) {
-  const calls: Call[] = [];
-  let counter = 0;
-  const gateway: PixGateway = {
-    async createCharge(input): Promise<PixCharge> {
-      calls.push({ orderId: input.orderId, amountCents: input.amountCents, expiresInSeconds: input.expiresInSeconds });
-      if (options.delayMs) await new Promise((resolve) => setTimeout(resolve, options.delayMs));
-      if (options.fail) throw new PixGatewayError("GATEWAY_UNAVAILABLE");
-      counter += 1;
-      return {
-        chargeId: `test_${input.orderId}_${counter}`,
-        pixCode: `CODE-${counter}`,
-        qrImage: "data:image/png;base64,AAA",
-        expiresAt: new Date(Date.now() + input.expiresInSeconds * 1000).toISOString(),
-      };
-    },
-  };
-  return { gateway, calls };
-}
 
 async function completeAttempt(answers = 15) {
   const customer = await createCustomer(db);
@@ -254,7 +230,7 @@ describe("begin_checkout, attach_charge and abort_checkout", () => {
 
   it("a gateway failure leaves no PENDING order", async () => {
     const attempt = await completeAttempt();
-    const { gateway } = recordingGateway({ fail: true });
+    const { gateway } = recordingGateway({ failCreate: true });
     await expect(ensureCheckout(db, gateway, attempt.id, { renew: false })).rejects.toMatchObject({
       code: "PIX_UNAVAILABLE",
     });

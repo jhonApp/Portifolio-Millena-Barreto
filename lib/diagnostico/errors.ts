@@ -10,6 +10,8 @@ export type ErrorCode =
   | "ANSWERS_INCOMPLETE"
   | "CHECKOUT_IN_PROGRESS"
   | "PIX_UNAVAILABLE"
+  | "PAYMENT_CHECK_UNAVAILABLE"
+  | "UNAUTHORIZED"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

@@ -386,6 +386,9 @@ isOneToOne: false
             "abort_checkout":
 { Args: { "p_order": string }; Returns: undefined
                            },
+"approve_order":
+{ Args: { "p_charge_id": string,"p_token_hash": string }; Returns: Json
+                           },
 "attach_charge":
 { Args: { "p_br_code": string,"p_charge_id": string,"p_expires_at": string,"p_order": string,"p_qr_image": string }; Returns: undefined
                            },
@@ -397,6 +400,9 @@ isOneToOne: false
                            },
 "hit_rate_limit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"record_webhook_event":
+{ Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string
                            },
 "save_answer":
 { Args: { "p_alternative": string,"p_attempt": string,"p_question": string }; Returns: number
