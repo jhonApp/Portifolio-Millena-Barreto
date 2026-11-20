@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConfigError, getDatabaseEnv, getPaymentApiEnv, getPaymentEnv, getWebhookEnv } from "@/lib/diagnostico/env";
+import { ConfigError, getDatabaseEnv, getCronEnv, getPaymentApiEnv, getPaymentEnv, getWebhookEnv } from "@/lib/diagnostico/env";
 
 const KEYS = [
   "SUPABASE_URL",
@@ -8,6 +8,7 @@ const KEYS = [
   "ABACATEPAY_API_KEY",
   "ABACATEPAY_WEBHOOK_SECRET",
   "ABACATEPAY_WEBHOOK_PUBLIC_KEY",
+  "CRON_SECRET",
 ];
 let saved: Record<string, string | undefined>;
 
@@ -107,5 +108,23 @@ describe("environment configuration", () => {
     expect(() => getWebhookEnv()).toThrow(ConfigError);
     process.env.ABACATEPAY_WEBHOOK_SECRET = "x".repeat(32);
     expect(() => getWebhookEnv()).not.toThrow();
+  });
+
+  it("getCronEnv names the missing CRON_SECRET", () => {
+    let error: unknown;
+    try {
+      getCronEnv();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(ConfigError);
+    expect((error as ConfigError).message).toContain("CRON_SECRET");
+  });
+
+  it("getCronEnv rejects a secret shorter than 16 characters", () => {
+    process.env.CRON_SECRET = "short";
+    expect(() => getCronEnv()).toThrow(ConfigError);
+    process.env.CRON_SECRET = "c".repeat(16);
+    expect(() => getCronEnv()).not.toThrow();
   });
 });

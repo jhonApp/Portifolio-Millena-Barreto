@@ -9,6 +9,7 @@ import {
 } from "@/lib/diagnostico/constants";
 import {
   adminClient,
+  anonClient,
   createAttempt,
   createCustomer,
   createOrder,
@@ -263,5 +264,29 @@ describe("schema constraints", () => {
     expect(new Date(data!.updated_at).getTime()).toBeGreaterThan(
       new Date(customer.updated_at).getTime(),
     );
+  });
+});
+
+describe("generation state (RF-07)", () => {
+  it("orders has generation_attempts and generation_next_at", async () => {
+    const { order } = await newOrder("APPROVED");
+    const { data } = await db.from("orders").select("generation_attempts, generation_next_at").eq("id", order.id).single();
+    expect(data).toEqual({ generation_attempts: 0, generation_next_at: null });
+  });
+
+  it("generation_attempts cannot exceed four", async () => {
+    const { order } = await newOrder("APPROVED");
+    const { error } = await db.from("orders").update({ generation_attempts: 5 }).eq("id", order.id);
+    expect(error).not.toBeNull();
+  });
+
+  it("the generation functions are not callable by browser roles", async () => {
+    const anon = anonClient();
+    const calls = [
+      anon.rpc("claim_generation", { p_order: randomUUID() }),
+      anon.rpc("fail_generation", { p_order: randomUUID(), p_reason: "x", p_retry: true }),
+      anon.rpc("reset_generation", { p_order: randomUUID() }),
+    ];
+    for (const result of await Promise.all(calls)) expect(result.error).not.toBeNull();
   });
 });

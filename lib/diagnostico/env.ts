@@ -68,6 +68,13 @@ export function getWebhookEnv() {
   });
 }
 
+// RF-07 cron route: Vercel Cron sends this value as "Authorization: Bearer <CRON_SECRET>".
+export function getCronEnv() {
+  return readGroup("cron", {
+    CRON_SECRET: z.string().trim().min(16),
+  });
+}
+
 export function getEmailEnv() {
   return readGroup("email", {
     RESEND_API_KEY: required,

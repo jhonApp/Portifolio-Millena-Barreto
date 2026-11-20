@@ -11,6 +11,21 @@ export const STYLES = [
 ] as const;
 export type Style = (typeof STYLES)[number];
 
+// Names shown to the customer (pt-BR), shared by the diagnosis, the PDF and the result screen.
+export const STYLE_LABELS: Record<Style, string> = {
+  esportivo_natural: "Esportivo/Natural",
+  tradicional: "Tradicional",
+  elegante: "Elegante",
+  romantico: "Romântico",
+  criativo: "Criativo",
+  dramatico: "Dramático",
+};
+
+// Diagnosis generation (RF-07): the first run plus 3 retries, after 30 s, 2 min and 10 min.
+// The same values are enforced by supabase/migrations/20260101000010_generation_state.sql.
+export const MAX_GENERATION_ATTEMPTS = 4;
+export const GENERATION_RETRY_DELAYS_SECONDS = [30, 120, 600] as const;
+
 export const ORDER_STATUSES = [
   "PENDING",
   "APPROVED",

@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"orders": {
                   Row: {
-                    "amount_cents": number,"approved_at": string | null,"attempt_id": string,"created_at": string,"delivered_at": string | null,"failure_reason": string | null,"id": string,"status": string,"updated_at": string
+                    "amount_cents": number,"approved_at": string | null,"attempt_id": string,"created_at": string,"delivered_at": string | null,"failure_reason": string | null,"generation_attempts": number,"generation_next_at": string | null,"id": string,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_cents": number,"approved_at"?: string | null,"attempt_id": string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
+                    "amount_cents": number,"approved_at"?: string | null,"attempt_id": string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "amount_cents"?: number,"approved_at"?: string | null,"attempt_id"?: string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
+                    "amount_cents"?: number,"approved_at"?: string | null,"attempt_id"?: string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -395,14 +395,23 @@ isOneToOne: false
 "begin_checkout":
 { Args: { "p_amount": number,"p_attempt": string,"p_renew": boolean }; Returns: Json
                            },
+"claim_generation":
+{ Args: { "p_order": string }; Returns: Json
+                           },
 "create_purchase_attempt":
 { Args: { "p_consent_text": string,"p_consent_version": string,"p_email": string,"p_idempotency_key": string,"p_ip_hash": string,"p_name": string,"p_preference": string,"p_whatsapp": string }; Returns: string
+                           },
+"fail_generation":
+{ Args: { "p_order": string,"p_reason": string,"p_retry": boolean }; Returns: Json
                            },
 "hit_rate_limit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
                            },
 "record_webhook_event":
 { Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string
+                           },
+"reset_generation":
+{ Args: { "p_order": string }; Returns: boolean
                            },
 "save_answer":
 { Args: { "p_alternative": string,"p_attempt": string,"p_question": string }; Returns: number
