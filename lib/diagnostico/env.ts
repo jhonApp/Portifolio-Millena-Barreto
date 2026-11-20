@@ -71,3 +71,9 @@ export function getAppEnv() {
     PRIVACY_CONTACT_EMAIL: z.string().trim().email(),
   });
 }
+
+export function getSessionEnv() {
+  return readGroup("session", {
+    SESSION_SECRET: z.string().min(32),
+  });
+}

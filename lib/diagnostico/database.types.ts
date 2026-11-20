@@ -251,14 +251,14 @@ isOneToOne: false
                   ]
                 },"purchase_attempts": {
                   Row: {
-                    "created_at": string,"customer_id": string,"delivery_preference": string,"expires_at": string,"id": string,"ip_hash": string | null,"updated_at": string
+                    "created_at": string,"customer_id": string,"delivery_preference": string,"expires_at": string,"id": string,"idempotency_key": string | null,"ip_hash": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"customer_id": string,"delivery_preference": string,"expires_at"?: string,"id"?: string,"ip_hash"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"customer_id": string,"delivery_preference": string,"expires_at"?: string,"id"?: string,"idempotency_key"?: string | null,"ip_hash"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"customer_id"?: string,"delivery_preference"?: string,"expires_at"?: string,"id"?: string,"ip_hash"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"customer_id"?: string,"delivery_preference"?: string,"expires_at"?: string,"id"?: string,"idempotency_key"?: string | null,"ip_hash"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -383,7 +383,12 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "create_purchase_attempt":
+{ Args: { "p_consent_text": string,"p_consent_version": string,"p_email": string,"p_idempotency_key": string,"p_ip_hash": string,"p_name": string,"p_preference": string,"p_whatsapp": string }; Returns: string
+                           },
+"hit_rate_limit":
+{ Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           }
           }
           Enums: {
             [_ in never]: never
