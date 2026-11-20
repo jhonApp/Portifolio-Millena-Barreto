@@ -7,7 +7,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Platform Foundation and Data Model | 1 | none | yes | 5/5 | 4/4 | n/a | implemented | 2026-11-20 4e6a8e1 |
 | RF-02 | Customer Identification | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 f5f5630 |
-| RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 2/3 | 0/7 | n/a | in progress | none |
+| RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 9d11d05 |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | no | none | none | none | not started | none |
 | RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | no | none | none | none | not started | none |
 | RF-06 | Payment Confirmation | 5 | RF-05 | no | none | none | none | not started | none |
@@ -36,3 +36,13 @@ Last run: 2026-11-20, commit f5f5630
 - ✓ Valid data and consent store attempt, consent version and timestamp, and the questionnaire address opens (attempts-route.test.ts::valid submission creates customer attempt and consent, consent stores text version and accepted_at, response sets a signed HttpOnly cookie; browser script step 6)
 - ✓ Direct request with invalid data is rejected with field errors (attempts-route.test.ts::invalid data sent directly gets 400 with field errors, non-JSON body gets INVALID_JSON, oversized body gets PAYLOAD_TOO_LARGE)
 - ✓ The 11th registration from one IP in an hour is refused with the rate-limit message (attempts-route.test.ts::the eleventh registration from one IP in an hour gets 429 with Retry-After, replaying an idempotency key does not count against the limit)
+
+### RF-03. Question Bank and Scoring Engine
+Last run: 2026-11-20, commit 9d11d05
+- ✓ Active set has 15 questions with 4 alternatives each, six styles, each style in exactly 10 questions (question-bank.test.ts::active set has 15 questions with 4 alternatives each, each style appears in exactly 10 questions, six styles in total and no sexy)
+- ✓ The public question set contains no style or weight (question-bank.test.ts::public question set contains no style or weight; the HTTP response check belongs to the RF-04 hand-off test)
+- ✓ Elegante with 6 points and Tradicional with 4 give Elegante predominant and Tradicional secondary (scoring.test.ts::elegante with 6 points and tradicional with 4 gives that order)
+- ✓ A tie is broken by more answers in questions 11 to 15 (scoring.test.ts::tie is broken by more answers in questions 11 to 15, tie-break applies to the secondary pick too)
+- ✓ A tie still equal after questions 11 to 15 falls to the fixed order (scoring.test.ts::tie still equal falls to the fixed order, fixed order is elegante tradicional romantico esportivo criativo dramatico)
+- ✓ The same answers scored 100 times give identical results (scoring.test.ts::same answers scored 100 times give identical results, answer order does not change the result)
+- ✓ Past answers are scored with the version stored on them after a new version is published (question-bank.test.ts::past answers are scored with the version stored on them)
