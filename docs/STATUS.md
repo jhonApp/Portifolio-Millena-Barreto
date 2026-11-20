@@ -9,7 +9,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-02 | Customer Identification | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 f5f5630 |
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 9d11d05 |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | yes | 4/4 | 8/8 | n/a | implemented | 2026-11-20 b317eb6 |
-| RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | yes | 4/4 | 0/8 | pending | in progress | none |
+| RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | yes | 4/4 | 7/8 | pending | implemented | 2026-11-20 42fec83 |
 | RF-06 | Payment Confirmation | 5 | RF-05 | no | none | none | none | not started | none |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | no | none | none | none | not started | none |
 | RF-08 | Result Screen and E-mail Delivery | 7 | RF-06, RF-07 | no | none | none | none | not started | none |
@@ -57,3 +57,15 @@ Last run: 2026-11-20, commit b317eb6
 - ✓ Opening the questionnaire without the attempt cookie sends the visitor to the registration (answers-lib.test.ts::no cookie yields no active attempt, a tampered cookie yields no active attempt, an expired attempt yields no active attempt; answers-route.test.ts::request without cookie gets 403; browser script steps 1, 10)
 - ✓ Hand-off RF-02 to RF-04: a customer registered through RF-02 saves answers only to that attempt (questionnaire-handoff.test.ts::answers saved with the cookie of a real registration belong only to that attempt)
 - ✓ Hand-off RF-03 to RF-04: the question shown carries no style or weight (questionnaire-handoff.test.ts::the page state carries the public question set without style or weight; browser script step 11)
+
+### RF-05. Questionnaire Completion and Pix Checkout
+Last run: 2026-11-20, commit 42fec83
+- ✓ 15 answers saved: the completion screen shows "15 de 15 perguntas respondidas" and "R$ 9,90" (checkout-state.test.ts::formatPrice formats 990 cents as R$ 9,90; checkout-route.test.ts::resolveCheckoutAccess allows an attempt with 15 answers; browser script step 3)
+- ✓ Fewer than 15 answers: the visitor is redirected to the first unanswered question with the notice (checkout-route.test.ts::resolveCheckoutAccess redirects an attempt with 14 answers to the questionnaire, POST checkout with 14 answers gets 409 ANSWERS_INCOMPLETE; browser script step 2)
+- — Opening the checkout creates exactly one PENDING order and one charge of 990 cents, and reloading creates no second charge (live pending): fake proof passes (checkout-sql.test.ts::first call creates one PENDING order and the charge is attached, two concurrent calls create one order; checkout-route.test.ts::first POST creates one order and one payment of 990 cents, reloading returns the same order and does not call the gateway again; browser script steps 4, 6), but the real AbacatePay answer is not verified: live check L1 (tests/live/abacatepay-pix.live.test.ts) needs the owner's approval and a development-mode key
+- ✓ "Copiar código Pix" copies the code and shows "Código Pix copiado!" (checkout-state.test.ts::copy confirmation text is Código Pix copiado!; browser script step 7: clipboard equals the displayed code)
+- ✓ Expired Pix: "Seu Pix expirou", old order FAILED (PIX_EXPIRED), "Gerar novo Pix" creates a PENDING order without the questions (checkout-sql.test.ts::an expired Pix marks the order FAILED with PIX_EXPIRED and the payment EXPIRED, renew creates a new PENDING order for the same attempt; checkout-route.test.ts::POST renew after expiry creates a new order and keeps the answers; browser script step 8)
+- ✓ No card fields and no payment instrument data stored (checkout-route.test.ts::the payments table holds identifiers, amount, code, image and times only, the checkout answer carries no payment instrument data; abacatepay-gateway.test.ts::the request body has no customer or card data; browser script step 5)
+- ✓ Hand-off RF-02 + RF-04 to RF-05: a real registration with 15 saved answers opens a checkout whose order belongs to that customer (checkout-handoff.test.ts::a real registration with 15 saved answers opens a checkout whose order belongs to that customer)
+- ✓ Hand-off RF-04 to RF-05: an incomplete answer set sends RF-05 back to the questionnaire (checkout-handoff.test.ts::answers saved by the RF-04 route with one question missing send RF-05 back to the questionnaire)
+
