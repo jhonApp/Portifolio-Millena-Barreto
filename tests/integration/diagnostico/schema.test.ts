@@ -63,13 +63,20 @@ describe("schema constraints", () => {
   });
 
   it("rejects a second published questionnaire version", async () => {
-    const first = await createVersion(db, "published");
-    versionIds.push(first.id);
+    // Make sure exactly one published version exists (the seeded version 1, or a throwaway one).
+    const { data: published } = await db
+      .from("questionnaire_versions")
+      .select("id, version")
+      .eq("status", "published");
+    let current = published?.[0];
+    if (!current) {
+      current = await createVersion(db, "published");
+      versionIds.push(current.id);
+    }
     const { error } = await db
       .from("questionnaire_versions")
-      .insert({ version: first.version + 1, status: "published" });
+      .insert({ version: current.version + 100000, status: "published" });
     expect(error).not.toBeNull();
-    await db.from("questionnaire_versions").update({ status: "archived" }).eq("id", first.id);
   });
 
   it("accepts every order status and rejects an unknown one", async () => {

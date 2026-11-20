@@ -7,7 +7,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Platform Foundation and Data Model | 1 | none | yes | 5/5 | 4/4 | n/a | implemented | 2026-11-20 4e6a8e1 |
 | RF-02 | Customer Identification | 2 | RF-01 | yes | 3/3 | 7/7 | n/a | implemented | 2026-11-20 f5f5630 |
-| RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 1/3 | 0/7 | n/a | in progress | none |
+| RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | yes | 2/3 | 0/7 | n/a | in progress | none |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | no | none | none | none | not started | none |
 | RF-05 | Questionnaire Completion and Pix Checkout | 4 | RF-02, RF-04 | no | none | none | none | not started | none |
 | RF-06 | Payment Confirmation | 5 | RF-05 | no | none | none | none | not started | none |
