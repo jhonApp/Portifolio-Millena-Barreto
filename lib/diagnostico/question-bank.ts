@@ -39,9 +39,16 @@ async function loadVersionRow(db: Db, versionId?: string) {
  * Question set shown to the customer, for the published version. It never includes the style or
  * the weight of an alternative (those columns are not even selected). The order of the four
  * alternatives is shuffled with a seed, so it is stable for the same seed (the attempt id).
+ * An optional version id serves that exact version (used to keep an attempt on its own version).
  */
-export async function getPublicQuestionSet(db: Db, seed: string): Promise<PublicQuestionSet> {
-  const version = await loadVersionRow(db);
+export async function getPublicQuestionSet(
+  db: Db,
+  seed: string,
+  versionId?: string,
+): Promise<PublicQuestionSet> {
+  // With a version id (an attempt already pinned to a version) that version is served whatever
+  // its status; without it, the published version is served.
+  const version = await loadVersionRow(db, versionId);
 
   const { data: questions, error: questionsError } = await db
     .from("questions")

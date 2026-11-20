@@ -31,6 +31,26 @@ export function attemptCookie(attemptId: string): string {
   return parts.join("; ");
 }
 
+/** Verifies a raw cookie value ("<attemptId>.<signature>") and returns the attempt id, or null. */
+export function verifyAttemptCookieValue(value: string): string | null {
+  const dot = value.lastIndexOf(".");
+  if (dot === -1) return null;
+  const attemptId = value.slice(0, dot);
+  const given = Buffer.from(value.slice(dot + 1));
+  if (!UUID_PATTERN.test(attemptId)) return null;
+  const expected = Buffer.from(signature(attemptId));
+  if (given.length !== expected.length) return null;
+  return timingSafeEqual(given, expected) ? attemptId : null;
+}
+
+/** Reads the attempt id from the cookie store of Next (`cookies()` in a Server Component). */
+export function readAttemptIdFromCookies(store: {
+  get(name: string): { value: string } | undefined;
+}): string | null {
+  const cookie = store.get(ATTEMPT_COOKIE);
+  return cookie ? verifyAttemptCookieValue(cookie.value) : null;
+}
+
 /** Returns the attempt id from a request, or null when missing, malformed or not signed by us. */
 export function readAttemptId(request: Request): string | null {
   const header = request.headers.get("cookie");
@@ -40,13 +60,5 @@ export function readAttemptId(request: Request): string | null {
     .map((part) => part.trim())
     .find((part) => part.startsWith(`${ATTEMPT_COOKIE}=`));
   if (!entry) return null;
-  const value = entry.slice(ATTEMPT_COOKIE.length + 1);
-  const dot = value.lastIndexOf(".");
-  if (dot === -1) return null;
-  const attemptId = value.slice(0, dot);
-  const given = Buffer.from(value.slice(dot + 1));
-  if (!UUID_PATTERN.test(attemptId)) return null;
-  const expected = Buffer.from(signature(attemptId));
-  if (given.length !== expected.length) return null;
-  return timingSafeEqual(given, expected) ? attemptId : null;
+  return verifyAttemptCookieValue(entry.slice(ATTEMPT_COOKIE.length + 1));
 }

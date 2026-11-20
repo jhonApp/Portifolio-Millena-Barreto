@@ -187,6 +187,24 @@ describe("public question set", () => {
     expect(sorted(await getPublicQuestionSet(db, randomUUID()))).toEqual(sorted(first));
   });
 
+  it("getPublicQuestionSet serves a given version even when it is archived", async () => {
+    const versionOne = await publishedVersionOne();
+    await setStatus(versionOne, "archived");
+    try {
+      const set = await getPublicQuestionSet(db, "seed", versionOne);
+      expect(set.versionId).toBe(versionOne);
+      expect(set.questions).toHaveLength(15);
+    } finally {
+      await setStatus(versionOne, "published");
+    }
+  });
+
+  it("getPublicQuestionSet fails with VERSION_NOT_FOUND for an unknown version", async () => {
+    await expect(getPublicQuestionSet(db, "seed", randomUUID())).rejects.toMatchObject({
+      code: "VERSION_NOT_FOUND",
+    });
+  });
+
   it("getPublicQuestionSet fails with NO_PUBLISHED_VERSION when none is published", async () => {
     const versionOne = await publishedVersionOne();
     await setStatus(versionOne, "archived");

@@ -388,6 +388,9 @@ isOneToOne: false
                            },
 "hit_rate_limit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"save_answer":
+{ Args: { "p_alternative": string,"p_attempt": string,"p_question": string }; Returns: number
                            }
           }
           Enums: {

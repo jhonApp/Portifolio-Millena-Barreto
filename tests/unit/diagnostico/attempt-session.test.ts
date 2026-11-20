@@ -3,7 +3,9 @@ import {
   ATTEMPT_COOKIE,
   attemptCookie,
   readAttemptId,
+  readAttemptIdFromCookies,
   signAttemptId,
+  verifyAttemptCookieValue,
 } from "@/lib/diagnostico/attempt-session";
 
 const ID = "0f3c2f7e-5d0a-4c53-9a65-8c2f9e0a7b11";
@@ -65,5 +67,24 @@ describe("attempt cookie", () => {
     expect(attemptCookie(ID)).not.toContain("Secure");
     vi.stubEnv("NODE_ENV", "production");
     expect(attemptCookie(ID)).toContain("Secure");
+  });
+});
+
+describe("cookie value verification", () => {
+  it("verifyAttemptCookieValue accepts a signed value and rejects a tampered one", () => {
+    const signed = signAttemptId(ID);
+    expect(verifyAttemptCookieValue(signed)).toBe(ID);
+    expect(verifyAttemptCookieValue(`${signed}x`)).toBeNull();
+    expect(verifyAttemptCookieValue(ID)).toBeNull();
+    expect(verifyAttemptCookieValue("")).toBeNull();
+    expect(verifyAttemptCookieValue("not-a-uuid.abc")).toBeNull();
+  });
+
+  it("readAttemptIdFromCookies reads from a cookie store", () => {
+    const signed = signAttemptId(ID);
+    const store = { get: (name: string) => (name === ATTEMPT_COOKIE ? { value: signed } : undefined) };
+    expect(readAttemptIdFromCookies(store)).toBe(ID);
+    expect(readAttemptIdFromCookies({ get: () => undefined })).toBeNull();
+    expect(readAttemptIdFromCookies({ get: () => ({ value: "garbage" }) })).toBeNull();
   });
 });
