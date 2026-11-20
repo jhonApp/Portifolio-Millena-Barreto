@@ -5,7 +5,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Platform Foundation and Data Model | 1 | none | yes | 3/5 | 0/4 | n/a | in progress | none |
+| RF-01 | Platform Foundation and Data Model | 1 | none | yes | 4/5 | 0/4 | n/a | in progress | none |
 | RF-02 | Customer Identification | 2 | RF-01 | no | none | none | none | not started | none |
 | RF-03 | Question Bank and Scoring Engine | 2 | RF-01 | no | none | none | none | not started | none |
 | RF-04 | Interactive Questionnaire | 3 | RF-02, RF-03 | no | none | none | none | not started | none |

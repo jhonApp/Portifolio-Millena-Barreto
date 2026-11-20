@@ -46,7 +46,8 @@ describe("schema constraints", () => {
     const version = await newVersion();
     const q1 = await createQuestion(db, version.id, 1);
     const q2 = await createQuestion(db, version.id, 2);
-    for (const [index, style] of STYLES.entries()) {
+    for (let index = 0; index < STYLES.length; index++) {
+      const style = STYLES[index];
       const target = index < 4 ? q1 : q2;
       const position = index < 4 ? index + 1 : index - 3;
       const { error } = await db
