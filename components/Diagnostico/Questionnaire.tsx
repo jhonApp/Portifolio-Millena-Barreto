@@ -20,7 +20,13 @@ const MESSAGE_REJECTED = "Não foi possível salvar essa resposta. Escolha a alt
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-export default function Questionnaire({ initial }: { initial: QuestionnaireInitialState }) {
+export default function Questionnaire({
+  initial,
+  notice,
+}: {
+  initial: QuestionnaireInitialState;
+  notice?: string;
+}) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const { questions } = initial.questionSet;
@@ -120,6 +126,11 @@ export default function Questionnaire({ initial }: { initial: QuestionnaireIniti
 
   return (
     <section className="mx-auto max-w-[640px] py-4 xl:py-10">
+      {notice ? (
+        <p role="status" className="mb-6 rounded-lg bg-accent/10 p-3 text-sm text-primary">
+          {notice}
+        </p>
+      ) : null}
       <h1 className="font-primary text-[36px] leading-none text-primary xl:text-[56px]">
         Vamos descobrir o seu estilo?
       </h1>
