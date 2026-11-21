@@ -10,6 +10,7 @@ import {
   formatCountdown,
   formatPrice,
   secondsLeft,
+  shouldOpenResult,
   viewAfterCheck,
   viewAfterDelay,
 } from "@/lib/diagnostico/checkout-state";
@@ -74,5 +75,12 @@ describe("checkout state helpers", () => {
     expect(CONFIRMED_DELAY_MS).toBe(2000);
     expect(viewAfterDelay("confirmed")).toBe("preparing");
     expect(viewAfterDelay("pending")).toBe("pending");
+  });
+
+  it("the screen opens the result only when the payment is approved and the diagnosis exists", () => {
+    expect(shouldOpenResult({ state: "approved", resultReady: true })).toBe(true);
+    expect(shouldOpenResult({ state: "approved", resultReady: false })).toBe(false);
+    expect(shouldOpenResult({ state: "approved" })).toBe(false);
+    expect(shouldOpenResult({ state: "pending", resultReady: true })).toBe(false);
   });
 });

@@ -103,7 +103,7 @@ describe("POST /api/diagnostico/payment/check", () => {
     const startGeneration = vi.fn().mockResolvedValue(undefined);
     const response = await handlePaymentCheck(check(cookieFor(attempt.id)), { gateway, startGeneration });
 
-    expect(await response.json()).toEqual({ state: "approved", orderStatus: "APPROVED" });
+    expect(await response.json()).toEqual({ state: "approved", orderStatus: "APPROVED", resultReady: false });
     expect((await orderStatus(order.id)).status).toBe("APPROVED");
     expect(startGeneration).toHaveBeenCalledTimes(1);
     expect(await tokens(order.id)).toHaveLength(1);
@@ -114,7 +114,7 @@ describe("POST /api/diagnostico/payment/check", () => {
     await db.from("orders").update({ status: "APPROVED" }).eq("id", order.id);
     const { gateway, checks } = recordingGateway({ status: "PAID" });
     const response = await handlePaymentCheck(check(cookieFor(attempt.id)), { gateway, startGeneration: vi.fn() });
-    expect(await response.json()).toEqual({ state: "approved", orderStatus: "APPROVED" });
+    expect(await response.json()).toEqual({ state: "approved", orderStatus: "APPROVED", resultReady: false });
     expect(checks).toHaveLength(0);
   });
 
@@ -194,3 +194,32 @@ describe("POST /api/diagnostico/payment/check", () => {
     expect((await orderStatus(other.order.id)).status).toBe("PENDING");
   });
 });
+
+describe("resultReady (RF-08)", () => {
+  it("an approved order with a result answers resultReady true", async () => {
+    const { attempt, order } = await setup();
+    await db.from("orders").update({ status: "PROCESSING" }).eq("id", order.id);
+    const { data: version } = await db.from("questionnaire_versions").select("id").eq("status", "published").single();
+    await db.from("results").insert({
+      order_id: order.id,
+      version_id: version!.id,
+      points: { esportivo_natural: 1, tradicional: 2, elegante: 6, romantico: 4, criativo: 1, dramatico: 1 },
+      predominant_style: "elegante",
+      secondary_style: "romantico",
+      content: { blocks: [] },
+      pdf_path: `${order.id}.pdf`,
+    });
+    const { gateway } = recordingGateway({ status: "PENDING" });
+    const response = await handlePaymentCheck(check(cookieFor(attempt.id)), { gateway, startGeneration: vi.fn() });
+    expect(await response.json()).toEqual({ state: "approved", orderStatus: "PROCESSING", resultReady: true });
+  });
+
+  it("an approved order without a result answers resultReady false", async () => {
+    const { attempt, order } = await setup();
+    await db.from("orders").update({ status: "APPROVED" }).eq("id", order.id);
+    const { gateway } = recordingGateway({ status: "PENDING" });
+    const response = await handlePaymentCheck(check(cookieFor(attempt.id)), { gateway, startGeneration: vi.fn() });
+    expect(await response.json()).toEqual({ state: "approved", orderStatus: "APPROVED", resultReady: false });
+  });
+});
+

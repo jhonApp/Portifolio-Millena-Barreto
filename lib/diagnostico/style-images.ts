@@ -1,16 +1,15 @@
 import type { Style } from "./constants";
 
-// One editorial image per style for the result screen. None has been supplied or licensed yet
-// (owner decision), so the screen shows a reserved block with the style name instead.
-// When the images exist, put them in public/diagnostico/estilos/ and fill the entries, for example
-//   elegante: "/diagnostico/estilos/elegante.jpg"
+// One editorial image per style for the result screen, supplied by the owner and kept in
+// public/assets/diagnostic/. A style without an image (null) shows a reserved block with the
+// style name instead, so the screen never breaks.
 export const STYLE_IMAGES: Record<Style, string | null> = {
-  esportivo_natural: null,
-  tradicional: null,
-  elegante: null,
-  romantico: null,
-  criativo: null,
-  dramatico: null,
+  esportivo_natural: "/assets/diagnostic/esportivo.jpg",
+  tradicional: "/assets/diagnostic/tradicional.jpg",
+  elegante: "/assets/diagnostic/elegante.jpg",
+  romantico: "/assets/diagnostic/romantico.png",
+  criativo: "/assets/diagnostic/criativo.jpg",
+  dramatico: "/assets/diagnostic/dramatico.png",
 };
 
 export function styleImageFor(style: Style): string | null {

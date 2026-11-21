@@ -15,6 +15,7 @@ import {
   TITLE_PREPARING,
   formatCountdown,
   secondsLeft,
+  shouldOpenResult,
   viewAfterCheck,
 } from "@/lib/diagnostico/checkout-state";
 import { EXPIRED_PATH, INCOMPLETE_PATH } from "@/lib/diagnostico/paths";
@@ -32,6 +33,7 @@ type View =
 const CHECKOUT_URL = "/api/diagnostico/checkout";
 const RENEW_URL = "/api/diagnostico/checkout/renew";
 const CHECK_URL = "/api/diagnostico/payment/check";
+const LINK_URL = "/api/diagnostico/result/link";
 const GENERIC_ERROR = "Não conseguimos gerar o Pix agora. Tente novamente em instantes.";
 
 const STEPS = [
@@ -54,6 +56,8 @@ export default function Checkout() {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const codeRef = useRef<HTMLTextAreaElement>(null);
   const firstView = useRef(true);
+  const resultReady = useRef(false);
+  const navigating = useRef(false);
 
   const request = useCallback(
     async (url: string) => {
@@ -111,6 +115,27 @@ export default function Checkout() {
     void request(CHECKOUT_URL);
   }, [request]);
 
+  // The diagnosis exists: ask for a link to the result and go there (once).
+  async function goToResult() {
+    if (navigating.current) return;
+    navigating.current = true;
+    try {
+      const response = await fetch(LINK_URL, { method: "POST" });
+      if (response.status === 403) {
+        router.replace(EXPIRED_PATH);
+        return;
+      }
+      if (response.ok) {
+        const { path } = await response.json();
+        router.replace(path);
+        return;
+      }
+    } catch {
+      // Fall through: the next check tries again.
+    }
+    navigating.current = false;
+  }
+
   // "Já paguei" (manual) and the silent automatic check run the same server verification.
   async function checkPayment(manual: boolean) {
     if (manual) {
@@ -131,7 +156,9 @@ export default function Checkout() {
         if (manual) setNotice("failed");
         return;
       }
-      const next = viewAfterCheck(await response.json());
+      const answer = await response.json();
+      const next = viewAfterCheck(answer);
+      if (shouldOpenResult(answer)) resultReady.current = true;
       if (next === "confirmed") setView({ kind: "confirmed" });
       else if (next === "expired") void request(CHECKOUT_URL);
       else if (manual) setNotice("notPaid");
@@ -155,11 +182,15 @@ export default function Checkout() {
   const confirmed = view.kind === "confirmed";
   useEffect(() => {
     if (!confirmed) return;
-    const timer = setTimeout(() => setView({ kind: "preparing" }), CONFIRMED_DELAY_MS);
+    const timer = setTimeout(() => {
+      // "Pagamento confirmado!" shows for a moment; then the result (or the preparing state).
+      if (resultReady.current) void goToResult();
+      else setView({ kind: "preparing" });
+    }, CONFIRMED_DELAY_MS);
     return () => clearTimeout(timer);
   }, [confirmed]);
 
-  // After approval the status keeps being followed (the result screen of RF-08 builds on it).
+  // After approval the status keeps being followed until the diagnosis exists.
   const preparing = view.kind === "preparing";
   useEffect(() => {
     if (!preparing) return;
@@ -167,6 +198,7 @@ export default function Checkout() {
       try {
         const response = await fetch(CHECK_URL, { method: "POST" });
         if (response.status === 403) router.replace(EXPIRED_PATH);
+        else if (response.ok && shouldOpenResult(await response.json())) void goToResult();
       } catch {
         // Silent: the next tick asks again.
       }

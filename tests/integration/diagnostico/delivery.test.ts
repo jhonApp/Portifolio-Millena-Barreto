@@ -2,7 +2,8 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { MAX_ATTACHMENT_BYTES, deliverDiagnosis, retryDelivery, runDueDeliveries, sendResultLinkEmail } from "@/lib/diagnostico/delivery";
 import { DIAGNOSIS_BUCKET, diagnosisPdfPath } from "@/lib/diagnostico/diagnosis-storage";
 import { generateDiagnosis } from "@/lib/diagnostico/generation";
-import { findResultToken } from "@/lib/diagnostico/result-token";
+import { loadResultByToken } from "@/lib/diagnostico/result-page";
+import { findResultToken, mintResultToken } from "@/lib/diagnostico/result-token";
 import { adminClient, createApprovedOrder, recordingEmailProvider } from "./helpers";
 
 const db = adminClient();
@@ -205,6 +206,18 @@ describe("failures and retries", () => {
     expect(row).toMatchObject({ status: "FAILED", attempts: 4, next_attempt_at: null });
     expect(await orderRow(orderId)).toMatchObject({ status: "FAILED", failure_reason: "DELIVERY_FAILED" });
     expect((await steps(orderId)).map((s) => s.step)).toContain("DELIVERY_FAILED");
+  });
+
+  it("the result can still be read after the delivery failed", async () => {
+    const { orderId } = await generatedOrder();
+    const { provider } = recordingEmailProvider({ fail: true });
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      await deliverDiagnosis(db, orderId, { deps: { provider } });
+      if (attempt < 4) await makeDue(orderId);
+    }
+    expect(await orderRow(orderId)).toMatchObject({ status: "FAILED", failure_reason: "DELIVERY_FAILED" });
+    const state = await loadResultByToken(db, await mintResultToken(db, orderId));
+    expect(state.state).toBe("ready");
   });
 
   it("a failed delivery is not sent again by the job", async () => {

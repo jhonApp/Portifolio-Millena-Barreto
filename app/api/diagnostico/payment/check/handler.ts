@@ -15,6 +15,16 @@ export type PaymentCheckDeps = {
 
 const PAID_STATUSES: OrderStatus[] = ["APPROVED", "PROCESSING", "DELIVERED"];
 const SESSION_EXPIRED = "Sua sessão expirou.";
+
+/** The diagnosis of the order is saved: the waiting screen can move to the result. */
+async function hasResult(db: ReturnType<typeof getSupabaseAdmin>, orderId: string): Promise<boolean> {
+  const { count, error } = await db
+    .from("results")
+    .select("*", { count: "exact", head: true })
+    .eq("order_id", orderId);
+  if (error) throw new Error(`payment check failed: ${error.message}`);
+  return (count ?? 0) > 0;
+}
 const CHECK_WINDOW_SECONDS = 5;
 
 function noStore(response: Response): Response {
@@ -50,7 +60,9 @@ export async function handlePaymentCheck(request: Request, deps: PaymentCheckDep
     if (!order) return noStore(apiError("NOT_FOUND", "Pedido não encontrado.", 404));
 
     const status = order.status as OrderStatus;
-    if (PAID_STATUSES.includes(status)) return json({ state: "approved", orderStatus: status });
+    if (PAID_STATUSES.includes(status)) {
+      return json({ state: "approved", orderStatus: status, resultReady: await hasResult(db, order.id) });
+    }
     if (status === "FAILED" && order.failure_reason === "PIX_EXPIRED") return json({ state: "expired" });
     if (status !== "PENDING") return json({ state: "pending" });
 
@@ -75,9 +87,14 @@ export async function handlePaymentCheck(request: Request, deps: PaymentCheckDep
     );
     switch (outcome.result) {
       case "approved":
-        return json({ state: "approved", orderStatus: "APPROVED" });
+        // The first generation ran inside the approving request, so the result may already exist.
+        return json({ state: "approved", orderStatus: "APPROVED", resultReady: await hasResult(db, order.id) });
       case "already_approved":
-        return json({ state: "approved", orderStatus: outcome.orderStatus });
+        return json({
+          state: "approved",
+          orderStatus: outcome.orderStatus,
+          resultReady: await hasResult(db, order.id),
+        });
       case "expired":
         return json({ state: "expired" });
       default:

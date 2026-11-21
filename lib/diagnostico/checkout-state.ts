@@ -55,3 +55,9 @@ export function formatPrice(cents: number): string {
   const rest = cents % 100;
   return `R$ ${reais},${String(rest).padStart(2, "0")}`;
 }
+
+/** The payment is approved and the diagnosis exists: the waiting screen moves to the result (RF-08). */
+export function shouldOpenResult(answer: { state: string; resultReady?: boolean }): boolean {
+  return answer.state === "approved" && answer.resultReady === true;
+}
+

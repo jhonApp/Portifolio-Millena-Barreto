@@ -48,6 +48,10 @@ describe("diagnosis e-mail template", () => {
     expect(escapeHtml("a & b < c")).toBe("a &amp; b &lt; c");
   });
 
+  it("declares utf-8 so accents show when the file is opened directly", () => {
+    expect(renderDiagnosisEmail(INPUT).html).toContain('<meta charset="utf-8">');
+  });
+
   it("uses the site colors", () => {
     const { html } = renderDiagnosisEmail(INPUT);
     for (const color of ["#10151f", "#937dad", "#ffffff"]) expect(html).toContain(color);

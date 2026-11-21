@@ -43,6 +43,11 @@ export function renderDiagnosisEmail(input: DiagnosisEmailInput): { subject: str
 
   const html = `<!doctype html>
 <html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(EMAIL_SUBJECT)}</title>
+</head>
 <body style="margin:0;padding:0;background:#f4f4f6;font-family:Arial,Helvetica,sans-serif;color:#475467;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f4f6;padding:24px 12px;">
     <tr><td align="center">

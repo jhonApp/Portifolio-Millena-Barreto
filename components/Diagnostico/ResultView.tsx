@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
 import { useState } from "react";
 import { STYLE_LABELS, type Style } from "@/lib/diagnostico/constants";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
@@ -55,14 +56,21 @@ export default function ResultView({ token, content, hasPdf, imageSrc }: Props) 
       transition={{ duration: reduceMotion ? 0 : 0.4, ease: "easeOut" }}
       className="mx-auto max-w-[640px] pb-32 xl:pb-12"
     >
-      <p className="text-center text-xs font-semibold uppercase tracking-[6px] text-secondary">Millena Barreto</p>
-      <h1 className="mt-3 text-center font-primary text-[34px] leading-none text-primary xl:text-[52px]">
+      <h1 className="text-center font-primary text-[34px] leading-none text-primary xl:text-[52px]">
         SEU DIAGNÓSTICO DE ESTILO
       </h1>
 
       {imageSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageSrc} alt={`Estilo ${predominantName}`} className="mt-8 h-[260px] w-full rounded-lg object-cover" />
+        <div className="relative mt-8 h-[260px] w-full overflow-hidden rounded-lg bg-neutral-200">
+          <Image
+            src={imageSrc}
+            alt={`Estilo ${predominantName}`}
+            fill
+            priority
+            sizes="(min-width: 700px) 640px, 100vw"
+            className="object-cover"
+          />
+        </div>
       ) : (
         <div
           aria-hidden="true"
