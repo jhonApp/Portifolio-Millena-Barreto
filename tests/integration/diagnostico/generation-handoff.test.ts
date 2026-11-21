@@ -132,9 +132,9 @@ describe("RF-02, RF-03, RF-04 and RF-06 to RF-07 hand-off", () => {
     expect(response.status).toBe(200);
     expect((await response.json()).result).toBe("approved");
 
-    // The order was generated.
+    // The order was generated and, with RF-08 in place, its e-mail was accepted (development provider).
     const { data: order } = await db.from("orders").select("status").eq("id", orderId).single();
-    expect(order!.status).toBe("PROCESSING");
+    expect(order!.status).toBe("DELIVERED");
     const { data: result } = await db.from("results").select("*").eq("order_id", orderId).single();
 
     // RF-03 + RF-04: the points are the scoring engine's output on the answers saved by the route.

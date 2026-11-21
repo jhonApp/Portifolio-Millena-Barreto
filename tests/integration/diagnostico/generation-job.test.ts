@@ -2,7 +2,9 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 import { handleGenerationJob } from "@/app/api/diagnostico/jobs/generation/handler";
 import { DIAGNOSIS_BUCKET, diagnosisPdfPath } from "@/lib/diagnostico/diagnosis-storage";
 import { runDueGenerations, type GenerationDeps } from "@/lib/diagnostico/generation";
-import { adminClient, createApprovedOrder } from "./helpers";
+import { deliverDiagnosis } from "@/lib/diagnostico/delivery";
+import { generateDiagnosis } from "@/lib/diagnostico/generation";
+import { adminClient, createApprovedOrder, recordingEmailProvider } from "./helpers";
 
 const db = adminClient();
 const customerIds: string[] = [];
@@ -151,4 +153,23 @@ describe("GET /api/diagnostico/jobs/generation", () => {
     expect(renders).toBe(1);
     expect(await resultCount(orderId)).toBe(1);
   });
+
+  it("the job also runs due deliveries", async () => {
+    const orderId = await newOrder();
+    await isolate([orderId]);
+    // The diagnosis exists and its first e-mail failed: the retry is due.
+    vi.stubEnv("APP_URL", "http://localhost:3001");
+    await generateDiagnosis(db, orderId, { deps: deps() });
+    await deliverDiagnosis(db, orderId, { deps: { provider: recordingEmailProvider({ fail: true }).provider } });
+    await db.from("deliveries").update({ next_attempt_at: new Date(Date.now() - 1000).toISOString() }).eq("order_id", orderId);
+
+    const { provider, sent } = recordingEmailProvider();
+    const response = await handleGenerationJob(jobRequest(`Bearer ${SECRET}`), { ...deps(), delivery: { provider } });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.deliveries.sent).toBeGreaterThanOrEqual(1);
+    expect(sent.length).toBeGreaterThanOrEqual(1);
+    expect((await orderRow(orderId)).status).toBe("DELIVERED");
+  });
 });
+

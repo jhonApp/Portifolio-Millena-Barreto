@@ -60,7 +60,7 @@ afterAll(async () => {
 describe("generateDiagnosis", () => {
   it("an approved order is generated: PROCESSING, six scores, both styles saved and the PDF stored", async () => {
     const { orderId, name } = await newOrder({ name: "Maria Souza Lima" });
-    const outcome = await generateDiagnosis(db, orderId, { token: "plain-token" }); // real renderer and storage
+    const outcome = await generateDiagnosis(db, orderId, { token: "plain-token", deps: { onDiagnosisReady: async () => {} } }); // real renderer and storage
 
     expect(outcome).toEqual({ result: "generated", orderId });
     const order = await orderRow(orderId);
@@ -84,8 +84,9 @@ describe("generateDiagnosis", () => {
   it("the stored file is the PDF of the order", async () => {
     const first = await newOrder({ name: "Ana Paula Ribeiro" });
     const second = await newOrder({ name: "Beatriz Campos Neves" });
-    await generateDiagnosis(db, first.orderId);
-    await generateDiagnosis(db, second.orderId);
+    const hookless = { onDiagnosisReady: async () => {} };
+    await generateDiagnosis(db, first.orderId, { deps: hookless });
+    await generateDiagnosis(db, second.orderId, { deps: hookless });
     const a = await readPdf((await downloadDiagnosisPdf(db, first.orderId))!);
     const b = await readPdf((await downloadDiagnosisPdf(db, second.orderId))!);
     console.log("COVER_A", JSON.stringify(a.pages[0]), "COVER_B", JSON.stringify(b.pages[0]));
@@ -171,8 +172,9 @@ describe("generateDiagnosis", () => {
 describe("idempotency and recovery", () => {
   it("generating twice leaves one result and one PDF", async () => {
     const { orderId } = await newOrder();
-    const first = await generateDiagnosis(db, orderId);
-    const second = await generateDiagnosis(db, orderId);
+    const hookless = { deps: { onDiagnosisReady: async () => {} } };
+    const first = await generateDiagnosis(db, orderId, hookless);
+    const second = await generateDiagnosis(db, orderId, hookless);
     expect(first.result).toBe("generated");
     expect(second.result).toBe("already_generated");
     expect(await results(orderId)).toHaveLength(1);

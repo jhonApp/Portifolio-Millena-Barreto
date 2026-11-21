@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { getDatabaseEnv } from "@/lib/diagnostico/env";
 import type { Database } from "@/lib/diagnostico/database.types";
+import { EmailProviderError, type EmailProvider } from "@/lib/diagnostico/email-provider";
 import { PixGatewayError, type ChargeStatus, type PixCharge, type PixGateway } from "@/lib/diagnostico/pix-gateway";
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
@@ -55,10 +56,14 @@ export async function createCustomer(db: SupabaseClient<Database>) {
   return data;
 }
 
-export async function createAttempt(db: SupabaseClient<Database>, customerId: string) {
+export async function createAttempt(
+  db: SupabaseClient<Database>,
+  customerId: string,
+  preference: "email" | "whatsapp" | "both" = "both",
+) {
   const { data, error } = await db
     .from("purchase_attempts")
-    .insert({ customer_id: customerId, delivery_preference: "both" })
+    .insert({ customer_id: customerId, delivery_preference: preference })
     .select()
     .single();
   if (error) throw new Error(`createAttempt: ${error.message}`);
@@ -326,19 +331,25 @@ export async function fillAnswersWith(
 /** A customer with an attempt, 15 answers and an APPROVED order with a PAID payment. */
 export async function createApprovedOrder(
   db: SupabaseClient<Database>,
-  options: { name?: string; choose?: (questionPosition: number) => number; answers?: number } = {},
+  options: {
+    name?: string;
+    email?: string;
+    preference?: "email" | "whatsapp" | "both";
+    choose?: (questionPosition: number) => number;
+    answers?: number;
+  } = {},
 ) {
   const { data: customer, error } = await db
     .from("customers")
     .insert({
       name: options.name ?? "Maria Teste Silva",
-      email: `teste-${randomUUID()}@example.com`,
+      email: options.email ?? `teste-${randomUUID()}@example.com`,
       whatsapp: "+5511912345678",
     })
     .select()
     .single();
   if (error) throw new Error(`createApprovedOrder: ${error.message}`);
-  const attempt = await createAttempt(db, customer.id);
+  const attempt = await createAttempt(db, customer.id, options.preference);
   if (options.answers === undefined || options.answers === 15) {
     await fillAnswersWith(db, attempt.id, options.choose ?? (() => 0));
   } else {
@@ -348,4 +359,22 @@ export async function createApprovedOrder(
   await db.from("payments").update({ status: "PAID" }).eq("order_id", order.id);
   await db.from("orders").update({ approved_at: new Date().toISOString() }).eq("id", order.id);
   return { customerId: customer.id, attemptId: attempt.id, orderId: order.id, name: customer.name };
+}
+
+
+type RecordedEmail = { to: string; subject: string; html: string; text: string; attachments?: { filename: string; content: Uint8Array }[] };
+
+/** An e-mail provider that records what it is asked to send. `fail` makes every send fail. */
+export function recordingEmailProvider(options: { fail?: boolean; delayMs?: number } = {}) {
+  const sent: RecordedEmail[] = [];
+  const state = { fail: options.fail ?? false };
+  const provider: EmailProvider = {
+    async send(message) {
+      if (options.delayMs) await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+      if (state.fail) throw new EmailProviderError("EMAIL_UNAVAILABLE");
+      sent.push(message);
+      return { providerId: `rec_${sent.length}` };
+    },
+  };
+  return { provider, sent, state };
 }

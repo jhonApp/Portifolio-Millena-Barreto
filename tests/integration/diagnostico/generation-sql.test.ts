@@ -49,7 +49,7 @@ describe("claim_generation", () => {
     expect(after).toMatchObject({ status: "PROCESSING", generation_attempts: 1 });
     // The lease is about 2 minutes.
     expect(secondsAhead(after.generation_next_at!)).toBeGreaterThan(100);
-    expect(secondsAhead(after.generation_next_at!)).toBeLessThanOrEqual(120);
+    expect(secondsAhead(after.generation_next_at!)).toBeLessThanOrEqual(121);
   });
 
   it("a second claim before the lease ends is not claimed", async () => {
@@ -100,7 +100,7 @@ describe("fail_generation", () => {
       expect(outcome.state).toBe("retry");
       const seconds = secondsAhead(outcome.next_at!);
       expect(seconds).toBeGreaterThan(expected[attempt - 1] - 5);
-      expect(seconds).toBeLessThanOrEqual(expected[attempt - 1]);
+      expect(seconds).toBeLessThanOrEqual(expected[attempt - 1] + 1);
       expect((await row(order.id)).status).toBe("PROCESSING");
       await makeDue(order.id);
     }

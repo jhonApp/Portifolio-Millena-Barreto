@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { PDF_SIGNED_URL_SECONDS } from "./constants";
 import type { Database } from "./database.types";
 
 type Db = SupabaseClient<Database>;
@@ -27,3 +28,15 @@ export async function downloadDiagnosisPdf(db: Db, orderId: string): Promise<Uin
   if (error || !data) return null;
   return new Uint8Array(await data.arrayBuffer());
 }
+
+/** A link to the stored PDF that works for `seconds` (300 by default) and then stops. */
+export async function createSignedPdfUrl(
+  db: Db,
+  orderId: string,
+  seconds: number = PDF_SIGNED_URL_SECONDS,
+): Promise<string> {
+  const { data, error } = await db.storage.from(DIAGNOSIS_BUCKET).createSignedUrl(diagnosisPdfPath(orderId), seconds);
+  if (error || !data) throw new Error(`createSignedPdfUrl failed: ${error?.message ?? "no url"}`);
+  return data.signedUrl;
+}
+
