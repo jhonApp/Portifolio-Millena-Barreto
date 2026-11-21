@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { useState } from "react";
+import { CONSULTANCY_CTA } from "@/lib/diagnostico/consultancy-cta";
 import { STYLE_LABELS, type Style } from "@/lib/diagnostico/constants";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
 import type { ResultImages } from "@/lib/diagnostico/style-images";
@@ -174,6 +175,41 @@ export default function ResultView({ token, content, hasPdf, images }: Props) {
       <p className="mt-10 text-center text-sm text-secondary">
         Enviamos o seu diagnóstico por e-mail. Confira a caixa de entrada, o spam ou o lixo eletrônico.
       </p>
+
+      <section aria-labelledby="consultancy-cta" className="mt-10 rounded-2xl bg-primary p-6 text-white xl:p-8">
+        <h2 id="consultancy-cta" className="font-primary text-[32px] leading-tight xl:text-[40px]">
+          {CONSULTANCY_CTA.title}
+        </h2>
+        <p className="mt-3 text-base text-white/80">{CONSULTANCY_CTA.intro}</p>
+        <ul className="mt-4 space-y-2 text-base">
+          {CONSULTANCY_CTA.benefits.map((benefit) => (
+            <li key={benefit} className="flex gap-3">
+              <span aria-hidden className="text-accent">
+                •
+              </span>
+              <span>{benefit}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-col gap-3 xl:flex-row">
+          <a
+            href={CONSULTANCY_CTA.whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-accent w-full text-center text-sm font-semibold uppercase tracking-wider"
+          >
+            {CONSULTANCY_CTA.whatsappLabel}
+          </a>
+          <a
+            href={CONSULTANCY_CTA.instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full rounded-lg border border-white/60 px-6 py-3 text-center text-sm font-semibold uppercase tracking-wider text-white transition-colors hover:border-accent hover:text-accent"
+          >
+            {CONSULTANCY_CTA.instagramLabel}
+          </a>
+        </div>
+      </section>
 
     </motion.article>
 

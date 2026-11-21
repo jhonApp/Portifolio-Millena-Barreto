@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { Document, Font, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, Font, Image, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { CONSULTANCY_CTA } from "./consultancy-cta";
 import { STYLES, STYLE_LABELS, type Style } from "./constants";
 import type { DiagnosisContent } from "./schemas/diagnosis-content";
 
@@ -102,6 +103,14 @@ const styles = StyleSheet.create({
   subheading: { fontFamily: "Bebas Neue", fontSize: 24, color: PDF_COLORS.primary, marginTop: 14, marginBottom: 4 },
   closing: { backgroundColor: PDF_COLORS.primary, padding: 56, justifyContent: "center", alignItems: "center", color: PDF_COLORS.white },
   wordmark: { fontFamily: "Bebas Neue", fontSize: 44, letterSpacing: 8, color: PDF_COLORS.white, marginTop: 10 },
+  cta: { alignSelf: "stretch", borderWidth: 1.5, borderColor: PDF_COLORS.accent, borderRadius: 8, padding: 28, marginBottom: 56 },
+  ctaTitle: { fontFamily: "Bebas Neue", fontSize: 34, lineHeight: 1.1, color: PDF_COLORS.white },
+  ctaIntro: { fontSize: 12, color: PDF_COLORS.white, marginTop: 8, marginBottom: 12 },
+  ctaItem: { flexDirection: "row", marginBottom: 6 },
+  ctaItemText: { flex: 1, fontSize: 12.5, color: PDF_COLORS.white },
+  ctaButton: { backgroundColor: PDF_COLORS.accent, borderRadius: 6, paddingVertical: 11, paddingHorizontal: 16, marginTop: 16, textAlign: "center", textDecoration: "none" },
+  ctaButtonOutline: { borderWidth: 1, borderColor: PDF_COLORS.white, borderRadius: 6, paddingVertical: 11, paddingHorizontal: 16, marginTop: 10, textAlign: "center", textDecoration: "none" },
+  ctaButtonText: { fontFamily: "Inter", fontWeight: 600, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: PDF_COLORS.white, textAlign: "center" },
   closingNote: { fontSize: 11, color: PDF_COLORS.accent, marginTop: 24, textAlign: "center" },
 });
 
@@ -281,6 +290,24 @@ export function DiagnosisDocument({
 
       {/* 8. Closing page with the visual signature */}
       <Page size="A4" style={styles.closing}>
+        <View style={styles.cta}>
+          <Text style={styles.ctaTitle}>{CONSULTANCY_CTA.title}</Text>
+          <Text style={styles.ctaIntro}>{CONSULTANCY_CTA.intro}</Text>
+          {CONSULTANCY_CTA.benefits.map((benefit) => (
+            <View key={benefit} style={styles.ctaItem} wrap={false}>
+              <Text style={styles.bullet}>•</Text>
+              <Text style={styles.ctaItemText}>{benefit}</Text>
+            </View>
+          ))}
+          <Link src={CONSULTANCY_CTA.whatsappUrl} style={styles.ctaButton}>
+            <Text style={styles.ctaButtonText}>{CONSULTANCY_CTA.whatsappLabel}</Text>
+          </Link>
+          <Link src={CONSULTANCY_CTA.instagramUrl} style={styles.ctaButtonOutline}>
+            <Text style={styles.ctaButtonText}>
+              {CONSULTANCY_CTA.instagramLabel} · {CONSULTANCY_CTA.instagramHandle}
+            </Text>
+          </Link>
+        </View>
         <Text style={styles.kicker}>{PART_TITLES.closing}</Text>
         <Text style={styles.wordmark}>Millena Barreto</Text>
         <Text style={styles.closingNote}>Consultoria de imagem e estilo pessoal</Text>
