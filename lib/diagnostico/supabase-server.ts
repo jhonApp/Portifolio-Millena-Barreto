@@ -9,7 +9,14 @@ import type { Database } from "./database.types";
 let adminClient: SupabaseClient<Database> | undefined;
 let anonClient: SupabaseClient<Database> | undefined;
 
-const authOptions = { auth: { persistSession: false, autoRefreshToken: false } };
+// Next.js patches fetch and keeps successful GET responses in its Data Cache. A database read must never
+// come from there: a revoked token, an expired link or an erased customer (RF-09) would still be served.
+const noStoreFetch: typeof fetch = (input, init) => fetch(input, { ...init, cache: "no-store" });
+
+const authOptions = {
+  auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: noStoreFetch },
+};
 
 export function getSupabaseAdmin(): SupabaseClient<Database> {
   if (!adminClient) {

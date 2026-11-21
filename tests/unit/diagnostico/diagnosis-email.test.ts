@@ -52,6 +52,16 @@ describe("diagnosis e-mail template", () => {
     expect(renderDiagnosisEmail(INPUT).html).toContain('<meta charset="utf-8">');
   });
 
+  it("the footer links the privacy policy in the html and the text", () => {
+    const privacyUrl = "http://localhost:3001/diagnostico-estilo/privacidade";
+    const { html, text } = renderDiagnosisEmail({ ...INPUT, privacyUrl });
+    expect(html).toContain(`href="${privacyUrl}"`);
+    expect(html).toContain("Política de Privacidade");
+    expect(text).toContain(privacyUrl);
+    // Without the address the footer has no link (the template stays usable on its own).
+    expect(renderDiagnosisEmail(INPUT).html).not.toContain("Política de Privacidade");
+  });
+
   it("uses the site colors", () => {
     const { html } = renderDiagnosisEmail(INPUT);
     for (const color of ["#10151f", "#937dad", "#ffffff"]) expect(html).toContain(color);

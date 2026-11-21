@@ -32,6 +32,8 @@ export type DiagnosisEmailInput = {
   secondaryLabel: string;
   resultText: string;
   link: string;
+  // The address of the privacy policy (RF-09): shown in the footer of the e-mail when given.
+  privacyUrl?: string;
 };
 
 export function renderDiagnosisEmail(input: DiagnosisEmailInput): { subject: string; html: string; text: string } {
@@ -40,6 +42,9 @@ export function renderDiagnosisEmail(input: DiagnosisEmailInput): { subject: str
   const secondary = escapeHtml(input.secondaryLabel);
   const result = escapeHtml(shortResultText(input.resultText));
   const link = escapeHtml(input.link);
+  const privacyHtml = input.privacyUrl
+    ? `<br><a href="${escapeHtml(input.privacyUrl)}" style="color:#937dad;">Política de Privacidade</a>`
+    : "";
 
   const html = `<!doctype html>
 <html lang="pt-BR">
@@ -75,7 +80,7 @@ export function renderDiagnosisEmail(input: DiagnosisEmailInput): { subject: str
           <p style="margin:16px 0 0;font-size:13px;line-height:1.5;">O seu diagnóstico em PDF segue em anexo. O link é pessoal e vale por 30 dias.</p>
         </td></tr>
         <tr><td style="padding:20px 32px;background:#f4f4f6;text-align:center;font-size:12px;color:#475467;">
-          Com carinho, Millena Barreto
+          Com carinho, Millena Barreto${privacyHtml}
         </td></tr>
       </table>
     </td></tr>
@@ -99,6 +104,7 @@ export function renderDiagnosisEmail(input: DiagnosisEmailInput): { subject: str
     "",
     "Com carinho,",
     "Millena Barreto",
+    ...(input.privacyUrl ? ["", `Política de Privacidade: ${input.privacyUrl}`] : []),
   ].join("\n");
 
   return { subject: EMAIL_SUBJECT, html, text };

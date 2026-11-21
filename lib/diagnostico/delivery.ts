@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { recordAutomationError } from "./automation-errors";
 import type { Database } from "./database.types";
+import { privacyPolicyUrl } from "./deletion";
 import { EMAIL_ATTACHMENT_NAME, renderDiagnosisEmail } from "./diagnosis-email";
 import { downloadDiagnosisPdf } from "./diagnosis-storage";
 import { getEmailProvider, type EmailProvider } from "./email-provider";
@@ -68,6 +69,7 @@ async function sendDiagnosisEmail(db: Db, orderId: string, token: string | null,
     secondaryLabel: content.secondary.label,
     resultText: resultBlock.paragraphs[0],
     link,
+    privacyUrl: privacyPolicyUrl(),
   });
 
   let attachments: { filename: string; content: Uint8Array }[] | undefined;

@@ -13,7 +13,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-06 | Payment Confirmation | 5 | RF-05 | yes | 4/4 | 6/8 | pending | implemented | 2026-11-20 c6d2ea1 |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | yes | 5/5 | 8/8 | n/a | implemented | 2026-11-20 70d3797 |
 | RF-08 | Result Screen and E-mail Delivery | 7 | RF-06, RF-07 | yes | 5/5 | 8/9 | pending | implemented | 2026-11-21 38001a4 |
-| RF-09 | Privacy and LGPD Compliance | 7 | RF-02, RF-07 | yes | 3/4 | 0/8 | n/a | in progress | none |
+| RF-09 | Privacy and LGPD Compliance | 7 | RF-02, RF-07 | yes | 4/4 | 0/8 | n/a | in progress | none |
 | RF-10 | Admin Access and Operations Dashboard | 8 | RF-02, RF-04, RF-06, RF-07, RF-08 | no | none | none | none | not started | none |
 | RF-11 | Manual WhatsApp Delivery | 9 | RF-07, RF-08, RF-10 | no | none | none | none | not started | none |
 | RF-12 | Admin Content Management | 9 | RF-03, RF-07, RF-10 | no | none | none | none | not started | none |
