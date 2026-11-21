@@ -388,3 +388,17 @@ describe("hooks and guards", () => {
     expect(errors).not.toContain("@example.com");
   });
 });
+
+describe("an order without an attempt (RF-09)", () => {
+  it("an order without an attempt fails with INVALID_ANSWERS", async () => {
+    const { orderId } = await newOrder();
+    // What is left of an order when its customer was erased: no attempt, so no answers.
+    await db.from("orders").update({ attempt_id: null }).eq("id", orderId);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const outcome = await generateDiagnosis(db, orderId, { deps: okDeps() });
+    expect(outcome).toMatchObject({ result: "failed", reason: "INVALID_ANSWERS" });
+    expect(await orderRow(orderId)).toMatchObject({ status: "FAILED", failure_reason: "INVALID_ANSWERS" });
+    expect(await results(orderId)).toHaveLength(0);
+  });
+});
+

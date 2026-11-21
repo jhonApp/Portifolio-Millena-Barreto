@@ -61,6 +61,8 @@ async function defaultRenderPdf(content: DiagnosisContent, options: { customerNa
 async function loadCustomer(db: Db, orderId: string) {
   const { data: order, error } = await db.from("orders").select("attempt_id").eq("id", orderId).single();
   if (error) throw new GenerationError("UNEXPECTED", `order could not be read: ${error.message}`);
+  // An order whose customer was erased (RF-09) has no attempt and no answers: nothing to generate.
+  if (!order.attempt_id) throw new GenerationError("INVALID_ANSWERS", "the order has no attempt");
   const { data: attempt, error: attemptError } = await db
     .from("purchase_attempts")
     .select("customer_id, delivery_preference")

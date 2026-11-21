@@ -233,7 +233,8 @@ describe("schema constraints", () => {
     await db.from("webhook_events").delete().eq("event_id", eventId);
   });
 
-  it("deleting a customer cascades to attempts answers consent and orders", async () => {
+  it("deleting a customer cascades to attempts answers and consent and detaches the orders", async () => {
+    // RF-09: an order outlives the customer (anonymized payment record), so its attempt link is cut.
     const { customer, attempt, order } = await newOrder("APPROVED");
     await db.from("consent_records").insert({
       attempt_id: attempt.id,
@@ -244,11 +245,26 @@ describe("schema constraints", () => {
     const del = await db.from("customers").delete().eq("id", customer.id);
     expect(del.error).toBeNull();
     const attempts = await db.from("purchase_attempts").select("id").eq("id", attempt.id);
-    const orders = await db.from("orders").select("id").eq("id", order.id);
+    const orders = await db.from("orders").select("id, attempt_id").eq("id", order.id);
     const consents = await db.from("consent_records").select("id").eq("attempt_id", attempt.id);
     expect(attempts.data).toEqual([]);
-    expect(orders.data).toEqual([]);
+    expect(orders.data).toEqual([{ id: order.id, attempt_id: null }]);
     expect(consents.data).toEqual([]);
+    await db.from("orders").delete().eq("id", order.id);
+  });
+
+  it("orders.attempt_id is nullable and set to null when the attempt is deleted", async () => {
+    const { attempt, order } = await newOrder("PENDING");
+    const del = await db.from("purchase_attempts").delete().eq("id", attempt.id);
+    expect(del.error).toBeNull();
+    const { data } = await db.from("orders").select("attempt_id").eq("id", order.id).single();
+    expect(data!.attempt_id).toBeNull();
+    await db.from("orders").delete().eq("id", order.id);
+  });
+
+  it("deletion_requests has the last_error column", async () => {
+    const { error } = await db.from("deletion_requests").select("id, last_error").limit(1);
+    expect(error).toBeNull();
   });
 
   it("updated_at changes on update", async () => {

@@ -34,6 +34,19 @@ export const DELIVERY_RETRY_DELAYS_SECONDS = [60, 300, 900] as const;
 // A signed link to the PDF stays valid this long.
 export const PDF_SIGNED_URL_SECONDS = 300;
 
+// Privacy (RF-09). The retention periods are enforced by supabase/migrations/20260101000013_privacy.sql
+// (7 days = purchase_attempts.expires_at; 12 months in paid_customers_due) and shown in the policy.
+export const RETENTION_UNPAID_DAYS = 7;
+export const RETENTION_PAID_MONTHS = 12;
+export const DELETION_LINK_HOURS = 24;
+export const DELETION_REQUESTS_PER_EMAIL_PER_HOUR = 3;
+export const DELETION_REQUESTS_PER_IP_PER_HOUR = 10;
+export const DELETION_CONFIRMS_PER_IP_PER_HOUR = 20;
+// The daily job stops each step at these sizes so a run stays inside the 60 s limit.
+export const RETENTION_BATCH = { requests: 20, notices: 20, attempts: 100, customers: 50 } as const;
+// Expired and never confirmed deletion requests keep an e-mail address: they are removed after this long.
+export const STALE_DELETION_REQUEST_DAYS = 7;
+
 export const ORDER_STATUSES = [
   "PENDING",
   "APPROVED",

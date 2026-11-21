@@ -70,4 +70,18 @@ describe("access lockdown", () => {
     const { data } = await admin.from("customers").select("id").eq("id", customerId);
     expect(data).toHaveLength(1);
   });
+
+  it("the privacy functions are not callable by browser roles", async () => {
+    for (const client of [anonClient(), authenticated]) {
+      const calls = [
+        client.rpc("confirm_deletion_request", { p_token_hash: "x" }),
+        client.rpc("complete_deletion_request", { p_request: randomUUID() }),
+        client.rpc("erasure_plan", { p_customer: randomUUID() }),
+        client.rpc("erase_customer", { p_customer: randomUUID() }),
+        client.rpc("purge_unpaid_attempts", { p_limit: 1 }),
+        client.rpc("paid_customers_due", { p_limit: 1 }),
+      ];
+      for (const result of await Promise.all(calls)) expect(result.error).not.toBeNull();
+    }
+  });
 });

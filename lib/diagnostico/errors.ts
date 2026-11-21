@@ -13,6 +13,7 @@ export type ErrorCode =
   | "PAYMENT_CHECK_UNAVAILABLE"
   | "UNAUTHORIZED"
   | "RESULT_NOT_READY"
+  | "LINK_EXPIRED"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

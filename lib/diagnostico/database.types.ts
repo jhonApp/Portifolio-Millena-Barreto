@@ -177,14 +177,14 @@ isOneToOne: false
                   ]
                 },"deletion_requests": {
                   Row: {
-                    "completed_at": string | null,"confirmed_at": string | null,"created_at": string,"email": string | null,"expires_at": string,"id": string,"token_hash": string
+                    "completed_at": string | null,"confirmed_at": string | null,"created_at": string,"email": string | null,"expires_at": string,"id": string,"last_error": string | null,"token_hash": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "completed_at"?: string | null,"confirmed_at"?: string | null,"created_at"?: string,"email"?: string | null,"expires_at": string,"id"?: string,"token_hash": string
+                    "completed_at"?: string | null,"confirmed_at"?: string | null,"created_at"?: string,"email"?: string | null,"expires_at": string,"id"?: string,"last_error"?: string | null,"token_hash": string
                   }
                   Update: {
-                    "completed_at"?: string | null,"confirmed_at"?: string | null,"created_at"?: string,"email"?: string | null,"expires_at"?: string,"id"?: string,"token_hash"?: string
+                    "completed_at"?: string | null,"confirmed_at"?: string | null,"created_at"?: string,"email"?: string | null,"expires_at"?: string,"id"?: string,"last_error"?: string | null,"token_hash"?: string
                   }
                   Relationships: [
                     
@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"orders": {
                   Row: {
-                    "amount_cents": number,"approved_at": string | null,"attempt_id": string,"created_at": string,"delivered_at": string | null,"failure_reason": string | null,"generation_attempts": number,"generation_next_at": string | null,"id": string,"status": string,"updated_at": string
+                    "amount_cents": number,"approved_at": string | null,"attempt_id": string | null,"created_at": string,"delivered_at": string | null,"failure_reason": string | null,"generation_attempts": number,"generation_next_at": string | null,"id": string,"status": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "amount_cents": number,"approved_at"?: string | null,"attempt_id": string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
+                    "amount_cents": number,"approved_at"?: string | null,"attempt_id"?: string | null,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Update: {
-                    "amount_cents"?: number,"approved_at"?: string | null,"attempt_id"?: string,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
+                    "amount_cents"?: number,"approved_at"?: string | null,"attempt_id"?: string | null,"created_at"?: string,"delivered_at"?: string | null,"failure_reason"?: string | null,"generation_attempts"?: number,"generation_next_at"?: string | null,"id"?: string,"status"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -401,11 +401,23 @@ isOneToOne: false
 "claim_generation":
 { Args: { "p_order": string }; Returns: Json
                            },
+"complete_deletion_request":
+{ Args: { "p_request": string }; Returns: boolean
+                           },
 "complete_delivery":
 { Args: { "p_order": string }; Returns: undefined
                            },
+"confirm_deletion_request":
+{ Args: { "p_token_hash": string }; Returns: Json
+                           },
 "create_purchase_attempt":
 { Args: { "p_consent_text": string,"p_consent_version": string,"p_email": string,"p_idempotency_key": string,"p_ip_hash": string,"p_name": string,"p_preference": string,"p_whatsapp": string }; Returns: string
+                           },
+"erase_customer":
+{ Args: { "p_customer": string }; Returns: Json
+                           },
+"erasure_plan":
+{ Args: { "p_customer": string }; Returns: Json
                            },
 "fail_delivery":
 { Args: { "p_error": string,"p_order": string }; Returns: Json
@@ -415,6 +427,12 @@ isOneToOne: false
                            },
 "hit_rate_limit":
 { Args: { "p_key": string,"p_max": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"paid_customers_due":
+{ Args: { "p_limit": number }; Returns: string[]
+                           },
+"purge_unpaid_attempts":
+{ Args: { "p_limit": number }; Returns: number
                            },
 "record_webhook_event":
 { Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string

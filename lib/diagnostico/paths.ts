@@ -1,3 +1,5 @@
+import { PRIVACY_PATH } from "./consent";
+
 // Addresses of the diagnosis flow. Safe to import in the browser and on the server.
 
 export const REGISTRATION_PATH = "/diagnostico-estilo";
@@ -16,3 +18,10 @@ export const RESULT_PATH = "/diagnostico-estilo/resultado";
 export const resultPathFor = (token: string) => `${RESULT_PATH}/${token}`;
 export const EXPIRED_LINK_NOTICE = "Este link expirou ou não é válido. Peça um novo link.";
 export const RESEND_NEUTRAL_MESSAGE = "Se existir um diagnóstico para este e-mail, enviaremos um novo link.";
+
+// Privacy (RF-09): the policy (also linked by consent.ts) and the two-step deletion flow.
+export { PRIVACY_PATH };
+export const DELETION_PATH = `${PRIVACY_PATH}/exclusao`;
+export const deletionConfirmPathFor = (token: string) => `${DELETION_PATH}/${token}`;
+export const DELETION_NEUTRAL_MESSAGE = "Se existirem dados para este e-mail, enviaremos um link de confirmação.";
+export const DELETION_EXPIRED_NOTICE = "Este link expirou. Faça um novo pedido de exclusão.";

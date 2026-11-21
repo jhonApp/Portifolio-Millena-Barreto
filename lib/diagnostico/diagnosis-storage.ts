@@ -29,6 +29,13 @@ export async function downloadDiagnosisPdf(db: Db, orderId: string): Promise<Uin
   return new Uint8Array(await data.arrayBuffer());
 }
 
+/** Removes the stored PDFs of these orders (RF-09). A file that does not exist is not an error. */
+export async function removeDiagnosisPdfs(db: Db, orderIds: string[]): Promise<void> {
+  if (orderIds.length === 0) return;
+  const { error } = await db.storage.from(DIAGNOSIS_BUCKET).remove(orderIds.map(diagnosisPdfPath));
+  if (error) throw new Error(`removeDiagnosisPdfs failed: ${error.message}`);
+}
+
 /** A link to the stored PDF that works for `seconds` (300 by default) and then stops. */
 export async function createSignedPdfUrl(
   db: Db,

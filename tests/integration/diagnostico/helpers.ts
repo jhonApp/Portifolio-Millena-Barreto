@@ -397,3 +397,73 @@ export async function createGeneratedOrder(
   const { data: customer } = await db.from("customers").select("email").eq("id", created.customerId).single();
   return { ...created, email: customer!.email, result: result! };
 }
+
+// ---- RF-09 helpers: aged data and the records an erasure has to remove ----
+
+/** Makes an attempt older than its 7 days (its cookie and its retention window are over). */
+export async function expireAttempt(db: SupabaseClient<Database>, attemptId: string) {
+  const { error } = await db
+    .from("purchase_attempts")
+    .update({ expires_at: new Date(Date.now() - 3600_000).toISOString() })
+    .eq("id", attemptId);
+  if (error) throw new Error(`expireAttempt: ${error.message}`);
+}
+
+/** A paid order (PAID payment) of an attempt in the given status, approved `monthsAgo` months ago. */
+export async function addPaidOrder(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+  options: { status?: "APPROVED" | "PROCESSING" | "DELIVERED" | "FAILED"; monthsAgo?: number } = {},
+) {
+  const { order, payment, chargeId } = await createOrderWithPayment(db, attemptId, "APPROVED");
+  const approvedAt = new Date(Date.now() - (options.monthsAgo ?? 0) * 31 * 86400_000).toISOString();
+  await db.from("payments").update({ status: "PAID", paid_at: approvedAt }).eq("order_id", order.id);
+  const status = options.status ?? "DELIVERED";
+  await db
+    .from("orders")
+    .update({
+      status,
+      approved_at: approvedAt,
+      failure_reason: status === "FAILED" ? "GENERATION_FAILED" : null,
+    })
+    .eq("id", order.id);
+  return { orderId: order.id, paymentId: payment.id, chargeId };
+}
+
+/** A result, an e-mail delivery and an access token for a paid order, with the stored PDF reference. */
+export async function addDiagnosisRecords(db: SupabaseClient<Database>, orderId: string) {
+  const { data: version } = await db.from("questionnaire_versions").select("id").eq("status", "published").single();
+  const { error } = await db.from("results").insert({
+    order_id: orderId,
+    version_id: version!.id,
+    points: validPoints,
+    predominant_style: "elegante",
+    secondary_style: "romantico",
+    content: validContent,
+    pdf_path: `${orderId}.pdf`,
+  });
+  if (error) throw new Error(`addDiagnosisRecords: ${error.message}`);
+  await db.from("deliveries").insert({ order_id: orderId, channel: "email", status: "SENT" });
+  await db
+    .from("result_tokens")
+    .insert({ order_id: orderId, token_hash: `hash-${randomUUID()}`, expires_at: new Date(Date.now() + 86400_000).toISOString() });
+}
+
+/** A customer with one attempt and 15 answers (no order). */
+export async function createCustomerWithAnswers(db: SupabaseClient<Database>, email?: string) {
+  const { data: customer, error } = await db
+    .from("customers")
+    .insert({ name: "Maria Teste Silva", email: email ?? `teste-${randomUUID()}@example.com`, whatsapp: "+5511912345678" })
+    .select()
+    .single();
+  if (error) throw new Error(`createCustomerWithAnswers: ${error.message}`);
+  const attempt = await createAttempt(db, customer.id);
+  await fillAnswersWith(db, attempt.id, () => 0);
+  await db.from("consent_records").insert({
+    attempt_id: attempt.id,
+    customer_id: customer.id,
+    consent_text_version: "consent-v1",
+    consent_text: "Autorizo",
+  });
+  return { customerId: customer.id, attemptId: attempt.id, email: customer.email };
+}

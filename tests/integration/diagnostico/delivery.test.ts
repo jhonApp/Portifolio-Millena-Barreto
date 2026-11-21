@@ -358,3 +358,16 @@ describe("due deliveries, retry and re-sent links", () => {
     expect(await orderRow(orderId)).toMatchObject({ status: "DELIVERED" });
   });
 });
+
+describe("an order without an attempt (RF-09)", () => {
+  it("an order without an attempt ends without a send", async () => {
+    const { orderId } = await generatedOrder();
+    // What is left of an order when its customer was erased: nobody to send to.
+    await db.from("orders").update({ attempt_id: null }).eq("id", orderId);
+    const { provider, sent } = recordingEmailProvider();
+    const outcome = await deliverDiagnosis(db, orderId, { token: TOKEN, deps: { provider } });
+    expect(outcome.result).toBe("retry_scheduled");
+    expect(sent).toHaveLength(0);
+  });
+});
+

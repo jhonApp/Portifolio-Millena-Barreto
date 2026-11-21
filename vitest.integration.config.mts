@@ -13,7 +13,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/integration/**/*.test.ts"],
-    setupFiles: ["tests/setup/load-env.ts", "tests/setup/email-simulation.ts"],
+    setupFiles: ["tests/setup/load-env.ts", "tests/setup/email-simulation.ts", "tests/setup/clean-detached-orders.ts"],
     testTimeout: 30000,
     hookTimeout: 30000,
     fileParallelism: false,
