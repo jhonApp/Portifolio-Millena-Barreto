@@ -13,7 +13,7 @@ Format: see `~/.claude/skills/spec-writer/status-template.md`.
 | RF-06 | Payment Confirmation | 5 | RF-05 | yes | 4/4 | 6/8 | pending | implemented | 2026-11-20 c6d2ea1 |
 | RF-07 | Diagnosis Content and PDF Generation | 6 | RF-02, RF-03, RF-04, RF-06 | yes | 5/5 | 8/8 | n/a | implemented | 2026-11-20 70d3797 |
 | RF-08 | Result Screen and E-mail Delivery | 7 | RF-06, RF-07 | yes | 5/5 | 8/9 | pending | implemented | 2026-11-21 38001a4 |
-| RF-09 | Privacy and LGPD Compliance | 7 | RF-02, RF-07 | yes | 4/4 | 0/8 | n/a | in progress | none |
+| RF-09 | Privacy and LGPD Compliance | 7 | RF-02, RF-07 | yes | 4/4 | 8/8 | n/a | implemented | 2026-11-21 a8f7465 |
 | RF-10 | Admin Access and Operations Dashboard | 8 | RF-02, RF-04, RF-06, RF-07, RF-08 | no | none | none | none | not started | none |
 | RF-11 | Manual WhatsApp Delivery | 9 | RF-07, RF-08, RF-10 | no | none | none | none | not started | none |
 | RF-12 | Admin Content Management | 9 | RF-03, RF-07, RF-10 | no | none | none | none | not started | none |
@@ -103,3 +103,13 @@ Last run: 2026-11-21, commit 38001a4
 - ✓ The PDF button uses a signed URL valid for 5 minutes (result-routes.test.ts::the PDF route returns a signed URL valid for 300 seconds, the signed URL downloads the PDF of the order, the signed URL expires, the PDF route is rate limited per token; browser script step 2: signed URL answered 200 application/pdf)
 - ✓ Hand-off RF-06 + RF-07 to RF-08: a diagnosis generated through the real flow is shown by the result link with its own PDF (result-handoff.test.ts::a diagnosis generated through the real RF-06 and RF-07 flow is shown by the result link with its own PDF)
 
+### RF-09. Privacy and LGPD Compliance
+Last run: 2026-11-21, commit a8f7465 (plus the test-only follow-up)
+- ✓ The footer link opens the policy page, which lists data collected, purposes, retention, rights and operators (privacy-policy-content.test.ts::the policy lists data collected, purposes, retention, rights and operators, the retention numbers come from the constants, the controller line and the contact come from the owner decisions; browser script steps 1 to 3 at 360 px, no horizontal scroll)
+- ✓ A deletion confirmed within 24 hours deletes customer data, answers, results, tokens and PDFs and keeps only the anonymized payment (deletion.test.ts::confirming within 24 hours erases the customer, answers, results, tokens and PDF and keeps only the anonymized payment, the remaining order and payment carry no personal data, an expired link erases nothing; privacy-sql.test.ts::erase_customer keeps paid orders detached and deletes unpaid ones; browser script steps 5 to 10)
+- ✓ A deletion request for an unknown e-mail shows the same neutral message (deletion-routes.test.ts::a known, an unknown and an over-limit e-mail get the same answer and only the known one gets an e-mail, the answer body is identical; browser script steps 4 and 11: 4 submissions, 3 e-mails)
+- ✓ The daily job deletes unpaid attempts older than 7 days with their answers (retention-job.test.ts::the job deletes unpaid attempts older than 7 days with their answers and consent, a recent unpaid attempt and a paid one stay; privacy-sql.test.ts::purge_unpaid_attempts removes orders without payment and customers left without attempts)
+- ✓ The daily job erases paid data older than 12 months and its PDF (retention-job.test.ts::the job erases paid customers whose last paid order is older than 12 months, including the PDF, a customer with a recent paid order is kept; privacy-sql.test.ts::paid_customers_due lists only customers whose paid orders are all old)
+- ✓ A customer-facing request made with another customer's identifiers returns no data of that customer (privacy-scope.test.ts::the answers, checkout, payment check, result link, PDF and resend routes return nothing of another customer, the result page shows B's diagnosis for B's token and never A's, every cookie-based route refuses a forged cookie; no-personal-data-in-logs.test.ts::no console call in the diagnosis code writes a name, e-mail, phone or token)
+- ✓ Hand-off RF-07 to RF-09: a PDF generated through the real RF-02 to RF-08 flow is removed from storage on deletion (privacy-handoff.test.ts::a PDF generated through the real RF-02 to RF-08 flow is removed from storage when the customer's data is deleted)
+- ✓ Hand-off RF-02 to RF-09: the consent record created at registration is removed with the customer (privacy-handoff.test.ts::the consent record created at registration is removed with the customer)
