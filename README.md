@@ -47,5 +47,20 @@ arduino
 Copy
 Edit
 http://localhost:3000
+Diagnóstico de estilo: setup
+The diagnosis lives under /diagnostico-estilo and needs a local Supabase.
+
+1. Start Docker Desktop.
+2. Copy .env.example to .env.local and set APP_PORT (for example 3001).
+3. Run npx supabase start and paste the printed API URL, anon key and service_role key into SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY in .env.local.
+4. Run npm run db:reset to apply the migrations, then npm run db:types to refresh lib/diagnostico/database.types.ts.
+5. Tests: npm run test (unit) and npm run test:integration (needs the local Supabase running).
+
+Credentials to provide before going live (none is stored in the repository):
+- Supabase: project URL, anon key and service role key.
+- AbacatePay: API key and webhook secret.
+- Resend: API key and a sending domain verified in DNS.
+- Admin e-mail, privacy-policy contact e-mail, and (optional) Millena's WhatsApp number for the message signature.
+
 License:
 This project is licensed under the MIT License.

@@ -1,0 +1,81 @@
+// Fixed values shared by the diagnosis features. The same values are enforced by CHECK
+// constraints in supabase/migrations; tests/integration/diagnostico/schema.test.ts keeps both in sync.
+
+export const STYLES = [
+  "esportivo_natural",
+  "tradicional",
+  "elegante",
+  "romantico",
+  "criativo",
+  "dramatico",
+] as const;
+export type Style = (typeof STYLES)[number];
+
+// Names shown to the customer (pt-BR), shared by the diagnosis, the PDF and the result screen.
+export const STYLE_LABELS: Record<Style, string> = {
+  esportivo_natural: "Esportivo/Natural",
+  tradicional: "Tradicional",
+  elegante: "Elegante",
+  romantico: "Romântico",
+  criativo: "Criativo",
+  dramatico: "Dramático",
+};
+
+// Diagnosis generation (RF-07): the first run plus 3 retries, after 30 s, 2 min and 10 min.
+// The same values are enforced by supabase/migrations/20260101000010_generation_state.sql.
+export const MAX_GENERATION_ATTEMPTS = 4;
+export const GENERATION_RETRY_DELAYS_SECONDS = [30, 120, 600] as const;
+
+// Result access tokens and the e-mail delivery (RF-08). The delivery values are enforced by
+// supabase/migrations/20260101000012_delivery.sql: the first send plus 3 retries, after 1, 5 and 15 minutes.
+export const RESULT_TOKEN_DAYS = 30;
+export const MAX_DELIVERY_ATTEMPTS = 4;
+export const DELIVERY_RETRY_DELAYS_SECONDS = [60, 300, 900] as const;
+// A signed link to the PDF stays valid this long.
+export const PDF_SIGNED_URL_SECONDS = 300;
+
+// Privacy (RF-09). The retention periods are enforced by supabase/migrations/20260101000013_privacy.sql
+// (7 days = purchase_attempts.expires_at; 12 months in paid_customers_due) and shown in the policy.
+export const RETENTION_UNPAID_DAYS = 7;
+export const RETENTION_PAID_MONTHS = 12;
+export const DELETION_LINK_HOURS = 24;
+export const DELETION_REQUESTS_PER_EMAIL_PER_HOUR = 3;
+export const DELETION_REQUESTS_PER_IP_PER_HOUR = 10;
+export const DELETION_CONFIRMS_PER_IP_PER_HOUR = 20;
+// The daily job stops each step at these sizes so a run stays inside the 60 s limit.
+export const RETENTION_BATCH = { requests: 20, notices: 20, attempts: 100, customers: 50 } as const;
+// Expired and never confirmed deletion requests keep an e-mail address: they are removed after this long.
+export const STALE_DELETION_REQUEST_DAYS = 7;
+
+export const ORDER_STATUSES = [
+  "PENDING",
+  "APPROVED",
+  "PROCESSING",
+  "DELIVERED",
+  "FAILED",
+] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export const PAYMENT_STATUSES = ["PENDING", "PAID", "EXPIRED", "FAILED"] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export const DELIVERY_PREFERENCES = ["email", "whatsapp", "both"] as const;
+export type DeliveryPreference = (typeof DELIVERY_PREFERENCES)[number];
+
+export const DELIVERY_CHANNELS = ["email", "whatsapp"] as const;
+export type DeliveryChannel = (typeof DELIVERY_CHANNELS)[number];
+
+export const DELIVERY_STATUSES = ["PENDING", "SENT", "FAILED"] as const;
+export type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
+
+export const FAILURE_REASONS = [
+  "PIX_EXPIRED",
+  "GENERATION_FAILED",
+  "DELIVERY_FAILED",
+  "INVALID_ANSWERS",
+  "MISSING_CONTENT",
+] as const;
+export type FailureReason = (typeof FAILURE_REASONS)[number];
+
+// Price of the diagnosis in cents (R$ 9,90). The server is the only source of this value.
+export const PRICE_CENTS = 990;

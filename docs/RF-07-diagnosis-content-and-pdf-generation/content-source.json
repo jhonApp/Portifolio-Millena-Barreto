@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "note": "Rascunho da equipe (inferred). A Millena revisa e edita estes textos pelo painel (RF-12). {nome} vira o primeiro nome da cliente.",
+  "styles": {
+    "esportivo_natural": {
+      "result": "{nome}, o seu estilo predominante é o Esportivo/Natural. Você valoriza o conforto, a praticidade e a naturalidade: gosta de se vestir de um jeito leve, sem esforço aparente, e de se sentir à vontade em qualquer lugar. Sua imagem comunica simplicidade, autenticidade e energia, e as pessoas se sentem acolhidas perto de você.",
+      "secondary": "{nome}, o seu segundo estilo é o Esportivo/Natural. Ele traz para o seu visual o conforto, a praticidade e a naturalidade: é a parte de você que gosta de se vestir de um jeito leve, sem esforço aparente, e de se sentir à vontade em qualquer lugar. Esse toque suaviza o seu estilo principal e faz a sua imagem comunicar simplicidade e autenticidade.",
+      "pieces_intro": "Para o seu dia a dia, escolha peças confortáveis, de tecidos naturais e caimento solto, que acompanhem o seu ritmo sem perder a harmonia.",
+      "accessories_intro": "Os acessórios do seu estilo são discretos e funcionais: ajudam a completar o visual sem pesar nem chamar mais atenção do que você.",
+      "guidance": "{nome}, o seu maior trunfo é a naturalidade. Para o look ficar sempre intencional, e não apenas confortável, invista em um bom caimento e em uma cartela de cores harmoniosa. Uma peça com um pouco mais de estrutura, como um blazer de linho ou uma jaqueta bem cortada, eleva qualquer combinação sem tirar a sua leveza.",
+      "pieces": [
+        "Camisa de linho ou algodão, de caimento solto",
+        "Calça reta de sarja ou algodão em tom terroso",
+        "Camiseta básica de algodão de ótima qualidade",
+        "Jaqueta utilitária ou jeans em lavagem natural",
+        "Tênis branco ou em tom neutro, de design limpo",
+        "Vestido camisa de tecido leve com cinto fino",
+        "Short de alfaiataria confortável para os dias quentes",
+        "Cardigã de tricô macio em cor neutra"
+      ],
+      "accessories": [
+        "Bolsa de lona ou couro natural, de tamanho prático",
+        "Relógio simples de pulseira discreta",
+        "Brincos pequenos de metal fosco ou de madeira",
+        "Lenço de algodão para amarrar na bolsa ou no pescoço",
+        "Óculos de sol de armação leve e formato clássico",
+        "Pulseiras finas de fio ou de couro"
+      ]
+    },
+    "tradicional": {
+      "result": "{nome}, o seu estilo predominante é o Tradicional. Você valoriza a discrição, a organização e o que é atemporal: prefere peças clássicas, de qualidade, que nunca saem de moda. Sua imagem comunica seriedade, confiança e equilíbrio, e as pessoas sabem que podem contar com você.",
+      "secondary": "{nome}, o seu segundo estilo é o Tradicional. Ele traz para o seu visual a discrição, a organização e o gosto pelo que é atemporal: é a parte de você que prefere peças clássicas, de qualidade, que nunca saem de moda. Esse toque dá base e equilíbrio ao seu estilo principal e faz a sua imagem comunicar seriedade e confiança.",
+      "pieces_intro": "Aposte em peças de corte clássico e tecidos estruturados, em cores sóbrias, que formam combinações seguras e elegantes por muitos anos.",
+      "accessories_intro": "No seu estilo, menos é mais: acessórios clássicos e bem escolhidos completam o visual com sobriedade e um toque de tradição.",
+      "guidance": "{nome}, o seu estilo transmite credibilidade, e isso é um grande valor. Para não parecer rígida demais, permita-se uma peça com um detalhe mais suave, como uma estampa miúda, um tom mais vivo ou um tecido com leve brilho. Pequenas variações renovam o visual sem trair a sua essência.",
+      "pieces": [
+        "Blazer de alfaiataria em azul-marinho ou cinza",
+        "Camisa social branca de algodão",
+        "Calça de alfaiataria de corte reto",
+        "Saia midi lápis em tom neutro",
+        "Vestido chemisier de comprimento abaixo do joelho",
+        "Cardigã fino de tricô em cor clássica",
+        "Trench coat bege",
+        "Sapato scarpin ou mocassim de couro de salto baixo"
+      ],
+      "accessories": [
+        "Colar de pérolas ou de fio delicado",
+        "Bolsa estruturada de couro em cor neutra",
+        "Relógio clássico de pulseira de couro ou metal",
+        "Lenço de seda estampado, de motivo discreto",
+        "Brincos pequenos de pérola ou ouro",
+        "Cinto fino de couro com fivela simples"
+      ]
+    },
+    "elegante": {
+      "result": "{nome}, o seu estilo predominante é o Elegante. Você busca refinamento e sofisticação em cada detalhe: gosta de qualidade, de cortes impecáveis e de um visual harmonioso e bem cuidado. Sua imagem comunica classe, segurança e bom gosto, e as pessoas percebem o cuidado que você tem com a própria apresentação.",
+      "secondary": "{nome}, o seu segundo estilo é o Elegante. Ele traz para o seu visual o refinamento e a sofisticação: é a parte de você que gosta de qualidade, de cortes impecáveis e de um visual harmonioso e bem cuidado. Esse toque dá acabamento ao seu estilo principal e faz a sua imagem comunicar classe e bom gosto.",
+      "pieces_intro": "Escolha peças de corte preciso, tecidos nobres e cores bem combinadas, de preferência em composições monocromáticas que alongam e valorizam a silhueta.",
+      "accessories_intro": "Os acessórios do seu estilo são poucos e valiosos: peças de acabamento refinado que completam o visual com classe.",
+      "guidance": "{nome}, a elegância está no equilíbrio. Antes de sair, observe o conjunto e retire o que for excesso: um único ponto de destaque, como um brinco marcante ou um sapato especial, basta para o look ficar completo. Invista em menos peças, de qualidade superior, e cuide da conservação delas.",
+      "pieces": [
+        "Vestido de corte reto em tecido fluido de qualidade",
+        "Blazer estruturado em cor sólida",
+        "Calça pantalona de alfaiataria com caimento perfeito",
+        "Camisa de seda ou de tecido acetinado",
+        "Conjunto monocromático de saia e blusa",
+        "Casaco de lã de corte reto, em tom neutro",
+        "Scarpin ou sandália de salto médio de couro",
+        "Vestido midi de manga longa com decote sutil"
+      ],
+      "accessories": [
+        "Bolsa de couro de design limpo e acabamento refinado",
+        "Brincos de ouro ou prata com desenho sofisticado",
+        "Relógio fino de pulseira de metal",
+        "Lenço de seda de cor sólida",
+        "Colar delicado de pingente discreto",
+        "Cinto de couro liso com fivela elegante"
+      ]
+    },
+    "romantico": {
+      "result": "{nome}, o seu estilo predominante é o Romântico. Você valoriza a delicadeza, a feminilidade e os detalhes suaves: gosta de tecidos fluidos, de tons delicados e de um visual que transmite doçura. Sua imagem comunica gentileza, sensibilidade e charme, e as pessoas se sentem encantadas pelo seu jeito acolhedor.",
+      "secondary": "{nome}, o seu segundo estilo é o Romântico. Ele traz para o seu visual a delicadeza, a feminilidade e os detalhes suaves: é a parte de você que gosta de tecidos fluidos e de tons delicados. Esse toque suaviza o seu estilo principal e faz a sua imagem comunicar gentileza e charme.",
+      "pieces_intro": "Prefira peças de tecidos leves e movimento suave, com detalhes delicados como babados, laços, rendas e estampas florais, em cores claras e suaves.",
+      "accessories_intro": "Os acessórios do seu estilo são delicados e femininos: peças com brilho suave e formas arredondadas que completam o visual com graça.",
+      "guidance": "{nome}, a sua delicadeza é um dom. Para o visual ficar sempre atual, equilibre os detalhes românticos: se a blusa tem babado, escolha uma saia lisa; se a estampa é floral, mantenha o restante simples. Assim você preserva a doçura sem parecer fantasiada.",
+      "pieces": [
+        "Vestido midi fluido de estampa floral delicada",
+        "Blusa de renda ou de tecido leve com mangas bufantes",
+        "Saia plissada em tom suave",
+        "Camisa com laço no colarinho",
+        "Cardigã macio de tricô em rosa ou lavanda claros",
+        "Calça de tecido fluido na cor creme",
+        "Vestido com cintura marcada e saia rodada",
+        "Sandália de tiras finas ou sapatilha delicada"
+      ],
+      "accessories": [
+        "Brincos de pérola ou de pedra em tons suaves",
+        "Colar de pingente delicado, como um coração ou uma flor",
+        "Bolsa pequena de alça fina em tom claro",
+        "Laço ou faixa de tecido para os cabelos",
+        "Pulseira fina com pequenos pendentes",
+        "Lenço leve de estampa delicada"
+      ]
+    },
+    "criativo": {
+      "result": "{nome}, o seu estilo predominante é o Criativo. Você valoriza a originalidade e a liberdade de se expressar: gosta de misturar cores, texturas e estampas, e de montar combinações que ninguém mais teria pensado. Sua imagem comunica personalidade, curiosidade e alegria, e as pessoas se inspiram pela sua ousadia.",
+      "secondary": "{nome}, o seu segundo estilo é o Criativo. Ele traz para o seu visual a originalidade e a liberdade de se expressar: é a parte de você que gosta de misturar cores, texturas e estampas. Esse toque dá personalidade ao seu estilo principal e faz a sua imagem comunicar curiosidade e alegria.",
+      "pieces_intro": "Escolha peças diferentes, com cor, textura ou formato incomuns, que permitam combinações inesperadas e contem a sua história.",
+      "accessories_intro": "Os acessórios são o seu campo de criação: peças artesanais, coloridas ou de formas inusitadas que dão assinatura a cada look.",
+      "guidance": "{nome}, a sua criatividade é o seu cartão de visitas. Para as misturas funcionarem, escolha um ponto de partida por look, como uma cor ou uma estampa, e deixe o restante conversar com ele. Peças-base neutras ajudam a destacar as suas ousadias e facilitam a combinação do guarda-roupa.",
+      "pieces": [
+        "Blusa ou camisa de estampa artística ou geométrica",
+        "Saia ou calça de cor vibrante",
+        "Casaco ou kimono de textura diferente",
+        "Vestido de modelagem assimétrica",
+        "Jaqueta bordada ou customizada",
+        "Calça de corte inusitado, como cargo de alfaiataria",
+        "Peça de tricô artesanal colorida",
+        "Tênis ou bota de cor ou de design diferente"
+      ],
+      "accessories": [
+        "Brincos grandes e artesanais",
+        "Colar de volume com contas ou pedras coloridas",
+        "Bolsa de formato diferente ou de material inusitado",
+        "Lenço estampado usado de formas variadas",
+        "Anéis marcantes sobrepostos",
+        "Cinto largo ou com fivela escultural"
+      ]
+    },
+    "dramatico": {
+      "result": "{nome}, o seu estilo predominante é o Dramático. Você valoriza o impacto, a força e a presença marcante: gosta de contrastes, de linhas definidas e de um visual que chama atenção para onde você entra. Sua imagem comunica poder, ousadia e determinação, e as pessoas notam a sua presença.",
+      "secondary": "{nome}, o seu segundo estilo é o Dramático. Ele traz para o seu visual o impacto e a presença marcante: é a parte de você que gosta de contrastes e de linhas definidas. Esse toque dá força ao seu estilo principal e faz a sua imagem comunicar ousadia e determinação.",
+      "pieces_intro": "Escolha peças de linhas marcadas e corte estruturado, com contrastes fortes de cor e tecidos de presença, que valorizam a sua postura.",
+      "accessories_intro": "Os acessórios do seu estilo têm presença: peças de design forte, em metal ou couro, escolhidas uma ou duas por look para dar impacto sem excessos.",
+      "guidance": "{nome}, a sua presença já diz muito, e o seu estilo a reforça. Para manter o impacto sob controle, escolha um ponto focal por look: ou a peça é marcante, ou o acessório é. Caimento e acabamento impecáveis são essenciais, porque as linhas fortes mostram qualquer imperfeição.",
+      "pieces": [
+        "Blazer de ombros estruturados em preto ou em cor intensa",
+        "Vestido justo de linhas retas e decote marcante",
+        "Calça de alfaiataria de cintura alta e perna longa",
+        "Camisa branca de gola alta e mangas amplas",
+        "Casaco longo de corte reto em cor sólida",
+        "Conjunto preto e branco de forte contraste",
+        "Saia lápis em couro ou tecido encorpado",
+        "Bota ou scarpin de design marcante"
+      ],
+      "accessories": [
+        "Brincos geométricos de metal de grande presença",
+        "Colar curto e escultural",
+        "Bolsa estruturada de formas retas",
+        "Cinto largo de couro com fivela de destaque",
+        "Óculos de sol de armação marcante",
+        "Pulseira rígida de metal"
+      ]
+    }
+  },
+  "pairs": {
+    "esportivo_natural|tradicional": "{nome}, a naturalidade do Esportivo/Natural encontra a sobriedade do Tradicional: o seu visual é confortável sem ser descuidado e organizado sem ser rígido. Combine peças clássicas de corte reto com tecidos leves, como uma camisa de algodão com calça de alfaiataria e tênis branco, e você terá looks que servem do trabalho ao fim de semana.",
+    "esportivo_natural|elegante": "{nome}, a leveza do Esportivo/Natural ganha refinamento com o Elegante. Seu caminho é o conforto sofisticado: tecidos nobres em modelagens soltas, tons neutros e poucos detalhes bem escolhidos. Uma calça fluida com camiseta de ótimo caimento e um sapato de couro limpo mostram que simples e elegante podem ser a mesma coisa.",
+    "esportivo_natural|romantico": "{nome}, o Esportivo/Natural dá praticidade ao seu lado Romântico, e o resultado é um feminino descontraído e muito autêntico. Misture peças delicadas, como uma blusa de renda ou um vestido floral, com itens casuais, como jaqueta jeans e tênis, para um visual suave e sem esforço.",
+    "esportivo_natural|criativo": "{nome}, a espontaneidade do Esportivo/Natural se une à originalidade do Criativo em looks descontraídos e cheios de personalidade. Use uma base confortável e acrescente um toque inusitado: uma estampa diferente, um acessório artesanal ou uma cor viva faz toda a diferença sem perder a leveza.",
+    "esportivo_natural|dramatico": "{nome}, o Esportivo/Natural suaviza a força do seu lado Dramático, e o resultado é um impacto que parece natural. Aposte em linhas retas e contrastes marcantes em tecidos confortáveis, como um conjunto de alfaiataria preto de modelagem folgada com uma camiseta branca e um sapato de design forte.",
+    "tradicional|esportivo_natural": "{nome}, a base clássica do Tradicional ganha leveza com o Esportivo/Natural. Você pode manter a sobriedade das peças de qualidade e descontrair o conjunto: um blazer azul-marinho sobre camiseta de algodão, calça reta e mocassim formam um look seguro, atual e confortável.",
+    "tradicional|elegante": "{nome}, o Tradicional e o Elegante caminham juntos no seu guarda-roupa: a base clássica ganha acabamento refinado. Invista em alfaiataria impecável, tecidos nobres e cores sóbrias bem combinadas, como o conjunto de camisa de seda, saia midi e scarpin, que transmite credibilidade e classe.",
+    "tradicional|romantico": "{nome}, a discrição do Tradicional encontra a delicadeza do Romântico. Você pode manter as formas clássicas e acrescentar suavidade: um vestido chemisier de estampa floral miúda, um cardigã em tom claro e um colar de pérolas compõem um visual doce e respeitável.",
+    "tradicional|criativo": "{nome}, a estrutura do Tradicional dá base ao seu lado Criativo, e a combinação é muito interessante. Construa os looks com peças clássicas e deixe a originalidade aparecer em um detalhe: um lenço estampado, um colar artesanal ou um sapato de cor diferente renovam o clássico sem desorganizá-lo.",
+    "tradicional|dramatico": "{nome}, o Tradicional dá o equilíbrio e o Dramático dá a presença. Seus melhores looks têm linhas clássicas com contrastes bem definidos: um blazer estruturado em cor intensa, camisa branca impecável e calça de alfaiataria escura comunicam autoridade com elegância.",
+    "elegante|esportivo_natural": "{nome}, a sofisticação do Elegante aparece, no seu caso, de um jeito leve e despretensioso. Escolha peças de qualidade em tons neutros e modelagens fluidas, como um conjunto de linho, e use o calçado para ajustar o tom: o sapato de couro formaliza, a sandália ou o tênis limpo descontraem.",
+    "elegante|tradicional": "{nome}, o Elegante lidera o seu estilo e o Tradicional garante a base sólida. Os cortes clássicos recebem acabamento refinado: tecidos nobres, caimento impecável e uma cartela de poucas cores. Um vestido de linhas retas com blazer e scarpin é um uniforme de sucesso para você.",
+    "elegante|romantico": "{nome}, o refinamento do Elegante e a delicadeza do Romântico formam uma feminilidade sofisticada. Prefira tecidos fluidos de qualidade, cores suaves e detalhes sutis, como um decote delicado ou uma manga com leve volume, que valorizam a silhueta sem excesso de enfeites.",
+    "elegante|criativo": "{nome}, o Elegante organiza e o Criativo surpreende, e o resultado é uma elegância com assinatura própria. Mantenha cortes impecáveis e cores harmoniosas e escolha um elemento original por look, como um brinco escultural, uma estampa autoral ou uma textura diferente.",
+    "elegante|dramatico": "{nome}, o Elegante e o Dramático se encontram em um visual poderoso e refinado. Linhas retas, cortes precisos e contrastes bem escolhidos funcionam muito bem: um vestido midi de cor intensa, um blazer estruturado e um acessório escultural dão presença sem perder a classe.",
+    "romantico|esportivo_natural": "{nome}, a delicadeza do Romântico ganha descontração com o Esportivo/Natural. Você pode usar peças suaves no dia a dia sem parecer produzida: uma saia plissada com camiseta básica e tênis, ou um vestido floral com jaqueta jeans, resultam em um visual doce e confortável.",
+    "romantico|tradicional": "{nome}, o Romântico traz a doçura e o Tradicional traz o bom senso. Escolha formas clássicas em tons suaves e tecidos delicados, como uma blusa de laço com saia midi e cardigã, e acessórios discretos, como brincos de pérola, para um visual feminino e atemporal.",
+    "romantico|elegante": "{nome}, o Romântico lidera e o Elegante refina o conjunto. Você pode usar rendas, fluidez e tons suaves com acabamento primoroso: tecidos de qualidade, cortes bem ajustados e poucos detalhes de impacto fazem a sua delicadeza parecer sofisticada.",
+    "romantico|criativo": "{nome}, a ternura do Romântico se mistura à originalidade do Criativo em um feminino cheio de fantasia. Explore estampas florais incomuns, cores suaves combinadas de forma inesperada e acessórios artesanais, deixando um elemento como protagonista para o visual não ficar carregado.",
+    "romantico|dramatico": "{nome}, o Romântico e o Dramático formam um contraste cheio de charme: a doçura que encanta e a força que marca presença. Experimente combinar um vestido fluido com uma jaqueta estruturada de couro, ou um laço delicado com um batom e um sapato de impacto.",
+    "criativo|esportivo_natural": "{nome}, a imaginação do Criativo ganha liberdade com o Esportivo/Natural. Seus looks funcionam quando são confortáveis e divertidos: peças-base soltas, com um toque de cor ou de estampa, e acessórios artesanais que contam algo sobre você, sem pesar na rotina.",
+    "criativo|tradicional": "{nome}, o Criativo conduz e o Tradicional organiza. Use o clássico como tela para a sua originalidade: um blazer de alfaiataria com estampa inesperada na blusa, ou uma calça reta com um colar autoral. Assim as suas ideias aparecem com ordem e boa proporção.",
+    "criativo|elegante": "{nome}, o Criativo e o Elegante produzem uma sofisticação artística. Escolha cortes limpos e tecidos nobres e permita-se uma estampa, uma cor ou um acessório de assinatura. Menos peças, mais autorais, é a fórmula para você brilhar sem parecer excessiva.",
+    "criativo|romantico": "{nome}, o Criativo e o Romântico se unem em um visual poético e cheio de fantasia. Brinque com estampas delicadas, tons suaves em misturas inesperadas e detalhes como laços e bordados, e use acessórios artesanais para manter a sua originalidade em evidência.",
+    "criativo|dramatico": "{nome}, o Criativo e o Dramático formam uma combinação de grande impacto e muita personalidade. Aposte em formas e cores intensas com linhas fortes, como uma peça assimétrica em preto com um acessório escultural colorido, e deixe um único ponto de destaque comandar o look.",
+    "dramatico|esportivo_natural": "{nome}, a força do Dramático ganha naturalidade com o Esportivo/Natural. Seus looks funcionam com linhas retas e contrastes simples em tecidos confortáveis: um conjunto escuro de modelagem solta, uma camisa branca ampla e um tênis ou bota de design forte mostram presença sem rigidez.",
+    "dramatico|tradicional": "{nome}, o Dramático dá impacto e o Tradicional garante a estrutura. Os cortes clássicos aparecem com cores intensas e contrastes marcados: um blazer escuro com camisa branca e uma saia lápis de couro formam um conjunto de autoridade e credibilidade.",
+    "dramatico|elegante": "{nome}, o Dramático lidera e o Elegante lapida. Mantenha as linhas fortes, as cores intensas e o contraste, e acrescente o refinamento dos tecidos nobres e dos acabamentos perfeitos. Um vestido estruturado em cor profunda com um acessório escultural resume o seu poder de presença.",
+    "dramatico|romantico": "{nome}, o Dramático e o Romântico se equilibram: força e delicadeza no mesmo visual. Use linhas fortes com tecidos macios, como um vestido justo com detalhe de renda, ou combine uma peça estruturada com um acessório delicado para suavizar o impacto.",
+    "dramatico|criativo": "{nome}, o Dramático e o Criativo formam um estilo ousado e original. Aposte em contrastes de cor, texturas e formas marcantes, com um elemento inusitado por look: um casaco longo de corte diferente, um colar escultural ou uma estampa gráfica de impacto."
+  }
+}
