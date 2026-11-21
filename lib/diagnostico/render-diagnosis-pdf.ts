@@ -22,6 +22,8 @@ export async function renderDiagnosisPdf(
   options: {
     timeoutMs?: number;
     customerName?: string;
+    /** Folder of the light image copies (tests only; the default is assets/pdf-images). */
+    imagesDir?: string;
     /** Replaces the library renderer (tests only: a renderer that never finishes proves the limit). */
     renderer?: (element: unknown) => Promise<Uint8Array>;
   } = {},
@@ -37,6 +39,7 @@ export async function renderDiagnosisPdf(
     const element = createElement(DiagnosisDocument, {
       content,
       customerName: options.customerName ?? content.customer.firstName,
+      ...(options.imagesDir ? { imagesDir: options.imagesDir } : {}),
     });
     // renderToBuffer takes the document element; the cast keeps the library types out of our code.
     // The limit protects against a render that stalls; layout work itself is synchronous.

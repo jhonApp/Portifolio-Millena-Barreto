@@ -79,7 +79,8 @@ describe("the diagnosis PDF", () => {
   });
 
   it("the secondary page speaks of the second style, not of the predominant one", () => {
-    expect(read.pages[2]).toContain(`o seu segundo estilo é o ${content.secondary.label}`);
+    // The text of the secondary style now opens with "O seu segundo estilo" (no leading first name).
+    expect(read.pages[2]).toContain(`seu segundo estilo é o ${content.secondary.label}`);
     expect(read.pages[2]).not.toContain("predominante é o");
     expect(read.pages[1]).toContain(`o seu estilo predominante é o ${content.predominant.label}`);
   });
@@ -114,10 +115,11 @@ describe("the diagnosis PDF", () => {
     expect(compact(long.pages[0])).toContain("albuquerque");
   });
 
-  it("the predominant and the secondary pages carry the editorial image of their style and no other page does", async () => {
+  it("the cover, the two style pages and the numbers page carry the images, and no other page does", async () => {
     expect(pdfStyleImage(content.predominant.style)).not.toBeNull();
     expect(pdfStyleImage(content.secondary.style)).not.toBeNull();
-    expect(await imagesPerPage(pdf)).toEqual([0, 1, 1, 0, 0, 0, 0, 0]);
+    // cover (predominant, under a dark layer), the two style pages, and two thumbnails on the numbers page.
+    expect(await imagesPerPage(pdf)).toEqual([1, 1, 1, 2, 0, 0, 0, 0]);
   });
 
   it("every style has a light image file for the PDF", () => {

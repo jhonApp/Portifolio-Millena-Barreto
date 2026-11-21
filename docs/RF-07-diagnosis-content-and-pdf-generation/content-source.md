@@ -174,63 +174,63 @@ Fonte das migrations `20260101000011_seed_content_v1.sql` e `20260101000014_seco
 
 ## Parágrafos de combinação (estilo predominante + secundário)
 
-**Esportivo/Natural + Tradicional:** {nome}, a naturalidade do Esportivo/Natural encontra a sobriedade do Tradicional: o seu visual é confortável sem ser descuidado e organizado sem ser rígido. Combine peças clássicas de corte reto com tecidos leves, como uma camisa de algodão com calça de alfaiataria e tênis branco, e você terá looks que servem do trabalho ao fim de semana.
+**Esportivo/Natural + Tradicional:** A naturalidade do Esportivo/Natural encontra a sobriedade do Tradicional: o seu visual é confortável sem ser descuidado e organizado sem ser rígido. Combine peças clássicas de corte reto com tecidos leves, como uma camisa de algodão com calça de alfaiataria e tênis branco, e você terá looks que servem do trabalho ao fim de semana.
 
-**Esportivo/Natural + Elegante:** {nome}, a leveza do Esportivo/Natural ganha refinamento com o Elegante. Seu caminho é o conforto sofisticado: tecidos nobres em modelagens soltas, tons neutros e poucos detalhes bem escolhidos. Uma calça fluida com camiseta de ótimo caimento e um sapato de couro limpo mostram que simples e elegante podem ser a mesma coisa.
+**Esportivo/Natural + Elegante:** A leveza do Esportivo/Natural ganha refinamento com o Elegante. Seu caminho é o conforto sofisticado: tecidos nobres em modelagens soltas, tons neutros e poucos detalhes bem escolhidos. Uma calça fluida com camiseta de ótimo caimento e um sapato de couro limpo mostram que simples e elegante podem ser a mesma coisa.
 
-**Esportivo/Natural + Romântico:** {nome}, o Esportivo/Natural dá praticidade ao seu lado Romântico, e o resultado é um feminino descontraído e muito autêntico. Misture peças delicadas, como uma blusa de renda ou um vestido floral, com itens casuais, como jaqueta jeans e tênis, para um visual suave e sem esforço.
+**Esportivo/Natural + Romântico:** O Esportivo/Natural dá praticidade ao seu lado Romântico, e o resultado é um feminino descontraído e muito autêntico. Misture peças delicadas, como uma blusa de renda ou um vestido floral, com itens casuais, como jaqueta jeans e tênis, para um visual suave e sem esforço.
 
-**Esportivo/Natural + Criativo:** {nome}, a espontaneidade do Esportivo/Natural se une à originalidade do Criativo em looks descontraídos e cheios de personalidade. Use uma base confortável e acrescente um toque inusitado: uma estampa diferente, um acessório artesanal ou uma cor viva faz toda a diferença sem perder a leveza.
+**Esportivo/Natural + Criativo:** A espontaneidade do Esportivo/Natural se une à originalidade do Criativo em looks descontraídos e cheios de personalidade. Use uma base confortável e acrescente um toque inusitado: uma estampa diferente, um acessório artesanal ou uma cor viva faz toda a diferença sem perder a leveza.
 
-**Esportivo/Natural + Dramático:** {nome}, o Esportivo/Natural suaviza a força do seu lado Dramático, e o resultado é um impacto que parece natural. Aposte em linhas retas e contrastes marcantes em tecidos confortáveis, como um conjunto de alfaiataria preto de modelagem folgada com uma camiseta branca e um sapato de design forte.
+**Esportivo/Natural + Dramático:** O Esportivo/Natural suaviza a força do seu lado Dramático, e o resultado é um impacto que parece natural. Aposte em linhas retas e contrastes marcantes em tecidos confortáveis, como um conjunto de alfaiataria preto de modelagem folgada com uma camiseta branca e um sapato de design forte.
 
-**Tradicional + Esportivo/Natural:** {nome}, a base clássica do Tradicional ganha leveza com o Esportivo/Natural. Você pode manter a sobriedade das peças de qualidade e descontrair o conjunto: um blazer azul-marinho sobre camiseta de algodão, calça reta e mocassim formam um look seguro, atual e confortável.
+**Tradicional + Esportivo/Natural:** A base clássica do Tradicional ganha leveza com o Esportivo/Natural. Você pode manter a sobriedade das peças de qualidade e descontrair o conjunto: um blazer azul-marinho sobre camiseta de algodão, calça reta e mocassim formam um look seguro, atual e confortável.
 
-**Tradicional + Elegante:** {nome}, o Tradicional e o Elegante caminham juntos no seu guarda-roupa: a base clássica ganha acabamento refinado. Invista em alfaiataria impecável, tecidos nobres e cores sóbrias bem combinadas, como o conjunto de camisa de seda, saia midi e scarpin, que transmite credibilidade e classe.
+**Tradicional + Elegante:** O Tradicional e o Elegante caminham juntos no seu guarda-roupa: a base clássica ganha acabamento refinado. Invista em alfaiataria impecável, tecidos nobres e cores sóbrias bem combinadas, como o conjunto de camisa de seda, saia midi e scarpin, que transmite credibilidade e classe.
 
-**Tradicional + Romântico:** {nome}, a discrição do Tradicional encontra a delicadeza do Romântico. Você pode manter as formas clássicas e acrescentar suavidade: um vestido chemisier de estampa floral miúda, um cardigã em tom claro e um colar de pérolas compõem um visual doce e respeitável.
+**Tradicional + Romântico:** A discrição do Tradicional encontra a delicadeza do Romântico. Você pode manter as formas clássicas e acrescentar suavidade: um vestido chemisier de estampa floral miúda, um cardigã em tom claro e um colar de pérolas compõem um visual doce e respeitável.
 
-**Tradicional + Criativo:** {nome}, a estrutura do Tradicional dá base ao seu lado Criativo, e a combinação é muito interessante. Construa os looks com peças clássicas e deixe a originalidade aparecer em um detalhe: um lenço estampado, um colar artesanal ou um sapato de cor diferente renovam o clássico sem desorganizá-lo.
+**Tradicional + Criativo:** A estrutura do Tradicional dá base ao seu lado Criativo, e a combinação é muito interessante. Construa os looks com peças clássicas e deixe a originalidade aparecer em um detalhe: um lenço estampado, um colar artesanal ou um sapato de cor diferente renovam o clássico sem desorganizá-lo.
 
-**Tradicional + Dramático:** {nome}, o Tradicional dá o equilíbrio e o Dramático dá a presença. Seus melhores looks têm linhas clássicas com contrastes bem definidos: um blazer estruturado em cor intensa, camisa branca impecável e calça de alfaiataria escura comunicam autoridade com elegância.
+**Tradicional + Dramático:** O Tradicional dá o equilíbrio e o Dramático dá a presença. Seus melhores looks têm linhas clássicas com contrastes bem definidos: um blazer estruturado em cor intensa, camisa branca impecável e calça de alfaiataria escura comunicam autoridade com elegância.
 
-**Elegante + Esportivo/Natural:** {nome}, a sofisticação do Elegante aparece, no seu caso, de um jeito leve e despretensioso. Escolha peças de qualidade em tons neutros e modelagens fluidas, como um conjunto de linho, e use o calçado para ajustar o tom: o sapato de couro formaliza, a sandália ou o tênis limpo descontraem.
+**Elegante + Esportivo/Natural:** A sofisticação do Elegante aparece, no seu caso, de um jeito leve e despretensioso. Escolha peças de qualidade em tons neutros e modelagens fluidas, como um conjunto de linho, e use o calçado para ajustar o tom: o sapato de couro formaliza, a sandália ou o tênis limpo descontraem.
 
-**Elegante + Tradicional:** {nome}, o Elegante lidera o seu estilo e o Tradicional garante a base sólida. Os cortes clássicos recebem acabamento refinado: tecidos nobres, caimento impecável e uma cartela de poucas cores. Um vestido de linhas retas com blazer e scarpin é um uniforme de sucesso para você.
+**Elegante + Tradicional:** O Elegante lidera o seu estilo e o Tradicional garante a base sólida. Os cortes clássicos recebem acabamento refinado: tecidos nobres, caimento impecável e uma cartela de poucas cores. Um vestido de linhas retas com blazer e scarpin é um uniforme de sucesso para você.
 
-**Elegante + Romântico:** {nome}, o refinamento do Elegante e a delicadeza do Romântico formam uma feminilidade sofisticada. Prefira tecidos fluidos de qualidade, cores suaves e detalhes sutis, como um decote delicado ou uma manga com leve volume, que valorizam a silhueta sem excesso de enfeites.
+**Elegante + Romântico:** O refinamento do Elegante e a delicadeza do Romântico formam uma feminilidade sofisticada. Prefira tecidos fluidos de qualidade, cores suaves e detalhes sutis, como um decote delicado ou uma manga com leve volume, que valorizam a silhueta sem excesso de enfeites.
 
-**Elegante + Criativo:** {nome}, o Elegante organiza e o Criativo surpreende, e o resultado é uma elegância com assinatura própria. Mantenha cortes impecáveis e cores harmoniosas e escolha um elemento original por look, como um brinco escultural, uma estampa autoral ou uma textura diferente.
+**Elegante + Criativo:** O Elegante organiza e o Criativo surpreende, e o resultado é uma elegância com assinatura própria. Mantenha cortes impecáveis e cores harmoniosas e escolha um elemento original por look, como um brinco escultural, uma estampa autoral ou uma textura diferente.
 
-**Elegante + Dramático:** {nome}, o Elegante e o Dramático se encontram em um visual poderoso e refinado. Linhas retas, cortes precisos e contrastes bem escolhidos funcionam muito bem: um vestido midi de cor intensa, um blazer estruturado e um acessório escultural dão presença sem perder a classe.
+**Elegante + Dramático:** O Elegante e o Dramático se encontram em um visual poderoso e refinado. Linhas retas, cortes precisos e contrastes bem escolhidos funcionam muito bem: um vestido midi de cor intensa, um blazer estruturado e um acessório escultural dão presença sem perder a classe.
 
-**Romântico + Esportivo/Natural:** {nome}, a delicadeza do Romântico ganha descontração com o Esportivo/Natural. Você pode usar peças suaves no dia a dia sem parecer produzida: uma saia plissada com camiseta básica e tênis, ou um vestido floral com jaqueta jeans, resultam em um visual doce e confortável.
+**Romântico + Esportivo/Natural:** A delicadeza do Romântico ganha descontração com o Esportivo/Natural. Você pode usar peças suaves no dia a dia sem parecer produzida: uma saia plissada com camiseta básica e tênis, ou um vestido floral com jaqueta jeans, resultam em um visual doce e confortável.
 
-**Romântico + Tradicional:** {nome}, o Romântico traz a doçura e o Tradicional traz o bom senso. Escolha formas clássicas em tons suaves e tecidos delicados, como uma blusa de laço com saia midi e cardigã, e acessórios discretos, como brincos de pérola, para um visual feminino e atemporal.
+**Romântico + Tradicional:** O Romântico traz a doçura e o Tradicional traz o bom senso. Escolha formas clássicas em tons suaves e tecidos delicados, como uma blusa de laço com saia midi e cardigã, e acessórios discretos, como brincos de pérola, para um visual feminino e atemporal.
 
-**Romântico + Elegante:** {nome}, o Romântico lidera e o Elegante refina o conjunto. Você pode usar rendas, fluidez e tons suaves com acabamento primoroso: tecidos de qualidade, cortes bem ajustados e poucos detalhes de impacto fazem a sua delicadeza parecer sofisticada.
+**Romântico + Elegante:** O Romântico lidera e o Elegante refina o conjunto. Você pode usar rendas, fluidez e tons suaves com acabamento primoroso: tecidos de qualidade, cortes bem ajustados e poucos detalhes de impacto fazem a sua delicadeza parecer sofisticada.
 
-**Romântico + Criativo:** {nome}, a ternura do Romântico se mistura à originalidade do Criativo em um feminino cheio de fantasia. Explore estampas florais incomuns, cores suaves combinadas de forma inesperada e acessórios artesanais, deixando um elemento como protagonista para o visual não ficar carregado.
+**Romântico + Criativo:** A ternura do Romântico se mistura à originalidade do Criativo em um feminino cheio de fantasia. Explore estampas florais incomuns, cores suaves combinadas de forma inesperada e acessórios artesanais, deixando um elemento como protagonista para o visual não ficar carregado.
 
-**Romântico + Dramático:** {nome}, o Romântico e o Dramático formam um contraste cheio de charme: a doçura que encanta e a força que marca presença. Experimente combinar um vestido fluido com uma jaqueta estruturada de couro, ou um laço delicado com um batom e um sapato de impacto.
+**Romântico + Dramático:** O Romântico e o Dramático formam um contraste cheio de charme: a doçura que encanta e a força que marca presença. Experimente combinar um vestido fluido com uma jaqueta estruturada de couro, ou um laço delicado com um batom e um sapato de impacto.
 
-**Criativo + Esportivo/Natural:** {nome}, a imaginação do Criativo ganha liberdade com o Esportivo/Natural. Seus looks funcionam quando são confortáveis e divertidos: peças-base soltas, com um toque de cor ou de estampa, e acessórios artesanais que contam algo sobre você, sem pesar na rotina.
+**Criativo + Esportivo/Natural:** A imaginação do Criativo ganha liberdade com o Esportivo/Natural. Seus looks funcionam quando são confortáveis e divertidos: peças-base soltas, com um toque de cor ou de estampa, e acessórios artesanais que contam algo sobre você, sem pesar na rotina.
 
-**Criativo + Tradicional:** {nome}, o Criativo conduz e o Tradicional organiza. Use o clássico como tela para a sua originalidade: um blazer de alfaiataria com estampa inesperada na blusa, ou uma calça reta com um colar autoral. Assim as suas ideias aparecem com ordem e boa proporção.
+**Criativo + Tradicional:** O Criativo conduz e o Tradicional organiza. Use o clássico como tela para a sua originalidade: um blazer de alfaiataria com estampa inesperada na blusa, ou uma calça reta com um colar autoral. Assim as suas ideias aparecem com ordem e boa proporção.
 
-**Criativo + Elegante:** {nome}, o Criativo e o Elegante produzem uma sofisticação artística. Escolha cortes limpos e tecidos nobres e permita-se uma estampa, uma cor ou um acessório de assinatura. Menos peças, mais autorais, é a fórmula para você brilhar sem parecer excessiva.
+**Criativo + Elegante:** O Criativo e o Elegante produzem uma sofisticação artística. Escolha cortes limpos e tecidos nobres e permita-se uma estampa, uma cor ou um acessório de assinatura. Menos peças, mais autorais, é a fórmula para você brilhar sem parecer excessiva.
 
-**Criativo + Romântico:** {nome}, o Criativo e o Romântico se unem em um visual poético e cheio de fantasia. Brinque com estampas delicadas, tons suaves em misturas inesperadas e detalhes como laços e bordados, e use acessórios artesanais para manter a sua originalidade em evidência.
+**Criativo + Romântico:** O Criativo e o Romântico se unem em um visual poético e cheio de fantasia. Brinque com estampas delicadas, tons suaves em misturas inesperadas e detalhes como laços e bordados, e use acessórios artesanais para manter a sua originalidade em evidência.
 
-**Criativo + Dramático:** {nome}, o Criativo e o Dramático formam uma combinação de grande impacto e muita personalidade. Aposte em formas e cores intensas com linhas fortes, como uma peça assimétrica em preto com um acessório escultural colorido, e deixe um único ponto de destaque comandar o look.
+**Criativo + Dramático:** O Criativo e o Dramático formam uma combinação de grande impacto e muita personalidade. Aposte em formas e cores intensas com linhas fortes, como uma peça assimétrica em preto com um acessório escultural colorido, e deixe um único ponto de destaque comandar o look.
 
-**Dramático + Esportivo/Natural:** {nome}, a força do Dramático ganha naturalidade com o Esportivo/Natural. Seus looks funcionam com linhas retas e contrastes simples em tecidos confortáveis: um conjunto escuro de modelagem solta, uma camisa branca ampla e um tênis ou bota de design forte mostram presença sem rigidez.
+**Dramático + Esportivo/Natural:** A força do Dramático ganha naturalidade com o Esportivo/Natural. Seus looks funcionam com linhas retas e contrastes simples em tecidos confortáveis: um conjunto escuro de modelagem solta, uma camisa branca ampla e um tênis ou bota de design forte mostram presença sem rigidez.
 
-**Dramático + Tradicional:** {nome}, o Dramático dá impacto e o Tradicional garante a estrutura. Os cortes clássicos aparecem com cores intensas e contrastes marcados: um blazer escuro com camisa branca e uma saia lápis de couro formam um conjunto de autoridade e credibilidade.
+**Dramático + Tradicional:** O Dramático dá impacto e o Tradicional garante a estrutura. Os cortes clássicos aparecem com cores intensas e contrastes marcados: um blazer escuro com camisa branca e uma saia lápis de couro formam um conjunto de autoridade e credibilidade.
 
-**Dramático + Elegante:** {nome}, o Dramático lidera e o Elegante lapida. Mantenha as linhas fortes, as cores intensas e o contraste, e acrescente o refinamento dos tecidos nobres e dos acabamentos perfeitos. Um vestido estruturado em cor profunda com um acessório escultural resume o seu poder de presença.
+**Dramático + Elegante:** O Dramático lidera e o Elegante lapida. Mantenha as linhas fortes, as cores intensas e o contraste, e acrescente o refinamento dos tecidos nobres e dos acabamentos perfeitos. Um vestido estruturado em cor profunda com um acessório escultural resume o seu poder de presença.
 
-**Dramático + Romântico:** {nome}, o Dramático e o Romântico se equilibram: força e delicadeza no mesmo visual. Use linhas fortes com tecidos macios, como um vestido justo com detalhe de renda, ou combine uma peça estruturada com um acessório delicado para suavizar o impacto.
+**Dramático + Romântico:** O Dramático e o Romântico se equilibram: força e delicadeza no mesmo visual. Use linhas fortes com tecidos macios, como um vestido justo com detalhe de renda, ou combine uma peça estruturada com um acessório delicado para suavizar o impacto.
 
-**Dramático + Criativo:** {nome}, o Dramático e o Criativo formam um estilo ousado e original. Aposte em contrastes de cor, texturas e formas marcantes, com um elemento inusitado por look: um casaco longo de corte diferente, um colar escultural ou uma estampa gráfica de impacto.
+**Dramático + Criativo:** O Dramático e o Criativo formam um estilo ousado e original. Aposte em contrastes de cor, texturas e formas marcantes, com um elemento inusitado por look: um casaco longo de corte diferente, um colar escultural ou uma estampa gráfica de impacto.
 

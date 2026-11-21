@@ -5,18 +5,19 @@ import Image from "next/image";
 import { useState } from "react";
 import { STYLE_LABELS, type Style } from "@/lib/diagnostico/constants";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
+import type { ResultImages } from "@/lib/diagnostico/style-images";
 
 type Props = {
   token: string;
   content: DiagnosisContent;
   hasPdf: boolean;
-  /** The editorial image of the predominant style, or null while none has been supplied. */
-  imageSrc: string | null;
+  /** The editorial images; each is null while none has been supplied. */
+  images: ResultImages;
 };
 
 const PDF_ERROR = "Não conseguimos gerar o PDF agora. Tente novamente.";
 
-export default function ResultView({ token, content, hasPdf, imageSrc }: Props) {
+export default function ResultView({ token, content, hasPdf, images }: Props) {
   const reduceMotion = useReducedMotion();
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
@@ -28,6 +29,7 @@ export default function ResultView({ token, content, hasPdf, imageSrc }: Props) 
     { title: string; paragraphs: string[] },
   ];
   const predominantName = STYLE_LABELS[content.predominant.style as Style];
+  const secondaryName = STYLE_LABELS[content.secondary.style as Style];
 
   async function download() {
     setDownloading(true);
@@ -60,44 +62,56 @@ export default function ResultView({ token, content, hasPdf, imageSrc }: Props) 
         SEU DIAGNÓSTICO DE ESTILO
       </h1>
 
-      {imageSrc ? (
-        <div className="relative mt-8 h-[260px] w-full overflow-hidden rounded-lg bg-neutral-200">
+      <div className="mt-8 flex flex-col items-center gap-6 xl:flex-row xl:items-center xl:gap-8">
+        {images.predominant ? (
           <Image
-            src={imageSrc}
-            alt={`Estilo ${predominantName}`}
-            fill
+            src={images.predominant.src}
+            width={images.predominant.width}
+            height={images.predominant.height}
+            alt={`Look de referência do estilo ${predominantName}, o seu estilo predominante`}
             priority
-            sizes="(min-width: 700px) 640px, 100vw"
-            className="object-cover"
+            sizes="(min-width: 1280px) 260px, 240px"
+            className="h-auto w-[240px] max-w-full rounded-lg bg-neutral-200 xl:w-[260px] xl:shrink-0"
           />
-        </div>
-      ) : (
-        <div
-          aria-hidden="true"
-          className="mt-8 flex h-[200px] items-center justify-center rounded-lg bg-accent px-4 text-center font-primary text-[44px] leading-none tracking-wide text-white xl:h-[260px] xl:text-[72px]"
-        >
-          {predominantName}
-        </div>
-      )}
+        ) : (
+          <div
+            aria-hidden="true"
+            className="flex h-[200px] w-full items-center justify-center rounded-lg bg-accent px-4 text-center font-primary text-[44px] leading-none tracking-wide text-white xl:h-[260px] xl:w-[260px] xl:shrink-0 xl:text-[48px]"
+          >
+            {predominantName}
+          </div>
+        )}
 
-      <p className="mt-8 text-center text-xs font-semibold uppercase tracking-[3px] text-accent">
-        Seu estilo predominante
-      </p>
-      <p className="mt-1 break-words text-center font-primary text-[44px] leading-none text-primary xl:text-[80px]">
-        {predominantName}
-      </p>
-      <p className="mt-1 text-center text-sm text-secondary">{content.predominant.percent}% das suas escolhas</p>
-      <p className="mt-4 text-center text-base text-primary">
-        Seu segundo estilo: <strong>{STYLE_LABELS[content.secondary.style as Style]}</strong>
-      </p>
+        <div className="min-w-0 text-center xl:text-left">
+          <p className="text-xs font-semibold uppercase tracking-[3px] text-accent">Seu estilo predominante</p>
+          <p className="mt-1 break-words font-primary text-[44px] leading-none text-primary xl:text-[60px]">
+            {predominantName}
+          </p>
+          <p className="mt-1 text-sm text-secondary">{content.predominant.percent}% das suas escolhas</p>
+          <p className="mt-4 text-base text-primary">
+            Seu segundo estilo: <strong>{secondaryName}</strong>
+          </p>
+        </div>
+      </div>
 
       <section className="mt-10">
         <h2 className="font-primary text-[28px] text-primary">{result.title}</h2>
-        {result.paragraphs.map((paragraph) => (
-          <p key={paragraph} className="mt-3 text-base leading-relaxed text-secondary">
-            {paragraph}
-          </p>
-        ))}
+        <p className="mt-3 text-base leading-relaxed text-secondary">{result.paragraphs[0]}</p>
+        <div className="mt-3 flex items-start gap-4">
+          {images.secondary ? (
+            <Image
+              src={images.secondary.src}
+              width={images.secondary.width}
+              height={images.secondary.height}
+              alt={`Look de referência do estilo ${secondaryName}, o seu segundo estilo`}
+              loading="lazy"
+              sizes="(min-width: 1280px) 128px, 96px"
+              className="h-auto w-24 shrink-0 rounded-md bg-neutral-200 xl:w-32"
+            />
+          ) : null}
+          <p className="min-w-0 text-base leading-relaxed text-secondary">{result.paragraphs[1]}</p>
+        </div>
+        <p className="mt-3 text-base leading-relaxed text-secondary">{result.paragraphs[2]}</p>
       </section>
 
       <section className="mt-10">
@@ -113,6 +127,17 @@ export default function ResultView({ token, content, hasPdf, imageSrc }: Props) 
             </li>
           ))}
         </ul>
+        {images.pieces ? (
+          <Image
+            src={images.pieces.src}
+            width={images.pieces.width}
+            height={images.pieces.height}
+            alt={`Peças de referência do estilo ${predominantName}`}
+            loading="lazy"
+            sizes="(min-width: 700px) 320px, 100vw"
+            className="mx-auto mt-5 h-auto w-full max-w-[320px] rounded-lg bg-neutral-200"
+          />
+        ) : null}
       </section>
 
       <section className="mt-10">
@@ -128,6 +153,17 @@ export default function ResultView({ token, content, hasPdf, imageSrc }: Props) 
             </li>
           ))}
         </ul>
+        {images.accessories ? (
+          <Image
+            src={images.accessories.src}
+            width={images.accessories.width}
+            height={images.accessories.height}
+            alt={`Acessórios de referência do estilo ${predominantName}`}
+            loading="lazy"
+            sizes="(min-width: 700px) 320px, 100vw"
+            className="mx-auto mt-5 h-auto w-full max-w-[320px] rounded-lg bg-neutral-200"
+          />
+        ) : null}
       </section>
 
       <section className="mt-10">

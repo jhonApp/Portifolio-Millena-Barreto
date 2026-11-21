@@ -3,7 +3,7 @@
 // PDF (stored in a bucket limited to 2 MB and attached to an e-mail) embeds two of them. Each copy is a
 // JPEG of at most 800 x 1360 pixels. Run: node scripts/generate-pdf-images.mjs
 import sharp from "sharp";
-import { mkdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 
 const SOURCES = {
   esportivo_natural: "esportivo.jpg",
@@ -14,10 +14,20 @@ const SOURCES = {
   dramatico: "dramatico.png",
 };
 
+const SLOTS = ["pecas", "acessorios"];
+
+// The slots (<style>-pecas.jpg, <style>-acessorios.jpg) are photos of pieces and accessories the owner has
+// not sent yet: a slot whose source file does not exist is skipped, and the PDF renders without it.
+const jobs = Object.entries(SOURCES).map(([style, file]) => ({ out: style, source: file }));
+for (const style of Object.keys(SOURCES)) {
+  for (const slot of SLOTS) jobs.push({ out: `${style}-${slot}`, source: `${style}-${slot}.jpg` });
+}
+
 mkdirSync("assets/pdf-images", { recursive: true });
-for (const [style, file] of Object.entries(SOURCES)) {
-  const out = `assets/pdf-images/${style}.jpg`;
-  await sharp(`public/assets/diagnostic/${file}`)
+for (const { out: name, source } of jobs) {
+  if (!existsSync(`public/assets/diagnostic/${source}`)) continue;
+  const out = `assets/pdf-images/${name}.jpg`;
+  await sharp(`public/assets/diagnostic/${source}`)
     .resize({ width: 800, height: 1360, fit: "inside", withoutEnlargement: true })
     .flatten({ background: "#ffffff" })
     .jpeg({ quality: 78, mozjpeg: true })

@@ -5,7 +5,7 @@ import ResultView from "@/components/Diagnostico/ResultView";
 import type { Style } from "@/lib/diagnostico/constants";
 import { EXPIRED_LINK_NOTICE, RESULT_PATH } from "@/lib/diagnostico/paths";
 import { loadResultByToken } from "@/lib/diagnostico/result-page";
-import { styleImageFor } from "@/lib/diagnostico/style-images";
+import { resultImagesFor } from "@/lib/diagnostico/style-images";
 import { getSupabaseAdmin } from "@/lib/diagnostico/supabase-server";
 
 // The token is the credential: always rendered on the server, never indexed, and never sent to
@@ -55,7 +55,7 @@ export default async function ResultPage({ params }: { params: { token: string }
       token={params.token}
       content={state.content}
       hasPdf={state.hasPdf}
-      imageSrc={styleImageFor(state.content.predominant.style as Style)}
+      images={resultImagesFor(state.content.predominant.style as Style, state.content.secondary.style as Style)}
     />
   );
 }
