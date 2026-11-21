@@ -294,3 +294,58 @@ export async function readPdf(bytes: Uint8Array): Promise<ReadPdf> {
   await loading.destroy();
   return { pages, width, height, bytes: bytes.length };
 }
+
+/**
+ * Saves the 15 answers of an attempt on the published version, choosing for each question the
+ * alternative at index `choose(position)` (0 to 3 in the stored order).
+ */
+export async function fillAnswersWith(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+  choose: (questionPosition: number) => number,
+) {
+  const { data: published } = await db.from("questionnaire_versions").select("id").eq("status", "published").single();
+  const { data: questions } = await db.from("questions").select("id, position").eq("version_id", published!.id).order("position");
+  for (const question of questions ?? []) {
+    const { data: alternatives } = await db
+      .from("alternatives")
+      .select("id")
+      .eq("question_id", question.id)
+      .order("position");
+    const alternative = alternatives![choose(question.position) % alternatives!.length];
+    const { error } = await db.from("answers").insert({
+      attempt_id: attemptId,
+      version_id: published!.id,
+      question_id: question.id,
+      alternative_id: alternative.id,
+    });
+    if (error) throw new Error(`fillAnswersWith: ${error.message}`);
+  }
+}
+
+/** A customer with an attempt, 15 answers and an APPROVED order with a PAID payment. */
+export async function createApprovedOrder(
+  db: SupabaseClient<Database>,
+  options: { name?: string; choose?: (questionPosition: number) => number; answers?: number } = {},
+) {
+  const { data: customer, error } = await db
+    .from("customers")
+    .insert({
+      name: options.name ?? "Maria Teste Silva",
+      email: `teste-${randomUUID()}@example.com`,
+      whatsapp: "+5511912345678",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createApprovedOrder: ${error.message}`);
+  const attempt = await createAttempt(db, customer.id);
+  if (options.answers === undefined || options.answers === 15) {
+    await fillAnswersWith(db, attempt.id, options.choose ?? (() => 0));
+  } else {
+    await fillAnswers(db, attempt.id, options.answers);
+  }
+  const { order } = await createOrderWithPayment(db, attempt.id, "APPROVED");
+  await db.from("payments").update({ status: "PAID" }).eq("order_id", order.id);
+  await db.from("orders").update({ approved_at: new Date().toISOString() }).eq("id", order.id);
+  return { customerId: customer.id, attemptId: attempt.id, orderId: order.id, name: customer.name };
+}

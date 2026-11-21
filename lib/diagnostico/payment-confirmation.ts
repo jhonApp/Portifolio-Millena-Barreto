@@ -2,9 +2,12 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createHash, randomBytes } from "node:crypto";
 import { PRICE_CENTS, type OrderStatus } from "./constants";
-import type { Database, Json } from "./database.types";
+import type { Database } from "./database.types";
 import { startGeneration as defaultStartGeneration } from "./generation-hook";
+import { recordAutomationError } from "./automation-errors";
 import { PixGatewayError, type PixGateway } from "./pix-gateway";
+
+export { recordAutomationError };
 
 type Db = SupabaseClient<Database>;
 
@@ -26,21 +29,6 @@ export class PaymentCheckError extends Error {
 }
 
 const PAID_STATUSES: OrderStatus[] = ["APPROVED", "PROCESSING", "DELIVERED"];
-
-/** Records a case that needs a person to look at it (shown in the admin panel by RF-10). */
-export async function recordAutomationError(
-  db: Db,
-  orderId: string | null,
-  step: string,
-  message: string,
-  context?: Record<string, Json>,
-): Promise<void> {
-  const { error } = await db
-    .from("automation_errors")
-    .insert({ order_id: orderId, step, message, context: context ?? null });
-  // Never throw from the flagging itself; never log personal data.
-  if (error) console.error("automation error could not be recorded", step);
-}
 
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");

@@ -11,6 +11,9 @@ import { adminClient, readPdf, type ReadPdf } from "./helpers";
 const db = adminClient();
 const CUSTOMER = "Maria Souza Lima";
 
+// Letter-spaced headings come out of the text reader with spaces between letters: compare without them.
+const compact = (text: string) => text.toLowerCase().replace(/\s+/g, "");
+
 let content: DiagnosisContent;
 let pdf: Uint8Array;
 let elapsed = 0;
@@ -41,7 +44,7 @@ beforeAll(async () => {
 
 describe("the diagnosis PDF", () => {
   it("the PDF has the customer name on the cover", () => {
-    expect(read.pages[0]).toContain(CUSTOMER);
+    expect(compact(read.pages[0])).toContain(compact(CUSTOMER));
   });
 
   it("the PDF has the eight parts in order", () => {
@@ -56,8 +59,6 @@ describe("the diagnosis PDF", () => {
       PART_TITLES.closing,
     ];
     expect(read.pages).toHaveLength(8);
-    // Letter-spaced headings come out of the text reader with spaces between letters: compare without them.
-    const compact = (text: string) => text.toLowerCase().replace(/\s+/g, "");
     expected.forEach((title, index) => {
       expect(compact(read.pages[index]), `part ${index + 1}`).toContain(compact(title));
     });
@@ -101,6 +102,6 @@ describe("the diagnosis PDF", () => {
     });
     const long = await readPdf(bytes);
     expect(long.pages).toHaveLength(8);
-    expect(long.pages[0]).toContain("Albuquerque");
+    expect(compact(long.pages[0])).toContain("albuquerque");
   });
 });
