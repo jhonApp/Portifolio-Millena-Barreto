@@ -1,17 +1,11 @@
-import { createHash, timingSafeEqual } from "node:crypto";
-import { ConfigError, getCronEnv } from "@/lib/diagnostico/env";
+import { isAuthorizedCron } from "@/lib/diagnostico/cron-auth";
+import { ConfigError } from "@/lib/diagnostico/env";
 import { apiError } from "@/lib/diagnostico/errors";
 import { runDueDeliveries, type DeliveryDeps } from "@/lib/diagnostico/delivery";
 import { runDueGenerations, type GenerationDeps } from "@/lib/diagnostico/generation";
 import { getSupabaseAdmin } from "@/lib/diagnostico/supabase-server";
 
 const BATCH_SIZE = 5;
-
-function sameSecret(received: string, expected: string): boolean {
-  const left = createHash("sha256").update(received).digest();
-  const right = createHash("sha256").update(expected).digest();
-  return timingSafeEqual(left, right);
-}
 
 /**
  * The cron job: runs the generations that are due (retries, expired leases, approvals whose first
@@ -23,12 +17,7 @@ export async function handleGenerationJob(
   deps: GenerationDeps & { delivery?: DeliveryDeps } = {},
 ): Promise<Response> {
   try {
-    const { CRON_SECRET } = getCronEnv();
-    const header = request.headers.get("authorization") ?? "";
-    const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length) : "";
-    if (!token || !sameSecret(token, CRON_SECRET)) {
-      return apiError("UNAUTHORIZED", "Não autorizado.", 401);
-    }
+    if (!isAuthorizedCron(request)) return apiError("UNAUTHORIZED", "Não autorizado.", 401);
 
     const { delivery: deliveryDeps, ...generationDeps } = deps;
     const db = getSupabaseAdmin();

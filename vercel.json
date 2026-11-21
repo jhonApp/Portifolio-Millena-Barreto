@@ -1,5 +1,5 @@
 {
   "crons": [
-    { "path": "/api/diagnostico/jobs/generation", "schedule": "* * * * *" }
+    { "path": "/api/diagnostico/jobs/retention", "schedule": "0 7 * * *" }
   ]
 }
