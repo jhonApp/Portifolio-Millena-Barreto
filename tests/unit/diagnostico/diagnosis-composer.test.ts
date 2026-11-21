@@ -149,7 +149,9 @@ describe("composeDiagnosis", () => {
     const result = composeDiagnosis(base("attempt-1", ELEGANTE_ROMANTICO));
     const [first, second, third] = (result.blocks[0] as { paragraphs: string[] }).paragraphs;
     expect(first).toContain("estilo predominante é o Elegante");
-    expect(second).toContain("o seu segundo estilo é o Romântico");
+    // The text of the secondary style opens with "O seu segundo estilo", not with the name: the name is kept
+    // for the result and the guidance (see name-repeats.test.ts).
+    expect(second).toContain("seu segundo estilo é o Romântico");
     expect(second).not.toContain("predominante");
     expect(third).toBe(source.pairs["elegante|romantico"].replaceAll("{nome}", "Maria"));
   });
@@ -159,9 +161,10 @@ describe("composeDiagnosis", () => {
       const predominant = STYLES.find((style) => style !== secondary)!;
       const result = composeDiagnosis(base("attempt-1", scoring({ [predominant]: 6, [secondary]: 4 }, predominant, secondary)));
       const second = (result.blocks[0] as { paragraphs: string[] }).paragraphs[1];
-      expect(second, secondary).toContain(`o seu segundo estilo é o ${STYLE_LABELS[secondary]}`);
+      expect(second, secondary).toContain(`seu segundo estilo é o ${STYLE_LABELS[secondary]}`);
       expect(second, secondary).not.toMatch(/predominante/);
-      expect(second, secondary).toContain("Maria");
+      // Changed: this used to expect the first name here. Only the result and the guidance carry it now.
+      expect(second, secondary).not.toContain("Maria");
       expect(second, secondary).not.toContain("{nome}");
     }
   });

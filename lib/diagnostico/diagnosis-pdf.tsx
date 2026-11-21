@@ -25,9 +25,24 @@ export const PART_TITLES = {
  * scripts/generate-pdf-images.mjs from the owner's images). A style whose file is missing has no image:
  * the PDF still renders, so a missing file never fails a paid diagnosis.
  */
-export function pdfStyleImage(style: Style): string | null {
-  const file = path.join(process.cwd(), "assets", "pdf-images", `${style}.jpg`);
+export function pdfStyleImage(style: Style, dir: string = defaultImagesDir()): string | null {
+  const file = path.join(dir, `${style}.jpg`);
   return existsSync(file) ? file : null;
+}
+
+/** The optional photo of pieces or accessories of a style (<style>-pecas.jpg, <style>-acessorios.jpg); null until the owner sends it. */
+export function pdfSlotImage(style: Style, slot: "pecas" | "acessorios", dir: string = defaultImagesDir()): string | null {
+  const file = path.join(dir, `${style}-${slot}.jpg`);
+  return existsSync(file) ? file : null;
+}
+
+function defaultImagesDir(): string {
+  return path.join(process.cwd(), "assets", "pdf-images");
+}
+
+/** The bytes are passed, not the path: a Windows path is read as a URL by the image loader. */
+function imageSource(file: string) {
+  return { data: readFileSync(file), format: "jpg" as const };
 }
 
 let fontsRegistered = false;
@@ -50,7 +65,9 @@ export function registerPdfFonts(): void {
 
 const styles = StyleSheet.create({
   page: { backgroundColor: PDF_COLORS.white, padding: 56, fontFamily: "Inter", fontSize: 13.5, color: PDF_COLORS.secondary, lineHeight: 1.7 },
-  cover: { backgroundColor: PDF_COLORS.primary, padding: 56, justifyContent: "space-between", color: PDF_COLORS.white },
+  coverPage: { backgroundColor: PDF_COLORS.primary, color: PDF_COLORS.white },
+  // The padding sits on an inner view, so the full-page photo is measured against the whole page.
+  cover: { height: 841, padding: 56, justifyContent: "space-between" },
   kicker: { fontFamily: "Inter", fontWeight: 600, fontSize: 10, letterSpacing: 3, color: PDF_COLORS.accent, textTransform: "uppercase" },
   coverTitle: { fontFamily: "Bebas Neue", fontSize: 54, lineHeight: 1.05, color: PDF_COLORS.white },
   // The name is set in Inter: the heading font maps some capitals wrongly in the text layer (search and copy).
@@ -62,6 +79,16 @@ const styles = StyleSheet.create({
   rule: { height: 2, width: 48, backgroundColor: PDF_COLORS.accent, marginVertical: 14 },
   paragraph: { marginBottom: 12 },
   styleRow: { flexDirection: "row", alignItems: "flex-start" },
+  coverLayer: { position: "absolute", top: 0, left: 0, width: 595.28, height: 841 },
+  coverImage: { width: 595.28, height: 841, objectFit: "cover" },
+  coverShade: { position: "absolute", top: 0, left: 0, width: 595.28, height: 841, backgroundColor: PDF_COLORS.primary, opacity: 0.78 },
+  thumbRow: { flexDirection: "row", marginTop: 20, marginBottom: 6 },
+  thumb: { width: 130, marginRight: 24 },
+  thumbImage: { width: 130, height: 200, objectFit: "cover", borderRadius: 4 },
+  thumbCaption: { fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: PDF_COLORS.accent, fontWeight: 600, marginTop: 6 },
+  thumbName: { fontFamily: "Bebas Neue", fontSize: 22, color: PDF_COLORS.primary, lineHeight: 1.1 },
+  slotRow: { flexDirection: "row", alignItems: "flex-start" },
+  slotImage: { width: 140, height: 210, objectFit: "cover", borderRadius: 4, marginLeft: 20 },
   styleImage: { width: 190, height: 330, objectFit: "cover", borderRadius: 4, marginRight: 22 },
   styleText: { flex: 1 },
   strong: { fontWeight: 600, color: PDF_COLORS.primary },
@@ -95,13 +122,12 @@ function List({ items }: { items: string[] }) {
 }
 
 /** The text of a style page, with the editorial image of the style beside it when the file exists. */
-function StyleBody({ style, text }: { style: Style; text: string }) {
-  const image = pdfStyleImage(style);
+function StyleBody({ style, text, dir }: { style: Style; text: string; dir: string }) {
+  const image = pdfStyleImage(style, dir);
   if (!image) return <Text style={styles.paragraph}>{text}</Text>;
   return (
     <View style={styles.styleRow}>
-      {/* The bytes are passed, not the path: a Windows path is read as a URL by the image loader. */}
-      <Image src={{ data: readFileSync(image), format: "jpg" }} style={styles.styleImage} />
+      <Image src={imageSource(image)} style={styles.styleImage} />
       <View style={styles.styleText}>
         <Text style={styles.paragraph}>{text}</Text>
       </View>
@@ -109,26 +135,73 @@ function StyleBody({ style, text }: { style: Style; text: string }) {
   );
 }
 
-/** The eight parts, in order. `customerName` is the full name shown on the cover. */
-export function DiagnosisDocument({ content, customerName }: { content: DiagnosisContent; customerName: string }) {
+/** A list with the photo of a slot beside it when the file exists. */
+function ListWithSlot({ items, image }: { items: string[]; image: string | null }) {
+  if (!image) return <List items={items} />;
+  return (
+    <View style={styles.slotRow}>
+      <View style={styles.styleText}>
+        <List items={items} />
+      </View>
+      <Image src={imageSource(image)} style={styles.slotImage} />
+    </View>
+  );
+}
+
+/** One of the two small portraits of the "styles in numbers" page. */
+function Thumb({ style, caption, label, dir }: { style: Style; caption: string; label: string; dir: string }) {
+  const image = pdfStyleImage(style, dir);
+  if (!image) return null;
+  return (
+    <View style={styles.thumb} wrap={false}>
+      <Image src={imageSource(image)} style={styles.thumbImage} />
+      <Text style={styles.thumbCaption}>{caption}</Text>
+      <Text style={styles.thumbName}>{label}</Text>
+    </View>
+  );
+}
+
+/**
+ * The eight parts, in order. `customerName` is the full name shown on the cover. `imagesDir` is where the
+ * light image copies are read from (tests point it at a folder of their own).
+ */
+export function DiagnosisDocument({
+  content,
+  customerName,
+  imagesDir = defaultImagesDir(),
+}: {
+  content: DiagnosisContent;
+  customerName: string;
+  imagesDir?: string;
+}) {
   const [result, pieces, accessories, guidance] = content.blocks as unknown as [
     BlockWithParagraphs,
     BlockWithItems,
     BlockWithItems,
     BlockWithParagraphs,
   ];
+  const coverImage = pdfStyleImage(content.predominant.style, imagesDir);
   const ordered = [...STYLES].sort((a, b) => content.percentages[b] - content.percentages[a]);
 
   return (
     <Document title="Diagnóstico de Estilo Pessoal — Millena Barreto" author="Millena Barreto" language="pt-BR">
       {/* 1. Cover with the customer's name */}
-      <Page size="A4" style={styles.cover}>
-        <Text style={styles.kicker}>Millena Barreto · Consultoria de imagem</Text>
-        <View>
-          <Text style={styles.coverTitle}>Diagnóstico de Estilo Pessoal</Text>
-          <Text style={styles.coverName}>{customerName}</Text>
+      <Page size="A4" style={styles.coverPage}>
+        {coverImage ? (
+          <View style={styles.coverLayer}>
+            <Image src={imageSource(coverImage)} style={styles.coverImage} />
+            {/* The dark layer keeps the white and lilac text legible over the photo. */}
+            <View style={styles.coverShade} />
+          </View>
+        ) : null}
+        <View style={styles.cover}>
+          <Text style={styles.kicker}>Millena Barreto · Consultoria de imagem</Text>
+          <View>
+            <Text style={styles.coverTitle}>Diagnóstico de Estilo Pessoal</Text>
+            <Text style={styles.coverName}>{customerName}</Text>
+          </View>
+          <Text style={styles.coverNote}>Um retrato do seu estilo, feito a partir das suas escolhas.</Text>
         </View>
-        <Text style={styles.coverNote}>Um retrato do seu estilo, feito a partir das suas escolhas.</Text>
       </Page>
 
       {/* 2. Predominant style */}
@@ -137,7 +210,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.styleName}>{content.predominant.label}</Text>
         <Text style={styles.percent}>{content.predominant.percent}% das suas escolhas</Text>
         <View style={styles.rule} />
-        <StyleBody style={content.predominant.style} text={result.paragraphs[0]} />
+        <StyleBody style={content.predominant.style} text={result.paragraphs[0]} dir={imagesDir} />
       </Page>
 
       {/* 3. Secondary style */}
@@ -146,7 +219,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.styleName}>{content.secondary.label}</Text>
         <Text style={styles.percent}>{content.secondary.percent}% das suas escolhas</Text>
         <View style={styles.rule} />
-        <StyleBody style={content.secondary.style} text={result.paragraphs[1]} />
+        <StyleBody style={content.secondary.style} text={result.paragraphs[1]} dir={imagesDir} />
       </Page>
 
       {/* 4. The styles in numbers */}
@@ -157,6 +230,10 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
           Veja como as suas escolhas se distribuíram entre os seis estilos. O {content.predominant.label} lidera, com{" "}
           {content.predominant.percent}%, seguido do {content.secondary.label}, com {content.secondary.percent}%.
         </Text>
+        <View style={styles.thumbRow}>
+          <Thumb style={content.predominant.style} caption="Predominante" label={content.predominant.label} dir={imagesDir} />
+          <Thumb style={content.secondary.style} caption="Secundário" label={content.secondary.label} dir={imagesDir} />
+        </View>
         <View style={{ marginTop: 14 }}>
           {ordered.map((style) => (
             <View key={style} style={styles.barRow} wrap={false}>
@@ -182,7 +259,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.heading}>{PART_TITLES.pieces}</Text>
         <View style={styles.rule} />
         <Text style={styles.paragraph}>{pieces.intro}</Text>
-        <List items={pieces.items} />
+        <ListWithSlot items={pieces.items} image={pdfSlotImage(content.predominant.style, "pecas", imagesDir)} />
       </Page>
 
       {/* 6. Outfit combinations (and the accessories) */}
@@ -192,7 +269,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.paragraph}>{result.paragraphs[2]}</Text>
         <Text style={styles.subheading}>Acessórios e complementos</Text>
         <Text style={styles.paragraph}>{accessories.intro}</Text>
-        <List items={accessories.items} />
+        <ListWithSlot items={accessories.items} image={pdfSlotImage(content.predominant.style, "acessorios", imagesDir)} />
       </Page>
 
       {/* 7. Practical guidance */}

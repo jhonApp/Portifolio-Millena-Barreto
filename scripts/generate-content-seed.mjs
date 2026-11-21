@@ -1,11 +1,18 @@
 // Generates, from docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json:
 //   - supabase/migrations/20260101000011_seed_content_v1.sql  (the seed of content version 1)
+//   - supabase/migrations/20260101000014_secondary_style_text.sql  (the text of a style as the secondary one)
+//   - supabase/migrations/20260101000017_fewer_name_repeats.sql  (the texts that changed after migrations 11 and 14)
+//
+// Migrations 11 and 14 are released and never change. They are built from content-source.v1-applied.json,
+// a frozen copy of the texts exactly as those two migrations applied them. Edit content-source.json for
+// new wording: the difference between the two files is what migration 17 updates in version 1.
 //   - docs/RF-07-diagnosis-content-and-pdf-generation/content-source.md  (readable copy for Millena's review)
 // Run: node scripts/generate-content-seed.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
 const DOCS = "docs/RF-07-diagnosis-content-and-pdf-generation";
 const content = JSON.parse(readFileSync(`${DOCS}/content-source.json`, "utf8"));
+const applied = JSON.parse(readFileSync(`${DOCS}/content-source.v1-applied.json`, "utf8"));
 const STYLES = ["esportivo_natural", "tradicional", "elegante", "romantico", "criativo", "dramatico"];
 const LABELS = {
   esportivo_natural: "Esportivo/Natural",
@@ -17,8 +24,9 @@ const LABELS = {
 };
 
 // --- checks: the seed must be complete before it is written ---
+for (const source of [applied, content])
 for (const style of STYLES) {
-  const block = content.styles[style];
+  const block = source.styles[style];
   for (const key of ["result", "secondary", "pieces_intro", "accessories_intro", "guidance"]) {
     if (!block?.[key]) throw new Error(`missing ${key} of ${style}`);
   }
@@ -26,16 +34,16 @@ for (const style of STYLES) {
   if (block.accessories?.length !== 6) throw new Error(`${style} needs 6 accessories`);
   for (const other of STYLES) {
     if (other === style) continue;
-    if (!content.pairs[`${style}|${other}`]) throw new Error(`missing pair ${style}|${other}`);
+    if (!source.pairs[`${style}|${other}`]) throw new Error(`missing pair ${style}|${other}`);
   }
+  if (Object.keys(source.pairs).length !== 30) throw new Error("expected 30 pair paragraphs");
 }
-if (Object.keys(content.pairs).length !== 30) throw new Error("expected 30 pair paragraphs");
 // Migration 11 is released and never changes: its seed carries the texts of version 1 as they were. The
 // text of a style when it is the secondary style (`secondary`) comes in migration 14.
 const withoutSecondary = Object.fromEntries(
-  Object.entries(content.styles).map(([style, block]) => [style, Object.fromEntries(Object.entries(block).filter(([key]) => key !== "secondary"))]),
+  Object.entries(applied.styles).map(([style, block]) => [style, Object.fromEntries(Object.entries(block).filter(([key]) => key !== "secondary"))]),
 );
-const json = JSON.stringify({ styles: withoutSecondary, pairs: content.pairs }, null, 1);
+const json = JSON.stringify({ styles: withoutSecondary, pairs: applied.pairs }, null, 1);
 if (json.includes("$json$")) throw new Error("content must not contain the dollar quote");
 
 const sql = `-- RF-07: first content version (version 1), published.
@@ -91,7 +99,7 @@ writeFileSync("supabase/migrations/20260101000011_seed_content_v1.sql", sql, "ut
 
 // --- migration 14: the text of a style when it is the secondary style ---
 const secondaryRows = STYLES.map((style) => {
-  const body = content.styles[style].secondary;
+  const body = applied.styles[style].secondary;
   if (body.includes("$json$") || body.includes("'")) throw new Error(`secondary text of ${style} has a quote`);
   return `    ('${style}', '${body}')`;
 }).join(",\n");
@@ -114,6 +122,68 @@ ${secondaryRows}
  where v.version = 1;
 `;
 writeFileSync("supabase/migrations/20260101000014_secondary_style_text.sql", secondarySql, "utf8");
+
+// --- migration 17: the texts that changed after migrations 11 and 14 (UPDATE in version 1) ---
+const changes = [];
+for (const style of STYLES) {
+  const was = applied.styles[style];
+  const now = content.styles[style];
+  for (const key of ["pieces", "accessories"]) {
+    if (JSON.stringify(was[key]) !== JSON.stringify(now[key])) throw new Error(`${style}.${key} changed: lists are not supported by migration 17`);
+  }
+  const blocks = { result: "result", secondary: "secondary", pieces_intro: "pieces", accessories_intro: "accessories", guidance: "guidance" };
+  for (const [key, block] of Object.entries(blocks)) {
+    if (was[key] !== now[key]) changes.push({ kind: "style_block", style, secondary: null, block, body: now[key] });
+  }
+}
+for (const key of Object.keys(applied.pairs)) {
+  if (applied.pairs[key] !== content.pairs[key]) {
+    const [style, secondary] = key.split("|");
+    changes.push({ kind: "pair_paragraph", style, secondary, block: null, body: content.pairs[key] });
+  }
+}
+const MIGRATION_17 = "supabase/migrations/20260101000017_fewer_name_repeats.sql";
+if (changes.length === 0) {
+  console.log("no text changed since migrations 11 and 14: migration 17 not written");
+} else {
+  const quote = (value) => (value === null ? "null" : `'${value.replaceAll("'", "''")}'`);
+  const rows = changes
+    .map((c) => `    (${quote(c.kind)}, ${quote(c.style)}, ${quote(c.secondary)}, ${quote(c.block)}, ${quote(c.body)})`)
+    .join(",\n");
+  const sql17 = `-- Fewer repeats of the customer's first name in a diagnosis.
+-- Until now four paragraphs of every diagnosis began with the name (the result, the text of the secondary
+-- style, the paragraph of the pair and the guidance). Now only the result and the guidance carry it: the
+-- text of the secondary style and the 30 pair paragraphs lose the leading "{nome}, " and keep the rest.
+-- Source: ${DOCS}/content-source.json (generated by scripts/generate-content-seed.mjs).
+-- Migrations 11 and 14 stay as released; this one updates ${changes.length} templates of version 1 in place. A diagnosis
+-- already generated keeps the text it was generated with.
+
+do $update$
+declare
+  v_count integer;
+begin
+  with changes(kind, style, secondary_style, block, body) as (values
+${rows}
+  )
+  update public.content_templates t
+     set body = c.body
+    from changes c, public.content_versions v
+   where v.version = 1
+     and t.version_id = v.id
+     and t.kind = c.kind
+     and t.style = c.style
+     and t.secondary_style is not distinct from c.secondary_style
+     and t.block is not distinct from c.block;
+  get diagnostics v_count = row_count;
+  if v_count <> ${changes.length} then
+    raise exception 'expected to update ${changes.length} templates, updated %', v_count;
+  end if;
+end
+$update$;
+`;
+  writeFileSync(MIGRATION_17, sql17, "utf8");
+  console.log(`migration 17 written with ${changes.length} changed texts`);
+}
 
 // --- readable copy for review ---
 let md = `# Conteúdo do diagnóstico — versão 1 (rascunho da equipe)\n\n`;
