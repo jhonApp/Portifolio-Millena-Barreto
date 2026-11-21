@@ -8,6 +8,15 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
 ];
 
+// Files the PDF renderer reads from disk at run time. The pdfkit standard fonts are loaded with a
+// dynamic require that the file tracer cannot see, so without them the production render fails
+// with "Cannot find module .../pdfkit/js/standard-fonts/Helvetica.cjs".
+const pdfFiles = [
+  "./assets/pdf-fonts/**/*",
+  "./assets/pdf-images/**/*",
+  "./node_modules/pdfkit/js/standard-fonts/**/*",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   i18n: {
@@ -19,9 +28,9 @@ const nextConfig = {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
     // The PDF fonts are read from disk: trace them into every route that can render a PDF.
     outputFileTracingIncludes: {
-      "/api/diagnostico/webhooks/abacatepay": ["./assets/pdf-fonts/**/*", "./assets/pdf-images/**/*"],
-      "/api/diagnostico/payment/check": ["./assets/pdf-fonts/**/*", "./assets/pdf-images/**/*"],
-      "/api/diagnostico/jobs/generation": ["./assets/pdf-fonts/**/*", "./assets/pdf-images/**/*"],
+      "/api/diagnostico/webhooks/abacatepay": pdfFiles,
+      "/api/diagnostico/payment/check": pdfFiles,
+      "/api/diagnostico/jobs/generation": pdfFiles,
     },
   },
   async headers() {
