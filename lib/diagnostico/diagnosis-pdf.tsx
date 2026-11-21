@@ -1,6 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { Document, Font, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { STYLES, STYLE_LABELS } from "./constants";
+import { Document, Font, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { STYLES, STYLE_LABELS, type Style } from "./constants";
 import type { DiagnosisContent } from "./schemas/diagnosis-content";
 
 // The PDF of the diagnosis: A4, eight parts in the order of the PRD (RF-07), with the colors and
@@ -18,6 +19,16 @@ export const PART_TITLES = {
   guidance: "Uma orientação especial",
   closing: "Com carinho,",
 } as const;
+
+/**
+ * The light editorial copy of a style image (assets/pdf-images/<style>.jpg, built by
+ * scripts/generate-pdf-images.mjs from the owner's images). A style whose file is missing has no image:
+ * the PDF still renders, so a missing file never fails a paid diagnosis.
+ */
+export function pdfStyleImage(style: Style): string | null {
+  const file = path.join(process.cwd(), "assets", "pdf-images", `${style}.jpg`);
+  return existsSync(file) ? file : null;
+}
 
 let fontsRegistered = false;
 
@@ -50,6 +61,9 @@ const styles = StyleSheet.create({
   percent: { fontFamily: "Bebas Neue", fontSize: 28, color: PDF_COLORS.primary, marginBottom: 18 },
   rule: { height: 2, width: 48, backgroundColor: PDF_COLORS.accent, marginVertical: 14 },
   paragraph: { marginBottom: 12 },
+  styleRow: { flexDirection: "row", alignItems: "flex-start" },
+  styleImage: { width: 190, height: 330, objectFit: "cover", borderRadius: 4, marginRight: 22 },
+  styleText: { flex: 1 },
   strong: { fontWeight: 600, color: PDF_COLORS.primary },
   barRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   barLabel: { width: 135, fontWeight: 600, color: PDF_COLORS.primary },
@@ -76,6 +90,21 @@ function List({ items }: { items: string[] }) {
           <Text style={styles.itemText}>{text}</Text>
         </View>
       ))}
+    </View>
+  );
+}
+
+/** The text of a style page, with the editorial image of the style beside it when the file exists. */
+function StyleBody({ style, text }: { style: Style; text: string }) {
+  const image = pdfStyleImage(style);
+  if (!image) return <Text style={styles.paragraph}>{text}</Text>;
+  return (
+    <View style={styles.styleRow}>
+      {/* The bytes are passed, not the path: a Windows path is read as a URL by the image loader. */}
+      <Image src={{ data: readFileSync(image), format: "jpg" }} style={styles.styleImage} />
+      <View style={styles.styleText}>
+        <Text style={styles.paragraph}>{text}</Text>
+      </View>
     </View>
   );
 }
@@ -108,7 +137,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.styleName}>{content.predominant.label}</Text>
         <Text style={styles.percent}>{content.predominant.percent}% das suas escolhas</Text>
         <View style={styles.rule} />
-        <Text style={styles.paragraph}>{result.paragraphs[0]}</Text>
+        <StyleBody style={content.predominant.style} text={result.paragraphs[0]} />
       </Page>
 
       {/* 3. Secondary style */}
@@ -117,7 +146,7 @@ export function DiagnosisDocument({ content, customerName }: { content: Diagnosi
         <Text style={styles.styleName}>{content.secondary.label}</Text>
         <Text style={styles.percent}>{content.secondary.percent}% das suas escolhas</Text>
         <View style={styles.rule} />
-        <Text style={styles.paragraph}>{result.paragraphs[1]}</Text>
+        <StyleBody style={content.secondary.style} text={result.paragraphs[1]} />
       </Page>
 
       {/* 4. The styles in numbers */}

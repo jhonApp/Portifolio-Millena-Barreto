@@ -1,8 +1,11 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { STYLES, type Style } from "@/lib/diagnostico/constants";
 import { loadPublishedContent } from "@/lib/diagnostico/content-store";
 import { composeDiagnosis } from "@/lib/diagnostico/diagnosis-composer";
-import { PART_TITLES } from "@/lib/diagnostico/diagnosis-pdf";
+import { PART_TITLES, pdfStyleImage } from "@/lib/diagnostico/diagnosis-pdf";
 import { PdfRenderError, renderDiagnosisPdf } from "@/lib/diagnostico/render-diagnosis-pdf";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
 import type { ScoringResult } from "@/lib/diagnostico/scoring";
@@ -75,6 +78,12 @@ describe("the diagnosis PDF", () => {
     for (const item of pieces) expect(read.pages[4]).toContain(item.slice(0, 20));
   });
 
+  it("the secondary page speaks of the second style, not of the predominant one", () => {
+    expect(read.pages[2]).toContain(`o seu segundo estilo é o ${content.secondary.label}`);
+    expect(read.pages[2]).not.toContain("predominante é o");
+    expect(read.pages[1]).toContain(`o seu estilo predominante é o ${content.predominant.label}`);
+  });
+
   it("the PDF is A4 with 6 to 8 pages", () => {
     expect(read.pages.length).toBeGreaterThanOrEqual(6);
     expect(read.pages.length).toBeLessThanOrEqual(8);
@@ -104,4 +113,47 @@ describe("the diagnosis PDF", () => {
     expect(long.pages).toHaveLength(8);
     expect(compact(long.pages[0])).toContain("albuquerque");
   });
+
+  it("the predominant and the secondary pages carry the editorial image of their style and no other page does", async () => {
+    expect(pdfStyleImage(content.predominant.style)).not.toBeNull();
+    expect(pdfStyleImage(content.secondary.style)).not.toBeNull();
+    expect(await imagesPerPage(pdf)).toEqual([0, 1, 1, 0, 0, 0, 0, 0]);
+  });
+
+  it("every style has a light image file for the PDF", () => {
+    for (const style of STYLES) expect(pdfStyleImage(style), style).not.toBeNull();
+  });
+
+  it("the PDF with its two images stays well under the 2 MB limit", () => {
+    expect(read.bytes).toBeLessThanOrEqual(1024 * 1024);
+  });
+
+  it("a missing image file does not fail the render: the page keeps its text", async () => {
+    // Fonts are registered by now; an empty working directory only hides the image files.
+    vi.spyOn(process, "cwd").mockReturnValue(mkdtempSync(path.join(tmpdir(), "no-images-")));
+    try {
+      const bytes = await renderDiagnosisPdf(content, { customerName: CUSTOMER });
+      const withoutImages = await readPdf(bytes);
+      expect(withoutImages.pages).toHaveLength(8);
+      expect(withoutImages.pages[1]).toContain(content.predominant.label);
+      expect(await imagesPerPage(bytes)).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
 });
+
+/** How many images each page of a PDF paints. */
+async function imagesPerPage(bytes: Uint8Array): Promise<number[]> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const loading = pdfjs.getDocument({ data: new Uint8Array(bytes), useSystemFonts: false });
+  const doc = await loading.promise;
+  const counts: number[] = [];
+  for (let number = 1; number <= doc.numPages; number++) {
+    const page = await doc.getPage(number);
+    const ops = await page.getOperatorList();
+    counts.push(ops.fnArray.filter((fn: number) => fn === pdfjs.OPS.paintImageXObject).length);
+  }
+  await loading.destroy();
+  return counts;
+}
