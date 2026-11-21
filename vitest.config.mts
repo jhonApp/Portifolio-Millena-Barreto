@@ -8,6 +8,8 @@ export default defineConfig({
       "server-only": path.resolve(import.meta.dirname, "tests/setup/server-only-stub.ts"),
     },
   },
+  // The PDF document is written in JSX (the site build uses its own transform).
+  oxc: { jsx: { runtime: "automatic" } },
   test: {
     environment: "node",
     include: ["tests/unit/**/*.test.ts"],

@@ -264,3 +264,33 @@ export async function createOrderWithPayment(
   if (error) throw new Error(`createOrderWithPayment: ${error.message}`);
   return { order, payment, chargeId };
 }
+
+export type ReadPdf = { pages: string[]; width: number; height: number; bytes: number };
+
+/** Reads a PDF back: the text of every page and the size of the first page. */
+export async function readPdf(bytes: Uint8Array): Promise<ReadPdf> {
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const loading = pdfjs.getDocument({ data: new Uint8Array(bytes), useSystemFonts: false });
+  const doc = await loading.promise;
+  const pages: string[] = [];
+  let width = 0;
+  let height = 0;
+  for (let number = 1; number <= doc.numPages; number++) {
+    const page = await doc.getPage(number);
+    if (number === 1) {
+      const viewport = page.getViewport({ scale: 1 });
+      width = viewport.width;
+      height = viewport.height;
+    }
+    const text = await page.getTextContent();
+    pages.push(
+      text.items
+        .map((item) => ("str" in item ? item.str : ""))
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    );
+  }
+  await loading.destroy();
+  return { pages, width, height, bytes: bytes.length };
+}
