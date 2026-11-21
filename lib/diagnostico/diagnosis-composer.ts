@@ -59,8 +59,9 @@ export function missingKeys(content: ContentSet, predominant: Style, secondary: 
       missing.push(`style_block:${predominant}:${block}`);
     }
   }
-  if (!has((t) => t.kind === "style_block" && t.style === secondary && t.block === "result")) {
-    missing.push(`style_block:${secondary}:result`);
+  // The text of the secondary style is its own block: the "result" text is written for the predominant one.
+  if (!has((t) => t.kind === "style_block" && t.style === secondary && t.block === "secondary")) {
+    missing.push(`style_block:${secondary}:secondary`);
   }
   if (!has((t) => t.kind === "pair_paragraph" && t.style === predominant && t.secondary_style === secondary)) {
     missing.push(`pair_paragraph:${predominant}>${secondary}`);
@@ -167,7 +168,7 @@ export function composeDiagnosis(input: {
       {
         id: "result",
         title: "Seu resultado",
-        paragraphs: [block(predominant, "result"), block(secondary, "result"), pair],
+        paragraphs: [block(predominant, "result"), block(secondary, "secondary"), pair],
       },
       { id: "pieces", title: "Peças que combinam com você", intro: block(predominant, "pieces"), items: pieces },
       {

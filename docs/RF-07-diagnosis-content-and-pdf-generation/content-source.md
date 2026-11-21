@@ -1,6 +1,6 @@
 # Conteúdo do diagnóstico — versão 1 (rascunho da equipe)
 
-Fonte da migration `20260101000011_seed_content_v1.sql` (gerada por `scripts/generate-content-seed.mjs` a partir de `content-source.json`).
+Fonte das migrations `20260101000011_seed_content_v1.sql` e `20260101000014_secondary_style_text.sql` (geradas por `scripts/generate-content-seed.mjs` a partir de `content-source.json`).
 
 **Rascunho da equipe (inferred).** A Millena revisa e edita estes textos pelo painel (RF-12). `{nome}` vira o primeiro nome da cliente.
 

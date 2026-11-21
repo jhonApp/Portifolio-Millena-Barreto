@@ -11,13 +11,13 @@ afterAll(async () => {
 });
 
 describe("seeded content version 1", () => {
-  it("the seed publishes version 1 with 24 style blocks 30 pair paragraphs 48 pieces and 36 accessories", async () => {
+  it("the seed publishes version 1 with 30 style blocks 30 pair paragraphs 48 pieces and 36 accessories", async () => {
     const { data: version } = await db.from("content_versions").select("*").eq("version", 1).single();
     expect(version).toMatchObject({ status: "published" });
     const counts: Record<string, number> = {};
     const { data: templates } = await db.from("content_templates").select("kind").eq("version_id", version!.id);
     for (const row of templates ?? []) counts[row.kind] = (counts[row.kind] ?? 0) + 1;
-    expect(counts).toEqual({ style_block: 24, pair_paragraph: 30, piece: 48, accessory: 36 });
+    expect(counts).toEqual({ style_block: 30, pair_paragraph: 30, piece: 48, accessory: 36 });
   });
 
   it("every ordered pair of two different styles has a paragraph", async () => {
@@ -38,7 +38,7 @@ describe("seeded content version 1", () => {
     for (const style of STYLES) {
       expect(content.templates.filter((t) => t.kind === "piece" && t.style === style).length).toBeGreaterThanOrEqual(8);
       expect(content.templates.filter((t) => t.kind === "accessory" && t.style === style).length).toBeGreaterThanOrEqual(6);
-      for (const block of ["result", "pieces", "accessories", "guidance"]) {
+      for (const block of ["result", "secondary", "pieces", "accessories", "guidance"]) {
         expect(content.templates.filter((t) => t.kind === "style_block" && t.style === style && t.block === block)).toHaveLength(1);
       }
     }
@@ -46,7 +46,7 @@ describe("seeded content version 1", () => {
 
   it("no template is empty", async () => {
     const content = await loadPublishedContent(db);
-    expect(content.templates.length).toBe(138);
+    expect(content.templates.length).toBe(144);
     for (const template of content.templates) expect(template.body.trim().length).toBeGreaterThan(10);
   });
 

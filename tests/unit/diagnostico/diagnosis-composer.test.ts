@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { STYLES, type Style } from "@/lib/diagnostico/constants";
+import { STYLES, STYLE_LABELS, type Style } from "@/lib/diagnostico/constants";
 import {
   ContentError,
   composeDiagnosis,
@@ -15,7 +15,7 @@ import type { ScoringResult } from "@/lib/diagnostico/scoring";
 const source = JSON.parse(
   readFileSync("docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"),
 ) as {
-  styles: Record<Style, { result: string; pieces_intro: string; accessories_intro: string; guidance: string; pieces: string[]; accessories: string[] }>;
+  styles: Record<Style, { result: string; secondary: string; pieces_intro: string; accessories_intro: string; guidance: string; pieces: string[]; accessories: string[] }>;
   pairs: Record<string, string>;
 };
 
@@ -25,6 +25,7 @@ function buildContent(): ContentSet {
     const s = source.styles[style];
     for (const [block, body] of [
       ["result", s.result],
+      ["secondary", s.secondary],
       ["pieces", s.pieces_intro],
       ["accessories", s.accessories_intro],
       ["guidance", s.guidance],
@@ -148,8 +149,31 @@ describe("composeDiagnosis", () => {
     const result = composeDiagnosis(base("attempt-1", ELEGANTE_ROMANTICO));
     const [first, second, third] = (result.blocks[0] as { paragraphs: string[] }).paragraphs;
     expect(first).toContain("estilo predominante é o Elegante");
-    expect(second).toContain("estilo predominante é o Romântico");
+    expect(second).toContain("o seu segundo estilo é o Romântico");
+    expect(second).not.toContain("predominante");
     expect(third).toBe(source.pairs["elegante|romantico"].replaceAll("{nome}", "Maria"));
+  });
+
+  it("the text of the secondary style never calls it the predominant one, for every style", () => {
+    for (const secondary of STYLES) {
+      const predominant = STYLES.find((style) => style !== secondary)!;
+      const result = composeDiagnosis(base("attempt-1", scoring({ [predominant]: 6, [secondary]: 4 }, predominant, secondary)));
+      const second = (result.blocks[0] as { paragraphs: string[] }).paragraphs[1];
+      expect(second, secondary).toContain(`o seu segundo estilo é o ${STYLE_LABELS[secondary]}`);
+      expect(second, secondary).not.toMatch(/predominante/);
+      expect(second, secondary).toContain("Maria");
+      expect(second, secondary).not.toContain("{nome}");
+    }
+  });
+
+  it("a content set without the secondary text of the second style is reported as missing", () => {
+    const input = base("attempt-1", ELEGANTE_ROMANTICO);
+    const without = input.content.templates.filter(
+      (t) => !(t.kind === "style_block" && t.style === "romantico" && t.block === "secondary"),
+    );
+    expect(() => composeDiagnosis({ ...input, content: { ...input.content, templates: without } })).toThrowError(
+      /style_block:romantico:secondary/,
+    );
   });
 
   it("three pieces and two accessories come from the predominant pool and one and one from the secondary", () => {
