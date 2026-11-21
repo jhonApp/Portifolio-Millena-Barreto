@@ -5,7 +5,7 @@ import { whatsApp } from "@/public/consts/whatsApp";
 
 export const CONSULTANCY_CTA = {
   title: "Quer ir mais fundo no seu estilo?",
-  intro: "Fale comigo e leve o seu diagnóstico para a vida real:",
+  intro: "Leve o seu diagnóstico para o seu dia a dia de forma prática:",
   benefits: [
     "Adquira uma análise mais profunda do seu estilo",
     "Tire suas dúvidas sobre a sua paleta",
