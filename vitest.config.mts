@@ -12,6 +12,8 @@ export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   test: {
     environment: "node",
+    // threads and forks fail with "Cannot read properties of undefined (reading 'config')" on Vitest 5.1 + Node 24.
+    pool: "vmThreads",
     include: ["tests/unit/**/*.test.ts"],
   },
 });

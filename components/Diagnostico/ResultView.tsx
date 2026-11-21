@@ -171,7 +171,9 @@ export default function ResultView({ token, content, hasPdf, images }: Props) {
         <p className="mt-3 text-base leading-relaxed text-secondary">{guidance.paragraphs[0]}</p>
       </section>
 
-      <p className="mt-10 text-center text-sm text-secondary">Também enviamos uma cópia para o seu e-mail.</p>
+      <p className="mt-10 text-center text-sm text-secondary">
+        Enviamos o seu diagnóstico por e-mail. Confira a caixa de entrada, o spam ou o lixo eletrônico.
+      </p>
 
     </motion.article>
 

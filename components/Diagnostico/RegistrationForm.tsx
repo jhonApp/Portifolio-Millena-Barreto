@@ -26,11 +26,8 @@ const MESSAGE_NETWORK = "Não conseguimos enviar seus dados. Tente novamente.";
 const MESSAGE_RATE_LIMIT = "Muitas tentativas. Aguarde alguns minutos e tente de novo.";
 const MESSAGE_SERVER = "Não foi possível concluir agora. Tente novamente.";
 
-const PREFERENCES = [
-  { value: "email", label: "E-mail" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "both", label: "Os dois" },
-];
+// The diagnosis is always delivered by e-mail, so the customer is not asked to choose.
+const DELIVERY_PREFERENCE = "email";
 
 function validate(values: Values): Errors {
   const result = customerFormSchema.safeParse({ ...values, idempotencyKey: VALIDATION_KEY });
@@ -63,7 +60,7 @@ export default function RegistrationForm() {
     fullName: "",
     email: "",
     whatsapp: "",
-    deliveryPreference: "",
+    deliveryPreference: DELIVERY_PREFERENCE,
     consent: false,
   });
   const [errors, setErrors] = useState<Errors>({});
@@ -84,10 +81,7 @@ export default function RegistrationForm() {
   }
 
   function focusField(field: FieldName) {
-    const element = document.getElementById(
-      field === "deliveryPreference" ? "pref-email" : `field-${field}`,
-    );
-    element?.focus();
+    document.getElementById(`field-${field}`)?.focus();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -206,42 +200,6 @@ export default function RegistrationForm() {
         />
         {errorText("whatsapp")}
       </div>
-
-      <fieldset aria-describedby={describe("deliveryPreference")}>
-        <legend className="mb-2 block text-sm font-medium text-primary">
-          Como você prefere receber o seu diagnóstico?
-        </legend>
-        <div className="grid grid-cols-3 gap-3">
-          {PREFERENCES.map((option) => {
-            const selected = values.deliveryPreference === option.value;
-            return (
-              <label
-                key={option.value}
-                className={`flex min-h-[48px] cursor-pointer items-center justify-center rounded-lg border px-3 text-center text-sm font-medium transition-colors ${
-                  selected
-                    ? "border-accent bg-accent text-white"
-                    : "border-neutral-300 text-primary hover:border-accent"
-                }`}
-              >
-                <input
-                  id={`pref-${option.value}`}
-                  type="radio"
-                  name="deliveryPreference"
-                  value={option.value}
-                  className="sr-only"
-                  checked={selected}
-                  onChange={() => {
-                    update("deliveryPreference", option.value);
-                    touch("deliveryPreference", { ...values, deliveryPreference: option.value });
-                  }}
-                />
-                {option.label}
-              </label>
-            );
-          })}
-        </div>
-        {errorText("deliveryPreference")}
-      </fieldset>
 
       <div>
         <label htmlFor="field-consent" className="flex cursor-pointer items-start gap-3 text-sm text-secondary">
