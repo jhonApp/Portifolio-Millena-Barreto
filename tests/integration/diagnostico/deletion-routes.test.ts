@@ -74,6 +74,20 @@ describe("POST /api/diagnostico/privacy/deletion/request", () => {
     expect(await unknownAnswer.json()).toEqual({ message: DELETION_NEUTRAL_MESSAGE });
   });
 
+  it("the answer body is identical", async () => {
+    const mine = await deliveredCustomer();
+    const ip = randomIp();
+    const bodies: string[] = [];
+    // A known e-mail, an unknown one and (after the third call) an over-limit one.
+    for (const email of [mine.email, `u-${randomUUID()}@example.com`, mine.email, mine.email, mine.email]) {
+      const response = await handleDeletionRequest(post(REQUEST_PATH, { email }, ip), { emailProvider: recordingEmailProvider().provider });
+      expect(response.status).toBe(200);
+      bodies.push(await response.text());
+    }
+    expect(new Set(bodies).size).toBe(1);
+    expect(JSON.parse(bodies[0])).toEqual({ message: DELETION_NEUTRAL_MESSAGE });
+  });
+
   it("the request limit is 3 an hour per e-mail and 10 per IP", async () => {
     const mine = await deliveredCustomer();
     const provider = recordingEmailProvider();

@@ -166,6 +166,18 @@ describe("erase_customer", () => {
   });
 });
 
+describe("the orders foreign key", () => {
+  it("the orders foreign key sets attempt_id to NULL", async () => {
+    const mine = await customer();
+    const { order } = await createOrderWithPayment(db, mine.attemptId, "PENDING");
+    orderIds.push(order.id);
+    expect((await db.from("purchase_attempts").delete().eq("id", mine.attemptId)).error).toBeNull();
+    const { data } = await db.from("orders").select("attempt_id, status").eq("id", order.id).single();
+    expect(data).toEqual({ attempt_id: null, status: "PENDING" });
+    expect((await db.from("payments").select("id").eq("order_id", order.id)).data).toHaveLength(1);
+  });
+});
+
 describe("purge_unpaid_attempts", () => {
   /** The function is global and takes the oldest first: keep calling it until nothing is left. */
   async function purgeAll() {
