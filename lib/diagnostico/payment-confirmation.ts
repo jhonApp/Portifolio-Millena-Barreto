@@ -1,13 +1,14 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { PRICE_CENTS, type OrderStatus } from "./constants";
 import type { Database } from "./database.types";
 import { startGeneration as defaultStartGeneration } from "./generation-hook";
 import { recordAutomationError } from "./automation-errors";
 import { PixGatewayError, type PixGateway } from "./pix-gateway";
+import { hashToken } from "./result-token";
 
-export { recordAutomationError };
+export { hashToken, recordAutomationError };
 
 type Db = SupabaseClient<Database>;
 
@@ -29,10 +30,6 @@ export class PaymentCheckError extends Error {
 }
 
 const PAID_STATUSES: OrderStatus[] = ["APPROVED", "PROCESSING", "DELIVERED"];
-
-export function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
-}
 
 /**
  * The verification shared by the webhook and the "Já paguei" route. It trusts nothing it was

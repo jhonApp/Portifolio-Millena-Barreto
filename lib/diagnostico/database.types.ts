@@ -395,11 +395,20 @@ isOneToOne: false
 "begin_checkout":
 { Args: { "p_amount": number,"p_attempt": string,"p_renew": boolean }; Returns: Json
                            },
+"claim_delivery":
+{ Args: { "p_order": string }; Returns: Json
+                           },
 "claim_generation":
 { Args: { "p_order": string }; Returns: Json
                            },
+"complete_delivery":
+{ Args: { "p_order": string }; Returns: undefined
+                           },
 "create_purchase_attempt":
 { Args: { "p_consent_text": string,"p_consent_version": string,"p_email": string,"p_idempotency_key": string,"p_ip_hash": string,"p_name": string,"p_preference": string,"p_whatsapp": string }; Returns: string
+                           },
+"fail_delivery":
+{ Args: { "p_error": string,"p_order": string }; Returns: Json
                            },
 "fail_generation":
 { Args: { "p_order": string,"p_reason": string,"p_retry": boolean }; Returns: Json
@@ -409,6 +418,9 @@ isOneToOne: false
                            },
 "record_webhook_event":
 { Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string
+                           },
+"reset_delivery":
+{ Args: { "p_order": string }; Returns: boolean
                            },
 "reset_generation":
 { Args: { "p_order": string }; Returns: boolean

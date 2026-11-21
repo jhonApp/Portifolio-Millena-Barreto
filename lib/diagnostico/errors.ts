@@ -12,6 +12,7 @@ export type ErrorCode =
   | "PIX_UNAVAILABLE"
   | "PAYMENT_CHECK_UNAVAILABLE"
   | "UNAUTHORIZED"
+  | "RESULT_NOT_READY"
   | "INTERNAL_ERROR";
 
 export class ApiError extends Error {

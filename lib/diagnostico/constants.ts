@@ -26,6 +26,14 @@ export const STYLE_LABELS: Record<Style, string> = {
 export const MAX_GENERATION_ATTEMPTS = 4;
 export const GENERATION_RETRY_DELAYS_SECONDS = [30, 120, 600] as const;
 
+// Result access tokens and the e-mail delivery (RF-08). The delivery values are enforced by
+// supabase/migrations/20260101000012_delivery.sql: the first send plus 3 retries, after 1, 5 and 15 minutes.
+export const RESULT_TOKEN_DAYS = 30;
+export const MAX_DELIVERY_ATTEMPTS = 4;
+export const DELIVERY_RETRY_DELAYS_SECONDS = [60, 300, 900] as const;
+// A signed link to the PDF stays valid this long.
+export const PDF_SIGNED_URL_SECONDS = 300;
+
 export const ORDER_STATUSES = [
   "PENDING",
   "APPROVED",

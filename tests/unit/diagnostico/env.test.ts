@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ConfigError, getDatabaseEnv, getCronEnv, getPaymentApiEnv, getPaymentEnv, getWebhookEnv } from "@/lib/diagnostico/env";
+import { ConfigError, getAppUrlEnv, getCronEnv, getDatabaseEnv, getPaymentApiEnv, getPaymentEnv, getWebhookEnv } from "@/lib/diagnostico/env";
 
 const KEYS = [
   "SUPABASE_URL",
@@ -9,6 +9,7 @@ const KEYS = [
   "ABACATEPAY_WEBHOOK_SECRET",
   "ABACATEPAY_WEBHOOK_PUBLIC_KEY",
   "CRON_SECRET",
+  "APP_URL",
 ];
 let saved: Record<string, string | undefined>;
 
@@ -126,5 +127,21 @@ describe("environment configuration", () => {
     expect(() => getCronEnv()).toThrow(ConfigError);
     process.env.CRON_SECRET = "c".repeat(16);
     expect(() => getCronEnv()).not.toThrow();
+  });
+
+  it("getAppUrlEnv needs APP_URL alone and names it when missing", () => {
+    let error: unknown;
+    try {
+      getAppUrlEnv();
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(ConfigError);
+    expect((error as ConfigError).message).toContain("APP_URL");
+    expect((error as ConfigError).message).not.toContain("PRIVACY_CONTACT_EMAIL");
+    process.env.APP_URL = "http://localhost:3001";
+    expect(getAppUrlEnv()).toEqual({ APP_URL: "http://localhost:3001" });
+    process.env.APP_URL = "not a url";
+    expect(() => getAppUrlEnv()).toThrow(ConfigError);
   });
 });

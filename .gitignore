@@ -34,3 +34,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# e-mails written by the development mail provider (RF-08)
+.local-mail/

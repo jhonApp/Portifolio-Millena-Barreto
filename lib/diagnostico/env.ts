@@ -82,6 +82,13 @@ export function getEmailEnv() {
   });
 }
 
+// Links in e-mails only need the public address of the site (getAppEnv also asks for the privacy contact).
+export function getAppUrlEnv() {
+  return readGroup("app-url", {
+    APP_URL: z.string().trim().url(),
+  });
+}
+
 export function getAdminEnv() {
   return readGroup("admin", {
     ADMIN_EMAIL: z.string().trim().toLowerCase().email(),
