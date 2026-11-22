@@ -103,6 +103,17 @@ describe("save_answer with a second choice", () => {
     expect(await saveAnswer(db, attempt.id, qid(4), alt(4, 1))).toBe(2);
   });
 
+  it("overlapping saves of one question are serialized and leave one consistent state", async () => {
+    const attempt = await pinnedAttempt();
+    const states = [alt(2, 2), alt(2, 3), alt(2, 4), null, alt(2, 2), alt(2, 3), null, alt(2, 4)];
+    const counts = await Promise.all(states.map((second) => saveAnswer(db, attempt.id, qid(2), alt(2, 1), second)));
+    expect(counts.every((count) => count === 2)).toBe(true);
+    const { data } = await db.from("answers").select("alternative_id, second_alternative_id").eq("attempt_id", attempt.id).eq("question_id", qid(2));
+    expect(data).toHaveLength(1);
+    expect(data![0].alternative_id).toBe(alt(2, 1));
+    expect([alt(2, 2), alt(2, 3), alt(2, 4), null]).toContain(data![0].second_alternative_id);
+  });
+
   it("a call with three arguments still works (version 1 compatibility)", async () => {
     const attempt = await pinnedAttempt();
     const { error } = await db.rpc("save_answer", {
