@@ -5,10 +5,18 @@ import {
   getAnswerProgress,
   getAttemptVersionId,
   getSavedAnswers,
+  getSavedChoices,
   saveAnswer,
 } from "@/lib/diagnostico/answers";
 import { getPublicQuestionSet, loadQuestionBank } from "@/lib/diagnostico/question-bank";
-import { adminClient, createAttempt, createCustomer } from "./helpers";
+import {
+  adminClient,
+  cleanupFixture,
+  createAttempt,
+  createCustomer,
+  createTwoChoiceFixture,
+  pinAttemptToVersion,
+} from "./helpers";
 
 const db = adminClient();
 const customerIds: string[] = [];
@@ -132,5 +140,41 @@ describe("active attempt from the cookie", () => {
     const cookie = signAttemptId(attempt.id);
     await db.from("purchase_attempts").delete().eq("id", attempt.id);
     expect(await getActiveAttemptId(db, storeWith(cookie))).toBeNull();
+  });
+});
+
+describe("answer helpers with second choices", () => {
+  it("getSavedChoices reads the first and second choice of each question", async () => {
+    const attempt = await newAttempt();
+    await answer(attempt.id, [1]);
+    const choices = await getSavedChoices(db, attempt.id);
+    const question = bank.questions.find((q) => q.position === 1)!;
+    expect(choices).toEqual({ [question.id]: { first: question.alternatives[0].id, second: null } });
+    // getSavedAnswers keeps returning the first choice only.
+    expect(await getSavedAnswers(db, attempt.id)).toEqual({ [question.id]: question.alternatives[0].id });
+  });
+
+  it("second choices do not change the first unanswered position", async () => {
+    const fixture = await createTwoChoiceFixture(db);
+    try {
+      const attempt = await newAttempt();
+      await pinAttemptToVersion(db, attempt.id, fixture);
+      for (const position of [2, 3]) {
+        const question = fixture.questions[position - 1];
+        await saveAnswer(db, attempt.id, question.id, question.alternatives[0].id, question.alternatives[1].id);
+      }
+      const progress = await getAnswerProgress(db, attempt.id);
+      expect(progress).toEqual({
+        versionId: fixture.version.id,
+        answeredCount: 3, // questions, not choices (5)
+        firstUnansweredPosition: 4,
+      });
+      const choices = await getSavedChoices(db, attempt.id);
+      expect(Object.keys(choices)).toHaveLength(3);
+    } finally {
+      await db.from("customers").delete().in("id", customerIds);
+      customerIds.length = 0;
+      await cleanupFixture(db, fixture);
+    }
   });
 });

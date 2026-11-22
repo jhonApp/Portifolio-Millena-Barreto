@@ -8,6 +8,10 @@ import {
   createAttempt,
   createCustomer,
   createFullVersion,
+  cleanupFixture,
+  createTwoChoiceFixture,
+  pinAttemptToVersion,
+  type TwoChoiceFixture,
 } from "./helpers";
 
 const db = adminClient();
@@ -247,6 +251,107 @@ describe("PUT /api/diagnostico/answers", () => {
     } finally {
       process.env.SESSION_SECRET = saved;
     }
+    expect(await rows(attempt.id)).toHaveLength(0);
+  });
+});
+
+describe("PUT /api/diagnostico/answers with a second choice", () => {
+  let fixture: TwoChoiceFixture;
+
+  beforeAll(async () => {
+    fixture = await createTwoChoiceFixture(db);
+  });
+
+  afterAll(async () => {
+    // The customers go first (their answers hold the alternatives), then the fixture.
+    if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
+    await cleanupFixture(db, fixture);
+  });
+
+  const fq = (position: number) => fixture.questions[position - 1];
+
+  async function pinnedAttempt() {
+    const attempt = await newAttempt();
+    await pinAttemptToVersion(db, attempt.id, fixture);
+    return attempt;
+  }
+
+  it("saves a second choice and returns the answered count", async () => {
+    const attempt = await pinnedAttempt();
+    const response = await put(
+      { questionId: fq(2).id, alternativeId: fq(2).alternatives[0].id, secondAlternativeId: fq(2).alternatives[1].id },
+      cookieFor(attempt.id),
+    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ answeredCount: 2 });
+    const saved = (await rows(attempt.id)).find((row) => row.question_id === fq(2).id)!;
+    expect(saved).toMatchObject({
+      alternative_id: fq(2).alternatives[0].id,
+      second_alternative_id: fq(2).alternatives[1].id,
+    });
+  });
+
+  it("a null secondAlternativeId clears the second choice", async () => {
+    const attempt = await pinnedAttempt();
+    const cookie = cookieFor(attempt.id);
+    const body = { questionId: fq(2).id, alternativeId: fq(2).alternatives[0].id };
+    await put({ ...body, secondAlternativeId: fq(2).alternatives[1].id }, cookie);
+    const cleared = await put({ ...body, secondAlternativeId: null }, cookie);
+    expect(cleared.status).toBe(200);
+    const saved = (await rows(attempt.id)).find((row) => row.question_id === fq(2).id)!;
+    expect(saved.second_alternative_id).toBeNull();
+  });
+
+  it("answers 400 on the second choice rejections", async () => {
+    const attempt = await pinnedAttempt();
+    const cookie = cookieFor(attempt.id);
+    const rejections = [
+      // The same alternative twice.
+      { questionId: fq(2).id, alternativeId: fq(2).alternatives[0].id, secondAlternativeId: fq(2).alternatives[0].id },
+      // A second choice on a question that allows one.
+      { questionId: fq(4).id, alternativeId: fq(4).alternatives[0].id, secondAlternativeId: fq(4).alternatives[1].id },
+    ];
+    for (const body of rejections) {
+      const response = await put(body, cookie);
+      expect(response.status).toBe(400);
+      const json = await response.json();
+      expect(json.error.code).toBe("VALIDATION_ERROR");
+      expect(json.error.fields.secondAlternativeId).toEqual(["Segunda escolha inválida para esta pergunta."]);
+    }
+    // A second alternative of another question, and a malformed one.
+    const other = await put(
+      { questionId: fq(2).id, alternativeId: fq(2).alternatives[0].id, secondAlternativeId: fq(3).alternatives[0].id },
+      cookie,
+    );
+    expect(other.status).toBe(400);
+    expect((await other.json()).error.fields.alternativeId).toBeDefined();
+    const malformed = await put(
+      { questionId: fq(2).id, alternativeId: fq(2).alternatives[0].id, secondAlternativeId: "abc" },
+      cookie,
+    );
+    expect(malformed.status).toBe(400);
+    expect((await malformed.json()).error.fields.secondAlternativeId).toBeDefined();
+    expect((await rows(attempt.id)).filter((row) => row.question_id !== fq(1).id)).toHaveLength(0);
+  });
+
+  it("a body without secondAlternativeId behaves as before", async () => {
+    const attempt = await newAttempt();
+    const response = await put(
+      { questionId: q(1).id, alternativeId: q(1).alternatives[0].id },
+      cookieFor(attempt.id),
+    );
+    expect(response.status).toBe(200);
+    expect((await rows(attempt.id))[0].second_alternative_id).toBeNull();
+  });
+
+  it("a second choice is refused on version 1, where every question allows one choice", async () => {
+    const attempt = await newAttempt();
+    const response = await put(
+      { questionId: q(1).id, alternativeId: q(1).alternatives[0].id, secondAlternativeId: q(1).alternatives[1].id },
+      cookieFor(attempt.id),
+    );
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.fields.secondAlternativeId).toBeDefined();
     expect(await rows(attempt.id)).toHaveLength(0);
   });
 });

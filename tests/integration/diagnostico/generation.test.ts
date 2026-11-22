@@ -6,11 +6,20 @@ import { generateDiagnosis, reprocessOrder, type GenerationDeps } from "@/lib/di
 import { OrderNotApprovedError } from "@/lib/diagnostico/order-guard";
 import { loadQuestionBank } from "@/lib/diagnostico/question-bank";
 import { scoreAnswers } from "@/lib/diagnostico/scoring";
-import { adminClient, createApprovedOrder, createAttempt, createCustomer, createOrderWithPayment, readPdf } from "./helpers";
+import {
+  adminClient,
+  createApprovedOrder,
+  createAttempt,
+  createCustomer,
+  createFullVersion,
+  createOrderWithPayment,
+  readPdf,
+} from "./helpers";
 
 const db = adminClient();
 const customerIds: string[] = [];
 const orderIds: string[] = [];
+const versionIds: string[] = [];
 
 async function newOrder(options: Parameters<typeof createApprovedOrder>[1] = {}) {
   const created = await createApprovedOrder(db, options);
@@ -55,6 +64,7 @@ afterAll(async () => {
     await db.from("automation_errors").delete().in("order_id", orderIds);
   }
   if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
+  if (versionIds.length) await db.from("questionnaire_versions").delete().in("id", versionIds);
 });
 
 describe("generateDiagnosis", () => {
@@ -124,6 +134,43 @@ describe("generateDiagnosis", () => {
     expect(result.points).toEqual(expected.points);
     expect(result.predominant_style).toBe(expected.predominant);
     expect(result.secondary_style).toBe(expected.secondary);
+  });
+
+  it("a two-choice attempt is counted as 15 questions and scored with the rules of its version", async () => {
+    // A throwaway version with the version 2 rules: every question allows two choices.
+    const full = await createFullVersion(db, "archived");
+    versionIds.push(full.version.id);
+    await db
+      .from("questionnaire_versions")
+      .update({ first_choice_points: 2, second_choice_points: 1, late_tiebreak_basis: "points" })
+      .eq("id", full.version.id);
+    await db.from("questions").update({ max_choices: 2 }).eq("version_id", full.version.id);
+
+    const customer = await createCustomer(db);
+    customerIds.push(customer.id);
+    const attempt = await createAttempt(db, customer.id);
+    // 15 questions with a first choice (elegante) and a second choice (tradicional): 30 items.
+    const { error } = await db.from("answers").insert(
+      full.questions.map((question) => ({
+        attempt_id: attempt.id,
+        version_id: full.version.id,
+        question_id: question.id,
+        alternative_id: question.alternatives[0].id,
+        second_alternative_id: question.alternatives[1].id,
+      })),
+    );
+    expect(error).toBeNull();
+    const { order } = await createOrderWithPayment(db, attempt.id, "APPROVED");
+    orderIds.push(order.id);
+    await db.from("payments").update({ status: "PAID" }).eq("order_id", order.id);
+    await db.from("orders").update({ approved_at: new Date().toISOString() }).eq("id", order.id);
+
+    const outcome = await generateDiagnosis(db, order.id, { deps: okDeps() });
+    expect(outcome.result).not.toBe("failed");
+    const [result] = await results(order.id);
+    expect(result.points).toMatchObject({ elegante: 30, tradicional: 15 });
+    expect(result.predominant_style).toBe("elegante");
+    expect(result.secondary_style).toBe("tradicional");
   });
 
   it("two customers with the same pair get different diagnoses", async () => {

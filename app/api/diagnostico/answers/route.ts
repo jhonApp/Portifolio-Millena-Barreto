@@ -20,10 +20,18 @@ export async function PUT(request: Request): Promise<Response> {
     if (!parsed.ok) {
       return apiError("VALIDATION_ERROR", "Dados inválidos.", 400, (parsed as { fields: Record<string, string[]> }).fields);
     }
-    const { questionId, alternativeId } = (parsed as { data: { questionId: string; alternativeId: string } }).data;
+    const { questionId, alternativeId, secondAlternativeId } = (
+      parsed as { data: { questionId: string; alternativeId: string; secondAlternativeId?: string | null } }
+    ).data;
 
     try {
-      const answeredCount = await saveAnswer(getSupabaseAdmin(), attemptId, questionId, alternativeId);
+      const answeredCount = await saveAnswer(
+        getSupabaseAdmin(),
+        attemptId,
+        questionId,
+        alternativeId,
+        secondAlternativeId,
+      );
       return new Response(JSON.stringify({ answeredCount }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -31,6 +39,11 @@ export async function PUT(request: Request): Promise<Response> {
     } catch (error) {
       if (error instanceof AnswerError) {
         if (error.code === "ATTEMPT_NOT_FOUND") return apiError("FORBIDDEN", SESSION_EXPIRED, 403);
+        if (error.code === "CHOICE_NOT_ALLOWED") {
+          return apiError("VALIDATION_ERROR", "Dados inválidos.", 400, {
+            secondAlternativeId: [ANSWER_MESSAGES.secondAlternativeId],
+          });
+        }
         return apiError("VALIDATION_ERROR", "Dados inválidos.", 400, {
           alternativeId: [ANSWER_MESSAGES.alternativeId],
         });

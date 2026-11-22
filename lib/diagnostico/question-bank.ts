@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { Style } from "./constants";
 import type { EditableQuestionSet, PublicQuestionSet, ScoredAnswer } from "./question-types";
+import { DEFAULT_RULES, type ScoringRules } from "./scoring";
 import { shuffleWithSeed } from "./seeded-shuffle";
 
 type Db = SupabaseClient<Database>;
@@ -52,7 +53,7 @@ export async function getPublicQuestionSet(
 
   const { data: questions, error: questionsError } = await db
     .from("questions")
-    .select("id, position, text")
+    .select("id, position, text, max_choices")
     .eq("version_id", version.id)
     .order("position");
   if (questionsError) fail("getPublicQuestionSet", questionsError.message);
@@ -72,6 +73,7 @@ export async function getPublicQuestionSet(
       id: question.id,
       position: question.position,
       text: question.text,
+      maxChoices: question.max_choices === 2 ? 2 : 1,
       alternatives: shuffleWithSeed(
         (alternatives ?? [])
           .filter((alternative) => alternative.question_id === question.id)
@@ -83,21 +85,26 @@ export async function getPublicQuestionSet(
 }
 
 /**
- * The attempt's answers as scoring input. It reads the alternatives and questions stored with the
- * answers, so the result does not depend on which questionnaire version is published now.
+ * The attempt's answers as scoring input, one item per chosen alternative: the first choice of a
+ * question has rank 1 and its optional second choice rank 2. It reads the alternatives and
+ * questions stored with the answers, so the result does not depend on which questionnaire version
+ * is published now.
  */
 export async function getScoredAnswers(db: Db, attemptId: string): Promise<ScoredAnswer[]> {
   const { data: answers, error } = await db
     .from("answers")
-    .select("question_id, alternative_id")
+    .select("question_id, alternative_id, second_alternative_id")
     .eq("attempt_id", attemptId);
   if (error) fail("getScoredAnswers", error.message);
   if (!answers || answers.length === 0) return [];
 
+  const alternativeIds = answers.flatMap((answer) =>
+    answer.second_alternative_id ? [answer.alternative_id, answer.second_alternative_id] : [answer.alternative_id],
+  );
   const { data: alternatives, error: alternativesError } = await db
     .from("alternatives")
     .select("id, style, weight")
-    .in("id", answers.map((answer) => answer.alternative_id));
+    .in("id", alternativeIds);
   if (alternativesError) fail("getScoredAnswers", alternativesError.message);
 
   const { data: questions, error: questionsError } = await db
@@ -109,18 +116,50 @@ export async function getScoredAnswers(db: Db, attemptId: string): Promise<Score
   const alternativeById = new Map((alternatives ?? []).map((a) => [a.id, a]));
   const positionById = new Map((questions ?? []).map((q) => [q.id, q.position]));
 
-  return answers.map((answer) => {
-    const alternative = alternativeById.get(answer.alternative_id);
+  return answers.flatMap((answer) => {
     const position = positionById.get(answer.question_id);
-    if (!alternative || position === undefined) {
-      fail("getScoredAnswers", "an answer points to a missing alternative or question");
-    }
-    return {
-      questionPosition: position,
-      style: alternative.style as Style,
-      weight: alternative.weight,
-    };
+    const choices: [string, 1 | 2][] = [[answer.alternative_id, 1]];
+    if (answer.second_alternative_id) choices.push([answer.second_alternative_id, 2]);
+    return choices.map(([alternativeId, rank]) => {
+      const alternative = alternativeById.get(alternativeId);
+      if (!alternative || position === undefined) {
+        fail("getScoredAnswers", "an answer points to a missing alternative or question");
+      }
+      return {
+        questionPosition: position,
+        style: alternative.style as Style,
+        weight: alternative.weight,
+        rank,
+      };
+    });
   });
+}
+
+/**
+ * The scoring rules of the questionnaire version stored on the attempt's answers. An attempt
+ * without answers gets the version 1 rules.
+ */
+export async function getScoringRules(db: Db, attemptId: string): Promise<ScoringRules> {
+  const { data: answer, error } = await db
+    .from("answers")
+    .select("version_id")
+    .eq("attempt_id", attemptId)
+    .limit(1)
+    .maybeSingle();
+  if (error) fail("getScoringRules", error.message);
+  if (!answer) return DEFAULT_RULES;
+
+  const { data: version, error: versionError } = await db
+    .from("questionnaire_versions")
+    .select("first_choice_points, second_choice_points, late_tiebreak_basis")
+    .eq("id", answer.version_id)
+    .single();
+  if (versionError) fail("getScoringRules", versionError.message);
+  return {
+    firstPoints: version.first_choice_points,
+    secondPoints: version.second_choice_points,
+    lateBasis: version.late_tiebreak_basis === "points" ? "points" : "answers",
+  };
 }
 
 /** Complete question set with the style mapping and weights, for the admin editor (RF-12). */
