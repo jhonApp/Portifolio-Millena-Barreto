@@ -467,3 +467,103 @@ export async function createCustomerWithAnswers(db: SupabaseClient<Database>, em
   });
   return { customerId: customer.id, attemptId: attempt.id, email: customer.email };
 }
+
+export type TwoChoiceFixture = {
+  version: Database["public"]["Tables"]["questionnaire_versions"]["Row"];
+  /** Questions 1 to 3 allow two choices; question 4 allows one. Alternatives are in position order. */
+  questions: {
+    id: string;
+    position: number;
+    maxChoices: number;
+    alternatives: { id: string; position: number; style: Database["public"]["Tables"]["alternatives"]["Row"]["style"] }[];
+  }[];
+};
+
+const FIXTURE_STYLES = ["elegante", "tradicional", "romantico", "esportivo_natural"] as const;
+
+/**
+ * A non-published questionnaire version with the quiz v2 rules (2 points, 1 point, tie-break by
+ * points), 3 questions that allow two choices and 1 that allows one, each with 4 alternatives of
+ * 4 different styles. Version 1 is never touched. Remove it with `cleanupFixture`.
+ */
+export async function createTwoChoiceFixture(db: SupabaseClient<Database>): Promise<TwoChoiceFixture> {
+  const { data: version, error } = await db
+    .from("questionnaire_versions")
+    .insert({
+      version: uniqueVersion(),
+      status: "archived",
+      first_choice_points: 2,
+      second_choice_points: 1,
+      late_tiebreak_basis: "points",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createTwoChoiceFixture: ${error.message}`);
+  const { data: questions, error: questionError } = await db
+    .from("questions")
+    .insert(
+      [1, 2, 3, 4].map((position) => ({
+        version_id: version.id,
+        position,
+        text: `Pergunta de teste ${position}`,
+        max_choices: position === 4 ? 1 : 2,
+      })),
+    )
+    .select();
+  if (questionError) throw new Error(`createTwoChoiceFixture: ${questionError.message}`);
+  const { error: alternativeError } = await db.from("alternatives").insert(
+    questions!.flatMap((question) =>
+      FIXTURE_STYLES.map((style, index) => ({
+        question_id: question.id,
+        position: index + 1,
+        text: `Alternativa ${question.position}.${index + 1}`,
+        style,
+        weight: 1,
+      })),
+    ),
+  );
+  if (alternativeError) throw new Error(`createTwoChoiceFixture: ${alternativeError.message}`);
+  const { data: alternatives } = await db
+    .from("alternatives")
+    .select("id, question_id, position, style")
+    .in("question_id", questions!.map((question) => question.id))
+    .order("position");
+  return {
+    version,
+    questions: questions!
+      .sort((a, b) => a.position - b.position)
+      .map((question) => ({
+        id: question.id,
+        position: question.position,
+        maxChoices: question.max_choices,
+        alternatives: (alternatives ?? [])
+          .filter((alternative) => alternative.question_id === question.id)
+          .map(({ id, position, style }) => ({ id, position, style })),
+      })),
+  };
+}
+
+/**
+ * Pins an attempt to a fixture version by inserting its first answer directly (`save_answer` only
+ * pins to a published version). Uses the first alternative of the first question.
+ */
+export async function pinAttemptToVersion(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+  fixture: TwoChoiceFixture,
+) {
+  const question = fixture.questions[0];
+  const { error } = await db.from("answers").insert({
+    attempt_id: attemptId,
+    version_id: fixture.version.id,
+    question_id: question.id,
+    alternative_id: question.alternatives[0].id,
+  });
+  if (error) throw new Error(`pinAttemptToVersion: ${error.message}`);
+}
+
+/** Deletes the fixture by id: its answers first (alternatives are restricted), then the version. */
+export async function cleanupFixture(db: SupabaseClient<Database>, fixture: TwoChoiceFixture) {
+  await db.from("answers").delete().eq("version_id", fixture.version.id);
+  await db.from("questionnaire_versions").delete().eq("id", fixture.version.id);
+}

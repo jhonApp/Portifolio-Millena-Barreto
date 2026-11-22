@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"answers": {
                   Row: {
-                    "alternative_id": string,"answered_at": string,"attempt_id": string,"id": string,"question_id": string,"version_id": string
+                    "alternative_id": string,"answered_at": string,"attempt_id": string,"id": string,"question_id": string,"second_alternative_id": string | null,"version_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "alternative_id": string,"answered_at"?: string,"attempt_id": string,"id"?: string,"question_id": string,"version_id": string
+                    "alternative_id": string,"answered_at"?: string,"attempt_id": string,"id"?: string,"question_id": string,"second_alternative_id"?: string | null,"version_id": string
                   }
                   Update: {
-                    "alternative_id"?: string,"answered_at"?: string,"attempt_id"?: string,"id"?: string,"question_id"?: string,"version_id"?: string
+                    "alternative_id"?: string,"answered_at"?: string,"attempt_id"?: string,"id"?: string,"question_id"?: string,"second_alternative_id"?: string | null,"version_id"?: string
                   }
                   Relationships: [
                     {
@@ -72,6 +72,12 @@ isOneToOne: false
       columns: ["question_id"]
 isOneToOne: false
       referencedRelation: "questions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "answers_second_alternative_id_fkey"
+      columns: ["second_alternative_id"]
+isOneToOne: false
+      referencedRelation: "alternatives"
       referencedColumns: ["id"]
     },{
       foreignKeyName: "answers_version_id_fkey"
@@ -271,28 +277,28 @@ isOneToOne: false
                   ]
                 },"questionnaire_versions": {
                   Row: {
-                    "created_at": string,"id": string,"published_at": string | null,"status": string,"updated_at": string,"version": number
+                    "created_at": string,"first_choice_points": number,"id": string,"late_tiebreak_basis": string,"published_at": string | null,"second_choice_points": number,"status": string,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"published_at"?: string | null,"status": string,"updated_at"?: string,"version": number
+                    "created_at"?: string,"first_choice_points"?: number,"id"?: string,"late_tiebreak_basis"?: string,"published_at"?: string | null,"second_choice_points"?: number,"status": string,"updated_at"?: string,"version": number
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"published_at"?: string | null,"status"?: string,"updated_at"?: string,"version"?: number
+                    "created_at"?: string,"first_choice_points"?: number,"id"?: string,"late_tiebreak_basis"?: string,"published_at"?: string | null,"second_choice_points"?: number,"status"?: string,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     
                   ]
                 },"questions": {
                   Row: {
-                    "id": string,"position": number,"text": string,"version_id": string
+                    "id": string,"max_choices": number,"position": number,"text": string,"version_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: string,"position": number,"text": string,"version_id": string
+                    "id"?: string,"max_choices"?: number,"position": number,"text": string,"version_id": string
                   }
                   Update: {
-                    "id"?: string,"position"?: number,"text"?: string,"version_id"?: string
+                    "id"?: string,"max_choices"?: number,"position"?: number,"text"?: string,"version_id"?: string
                   }
                   Relationships: [
                     {
@@ -444,7 +450,7 @@ isOneToOne: false
 { Args: { "p_order": string }; Returns: boolean
                            },
 "save_answer":
-{ Args: { "p_alternative": string,"p_attempt": string,"p_question": string }; Returns: number
+{ Args: { "p_alternative": string,"p_attempt": string,"p_question": string,"p_second"?: string }; Returns: number
                            }
           }
           Enums: {

@@ -15,6 +15,9 @@ import {
   createOrder,
   createQuestion,
   createVersion,
+  createTwoChoiceFixture,
+  cleanupFixture,
+  pinAttemptToVersion,
   validContent,
   validPoints,
 } from "./helpers";
@@ -304,5 +307,77 @@ describe("generation state (RF-07)", () => {
       anon.rpc("reset_generation", { p_order: randomUUID() }),
     ];
     for (const result of await Promise.all(calls)) expect(result.error).not.toBeNull();
+  });
+});
+
+
+describe("two-choice rule columns (quiz v2 RF-01)", () => {
+  it("the rule columns have the version 1 defaults", async () => {
+    const version = await newVersion();
+    expect(version.first_choice_points).toBe(1);
+    expect(version.second_choice_points).toBe(0);
+    expect(version.late_tiebreak_basis).toBe("answers");
+    const question = await createQuestion(db, version.id, 1);
+    expect(question.max_choices).toBe(1);
+  });
+
+  it("rejects out of range rule values", async () => {
+    const base = { version: 700000 + Math.floor(Math.random() * 90000), status: "archived" };
+    for (const bad of [
+      { first_choice_points: 0 },
+      { first_choice_points: 6 },
+      { second_choice_points: 6 },
+      { second_choice_points: -1 },
+      { late_tiebreak_basis: "weights" },
+      { first_choice_points: 1, second_choice_points: 2 },
+    ]) {
+      const { error } = await db.from("questionnaire_versions").insert({ ...base, ...bad });
+      expect(error, JSON.stringify(bad)).not.toBeNull();
+    }
+    const version = await newVersion();
+    const { error } = await db.from("questions").insert({ version_id: version.id, position: 1, text: "x", max_choices: 3 });
+    expect(error).not.toBeNull();
+  });
+
+  it("answers_second_differs rejects equal alternatives", async () => {
+    const fixture = await createTwoChoiceFixture(db);
+    const customer = await createCustomer(db);
+    customerIds.push(customer.id);
+    try {
+      const attempt = await createAttempt(db, customer.id);
+      const question = fixture.questions[0];
+      const same = await db.from("answers").insert({
+        attempt_id: attempt.id,
+        version_id: fixture.version.id,
+        question_id: question.id,
+        alternative_id: question.alternatives[0].id,
+        second_alternative_id: question.alternatives[0].id,
+      });
+      expect(same.error).not.toBeNull();
+      const different = await db.from("answers").insert({
+        attempt_id: attempt.id,
+        version_id: fixture.version.id,
+        question_id: question.id,
+        alternative_id: question.alternatives[0].id,
+        second_alternative_id: question.alternatives[1].id,
+      });
+      expect(different.error).toBeNull();
+    } finally {
+      await cleanupFixture(db, fixture);
+    }
+  });
+
+  it("the fixture pins an attempt to a non-published version", async () => {
+    const fixture = await createTwoChoiceFixture(db);
+    const customer = await createCustomer(db);
+    customerIds.push(customer.id);
+    try {
+      const attempt = await createAttempt(db, customer.id);
+      await pinAttemptToVersion(db, attempt.id, fixture);
+      const { data } = await db.from("answers").select("version_id").eq("attempt_id", attempt.id);
+      expect(data).toEqual([{ version_id: fixture.version.id }]);
+    } finally {
+      await cleanupFixture(db, fixture);
+    }
   });
 });
