@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { AnswerError, getSavedChoices, saveAnswer } from "@/lib/diagnostico/answers";
 import { getScoredAnswers, getScoringRules } from "@/lib/diagnostico/question-bank";
+import { loadQuestionnaire } from "@/lib/diagnostico/questionnaire-page";
 import {
   adminClient,
   cleanupFixture,
@@ -142,5 +143,20 @@ describe("scoring reads of a two-choice attempt", () => {
     customerIds.push(customer.id);
     const attempt = await createAttempt(db, customer.id);
     expect(await getScoringRules(db, attempt.id)).toEqual({ firstPoints: 1, secondPoints: 0, lateBasis: "answers" });
+  });
+});
+
+describe("questionnaire loader with two choices", () => {
+  it("loadQuestionnaire restores both choices, maxChoices and the first unanswered step", async () => {
+    const attempt = await pinnedAttempt();
+    await saveAnswer(db, attempt.id, qid(2), alt(2, 1), alt(2, 3));
+    const state = await loadQuestionnaire(db, attempt.id);
+    expect(state.choices[qid(2)]).toEqual({ first: alt(2, 1), second: alt(2, 3) });
+    expect(state.choices[qid(1)]).toEqual({ first: alt(1, 1), second: null });
+    expect(state.answers[qid(2)]).toBe(alt(2, 1)); // first choices only
+    expect(state.startIndex).toBe(2); // question 3 is the first without an answer
+    expect(state.questionSet.questions.map((question) => question.maxChoices)).toEqual([2, 2, 2, 1]);
+    // The public set never carries a style or a weight.
+    expect(JSON.stringify(state.questionSet)).not.toMatch(/"style"|"weight"/);
   });
 });

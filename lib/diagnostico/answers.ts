@@ -2,6 +2,9 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { readAttemptIdFromCookies } from "./attempt-session";
 import type { Database } from "./database.types";
+import type { SavedChoice } from "./questionnaire-state";
+
+export type { SavedChoice };
 
 type Db = SupabaseClient<Database>;
 type CookieStore = { get(name: string): { value: string } | undefined };
@@ -14,8 +17,6 @@ const ANSWER_ERROR_CODES: AnswerErrorCode[] = [
   "CHOICE_NOT_ALLOWED",
 ];
 
-/** The saved choices of one question: the first choice and the optional second one. */
-export type SavedChoice = { first: string; second: string | null };
 
 export class AnswerError extends Error {
   code: AnswerErrorCode;

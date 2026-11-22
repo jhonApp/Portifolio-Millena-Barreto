@@ -9,14 +9,22 @@ import {
   RETRY_DELAYS_MS,
   TRANSITION_MS,
   canAdvance,
+  nextChoices,
   progressPercent,
+  sameChoices,
+  type SavedChoice,
 } from "@/lib/diagnostico/questionnaire-state";
 
 type SaveStatus = "saving" | "retrying" | "failed" | "rejected";
+type SendOutcome = "ok" | "expired" | "rejected" | "failed";
 
 const MESSAGE_RETRYING = "Não conseguimos salvar sua resposta. Tentando de novo…";
 const MESSAGE_OFFLINE = "Sem conexão. Suas respostas já salvas estão seguras. Tente novamente.";
 const MESSAGE_REJECTED = "Não foi possível salvar essa resposta. Escolha a alternativa de novo.";
+// Draft copy for Millena's review.
+const HINT_SECOND_CHOICE = "Se mais de uma opção combina com você, escolha uma segunda. É opcional.";
+const LABEL_FIRST = "1ª escolha";
+const LABEL_SECOND = "2ª escolha";
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -35,17 +43,22 @@ export default function Questionnaire({
   const [index, setIndex] = useState(initial.startIndex);
   const [direction, setDirection] = useState<1 | -1>(1);
   // What the customer picked (shown at once) and what the server confirmed.
-  const [selected, setSelected] = useState<Record<string, string>>(initial.answers);
-  const [saved, setSaved] = useState<Record<string, string>>(initial.answers);
+  const [selected, setSelected] = useState<Record<string, SavedChoice>>(initial.choices);
+  const [saved, setSaved] = useState<Record<string, SavedChoice>>(initial.choices);
   const [status, setStatus] = useState<Record<string, SaveStatus | undefined>>({});
 
-  // Counts saves per question, so a response to an older choice never overrides a newer one.
-  const latestSave = useRef<Record<string, number>>({});
+  // One save in flight per question: a tap made meanwhile is sent after it, so an older state
+  // never overwrites a newer one on the server.
+  const inFlight = useRef<Record<string, boolean>>({});
+  const wanted = useRef<Record<string, SavedChoice>>({});
+  const confirmed = useRef<Record<string, SavedChoice>>({ ...initial.choices });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const navigated = useRef(false);
 
   const question = questions[index];
   const isLast = index === total - 1;
+  const chosen = selected[question.id];
+  const multiple = question.maxChoices === 2;
   const questionStatus = status[question.id];
   const pending = questionStatus !== undefined;
   const allSaved = questions.every((item) => Boolean(saved[item.id]));
@@ -61,50 +74,81 @@ export default function Questionnaire({
     setStatus((current) => ({ ...current, [questionId]: value }));
   }
 
-  async function persist(questionId: string, alternativeId: string) {
-    const ticket = (latestSave.current[questionId] ?? 0) + 1;
-    latestSave.current[questionId] = ticket;
-    const stale = () => latestSave.current[questionId] !== ticket;
-
-    setQuestionStatus(questionId, "saving");
+  /** Sends the whole answer of a question, retrying network failures and 5xx responses. */
+  async function send(questionId: string, choice: SavedChoice): Promise<SendOutcome> {
     // First attempt plus one retry per delay: 4 requests in total.
     for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
       try {
         const response = await fetch("/api/diagnostico/answers", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ questionId, alternativeId }),
+          body: JSON.stringify({ questionId, alternativeId: choice.first, secondAlternativeId: choice.second }),
         });
-        if (stale()) return;
-        if (response.ok) {
-          setSaved((current) => ({ ...current, [questionId]: alternativeId }));
-          setQuestionStatus(questionId, undefined);
-          return;
-        }
-        if (response.status === 403) {
-          router.replace(EXPIRED_PATH);
-          return;
-        }
-        if (response.status >= 400 && response.status < 500) {
-          // Retrying a request the server rejected cannot help.
-          setQuestionStatus(questionId, "rejected");
-          return;
-        }
+        if (response.ok) return "ok";
+        if (response.status === 403) return "expired";
+        // Retrying a request the server rejected cannot help.
+        if (response.status >= 400 && response.status < 500) return "rejected";
       } catch {
-        if (stale()) return;
+        // A network failure is retried below.
       }
       if (attempt < RETRY_DELAYS_MS.length) {
         setQuestionStatus(questionId, "retrying");
         await sleep(RETRY_DELAYS_MS[attempt]);
-        if (stale()) return;
       }
     }
-    setQuestionStatus(questionId, "failed");
+    return "failed";
+  }
+
+  async function persist(questionId: string, choice: SavedChoice) {
+    wanted.current[questionId] = choice;
+    if (inFlight.current[questionId]) return;
+    inFlight.current[questionId] = true;
+    setQuestionStatus(questionId, "saving");
+    try {
+      // Keep sending until the server holds the latest state the customer asked for.
+      for (;;) {
+        const target = wanted.current[questionId];
+        const outcome = await send(questionId, target);
+        if (outcome === "expired") {
+          router.replace(EXPIRED_PATH);
+          return;
+        }
+        if (outcome === "rejected") {
+          // Restore the last saved state of this question.
+          const last = confirmed.current[questionId];
+          setSelected((current) => {
+            const next = { ...current };
+            if (last) next[questionId] = last;
+            else delete next[questionId];
+            return next;
+          });
+          setQuestionStatus(questionId, "rejected");
+          return;
+        }
+        if (outcome === "failed") {
+          setQuestionStatus(questionId, "failed");
+          return;
+        }
+        confirmed.current[questionId] = target;
+        setSaved((current) => ({ ...current, [questionId]: target }));
+        if (wanted.current[questionId] === target) {
+          setQuestionStatus(questionId, undefined);
+          return;
+        }
+        setQuestionStatus(questionId, "saving");
+      }
+    } finally {
+      inFlight.current[questionId] = false;
+    }
   }
 
   function choose(alternativeId: string) {
-    setSelected((current) => ({ ...current, [question.id]: alternativeId }));
-    void persist(question.id, alternativeId);
+    const current = selected[question.id];
+    const next = nextChoices(current, alternativeId, question.maxChoices);
+    // Tapping the only selected card changes nothing and sends nothing.
+    if (sameChoices(current, next) && !pending) return;
+    setSelected((all) => ({ ...all, [question.id]: next }));
+    void persist(question.id, next);
   }
 
   function go(step: 1 | -1) {
@@ -123,6 +167,12 @@ export default function Questionnaire({
   }
 
   const duration = reduceMotion ? 0 : TRANSITION_MS / 1000;
+
+  // The card is marked by a border and by text ("1ª escolha"), never by color alone.
+  const cardClass = (isSelected: boolean) =>
+    `flex min-h-[56px] cursor-pointer items-center rounded-lg border px-4 py-3 text-base leading-snug transition-colors focus-within:ring-2 focus-within:ring-accent ${
+      isSelected ? "border-2 border-accent bg-accent/10 text-primary" : "border-neutral-300 text-secondary hover:border-accent"
+    }`;
 
   return (
     <section className="mx-auto max-w-[640px] py-4 xl:py-10">
@@ -174,31 +224,55 @@ export default function Questionnaire({
           {question.text}
         </h2>
 
-        <div role="radiogroup" aria-labelledby={`question-${question.id}`} className="mt-5 flex flex-col gap-3">
-          {question.alternatives.map((alternative) => {
-            const isSelected = selected[question.id] === alternative.id;
-            return (
-              <label
-                key={alternative.id}
-                className={`flex min-h-[56px] cursor-pointer items-center rounded-lg border px-4 py-3 text-base leading-snug transition-colors focus-within:ring-2 focus-within:ring-accent ${
-                  isSelected
-                    ? "border-accent bg-accent/10 text-primary"
-                    : "border-neutral-300 text-secondary hover:border-accent"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name={`question-${question.id}`}
-                  value={alternative.id}
-                  checked={isSelected}
-                  onChange={() => choose(alternative.id)}
-                  className="sr-only"
-                />
-                {alternative.text}
-              </label>
-            );
-          })}
-        </div>
+        {multiple ? (
+          <div role="group" aria-labelledby={`question-${question.id}`} aria-describedby={`hint-${question.id}`} className="mt-5 flex flex-col gap-3">
+            {question.alternatives.map((alternative) => {
+              const rank = chosen?.first === alternative.id ? 1 : chosen?.second === alternative.id ? 2 : 0;
+              return (
+                <label key={alternative.id} className={cardClass(rank > 0)}>
+                  <input
+                    type="checkbox"
+                    name={`question-${question.id}`}
+                    value={alternative.id}
+                    checked={rank > 0}
+                    onChange={() => choose(alternative.id)}
+                    className="sr-only"
+                  />
+                  <span className="flex-1">{alternative.text}</span>
+                  {rank > 0 ? (
+                    <span className="ml-3 shrink-0 text-xs font-semibold uppercase tracking-wider text-accent">
+                      {rank === 1 ? LABEL_FIRST : LABEL_SECOND}
+                    </span>
+                  ) : null}
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <div role="radiogroup" aria-labelledby={`question-${question.id}`} className="mt-5 flex flex-col gap-3">
+            {question.alternatives.map((alternative) => {
+              const isSelected = chosen?.first === alternative.id;
+              return (
+                <label key={alternative.id} className={cardClass(isSelected)}>
+                  <input
+                    type="radio"
+                    name={`question-${question.id}`}
+                    value={alternative.id}
+                    checked={isSelected}
+                    onChange={() => choose(alternative.id)}
+                    className="sr-only"
+                  />
+                  {alternative.text}
+                </label>
+              );
+            })}
+          </div>
+        )}
+        {multiple ? (
+          <p id={`hint-${question.id}`} className="mt-3 text-sm text-secondary">
+            {HINT_SECOND_CHOICE}
+          </p>
+        ) : null}
       </motion.div>
 
       <div className="mt-4 min-h-[48px]" aria-live="polite">

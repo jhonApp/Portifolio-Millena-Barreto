@@ -5,7 +5,10 @@ import {
   TRANSITION_MS,
   canAdvance,
   firstUnansweredIndex,
+  nextChoices,
   progressPercent,
+  sameChoices,
+  type SavedChoice,
 } from "@/lib/diagnostico/questionnaire-state";
 
 const questions = Array.from({ length: TOTAL_QUESTIONS }, (_, i) => ({ id: `q${i + 1}` }));
@@ -49,5 +52,60 @@ describe("questionnaire state helpers", () => {
     const all = Object.fromEntries(questions.map((q) => [q.id, "a"]));
     expect(firstUnansweredIndex(questions, all)).toBe(14);
     expect(firstUnansweredIndex([], {})).toBe(0);
+  });
+});
+
+describe("nextChoices", () => {
+  const A = "a";
+  const B = "b";
+  const C = "c";
+  const first = (id: string): SavedChoice => ({ first: id, second: null });
+
+  it("nextChoices: a first tap selects the first choice", () => {
+    expect(nextChoices(undefined, A, 2)).toEqual({ first: A, second: null });
+  });
+
+  it("nextChoices: a tap on a different card sets the second choice", () => {
+    expect(nextChoices(first(A), B, 2)).toEqual({ first: A, second: B });
+  });
+
+  it("nextChoices: tapping the second choice clears it", () => {
+    expect(nextChoices({ first: A, second: B }, B, 2)).toEqual(first(A));
+  });
+
+  it("nextChoices: a third card replaces the second choice", () => {
+    expect(nextChoices({ first: A, second: B }, C, 2)).toEqual({ first: A, second: C });
+  });
+
+  it("nextChoices: tapping the first choice while a second exists promotes the second", () => {
+    expect(nextChoices({ first: A, second: B }, A, 2)).toEqual(first(B));
+  });
+
+  it("nextChoices: tapping the only selected card keeps it selected", () => {
+    const current = first(A);
+    expect(nextChoices(current, A, 2)).toEqual(first(A));
+    expect(sameChoices(current, nextChoices(current, A, 2))).toBe(true);
+  });
+
+  it("nextChoices: a single-choice question takes the last tapped card and never a second", () => {
+    expect(nextChoices(undefined, A, 1)).toEqual(first(A));
+    expect(nextChoices(first(A), B, 1)).toEqual(first(B));
+  });
+
+  it("sameChoices compares the first and the second choice", () => {
+    expect(sameChoices(undefined, undefined)).toBe(true);
+    expect(sameChoices(first(A), undefined)).toBe(false);
+    expect(sameChoices({ first: A, second: B }, first(A))).toBe(false);
+    expect(sameChoices({ first: A, second: B }, { first: A, second: B })).toBe(true);
+  });
+
+  it("canAdvance is enabled by a saved first choice, with or without a second", () => {
+    expect(canAdvance("q1", { q1: first(A) })).toBe(true);
+    expect(canAdvance("q1", { q1: { first: A, second: B } })).toBe(true);
+    expect(canAdvance("q1", {})).toBe(false);
+  });
+
+  it("firstUnansweredIndex works on saved choices", () => {
+    expect(firstUnansweredIndex(questions, { q1: first(A), q2: { first: A, second: B } })).toBe(2);
   });
 });

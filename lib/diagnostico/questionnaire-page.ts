@@ -1,15 +1,17 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAttemptVersionId, getSavedAnswers } from "./answers";
+import { getAttemptVersionId, getSavedChoices } from "./answers";
 import type { Database } from "./database.types";
 import { getPublicQuestionSet } from "./question-bank";
 import type { PublicQuestionSet } from "./question-types";
-import { firstUnansweredIndex } from "./questionnaire-state";
+import { firstUnansweredIndex, type SavedChoice } from "./questionnaire-state";
 
 export type QuestionnaireInitialState = {
   questionSet: PublicQuestionSet;
-  /** question id -> alternative id, already saved on the server */
+  /** question id -> first alternative id, already saved on the server */
   answers: Record<string, string>;
+  /** question id -> first and optional second alternative id, already saved on the server */
+  choices: Record<string, SavedChoice>;
   /** 0-based index of the question to show first */
   startIndex: number;
 };
@@ -25,6 +27,7 @@ export async function loadQuestionnaire(
 ): Promise<QuestionnaireInitialState> {
   const pinnedVersion = await getAttemptVersionId(db, attemptId);
   const questionSet = await getPublicQuestionSet(db, attemptId, pinnedVersion ?? undefined);
-  const answers = await getSavedAnswers(db, attemptId);
-  return { questionSet, answers, startIndex: firstUnansweredIndex(questionSet.questions, answers) };
+  const choices = await getSavedChoices(db, attemptId);
+  const answers = Object.fromEntries(Object.entries(choices).map(([questionId, choice]) => [questionId, choice.first]));
+  return { questionSet, answers, choices, startIndex: firstUnansweredIndex(questionSet.questions, choices) };
 }
