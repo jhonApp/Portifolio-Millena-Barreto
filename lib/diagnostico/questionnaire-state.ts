@@ -57,3 +57,73 @@ export function progressPercent(index: number, total: number = TOTAL_QUESTIONS):
 export function canAdvance(questionId: string, saved: Readonly<Record<string, unknown>>): boolean {
   return Boolean(saved[questionId]);
 }
+
+// Chapters, badges and look progress (RF-04). Everything is derived from the chapter of each step
+// (RF-02) and from the saved answers (RF-01); nothing is stored.
+
+/** A step of the public question set, as far as the chapter logic needs it. */
+export type ChapterStep = { id: string; chapter: number | null };
+
+/** A question id is saved when it has a key in `saved` (a choice object or an alternative id). */
+export type SavedIds = Readonly<Record<string, unknown>>;
+
+export type SegmentState = "answered" | "current" | "pending";
+
+export type Segment = {
+  index: number;
+  chapter: number | null;
+  /** The step has a saved answer (it stays filled when the customer goes back). */
+  filled: boolean;
+  current: boolean;
+  /** What the segment is called for a screen reader: the step being shown wins over its answer. */
+  state: SegmentState;
+};
+
+/** True when every step belongs to a chapter; version 1 steps have none and keep the single bar. */
+export function hasChapters(steps: readonly ChapterStep[]): boolean {
+  return steps.length > 0 && steps.every((step) => step.chapter !== null && step.chapter !== undefined);
+}
+
+/** The state of each segment of the bar for the step at `currentIndex` (0-based). */
+export function segmentStates(steps: readonly ChapterStep[], saved: SavedIds, currentIndex: number): Segment[] {
+  return steps.map((step, index) => {
+    const filled = Boolean(saved[step.id]);
+    const current = index === currentIndex;
+    return {
+      index,
+      chapter: step.chapter,
+      filled,
+      current,
+      state: current ? "current" : filled ? "answered" : "pending",
+    };
+  });
+}
+
+/** The chapters whose steps all have a saved answer, in order. It does not depend on the step shown. */
+export function earnedChapters(steps: readonly ChapterStep[], saved: SavedIds): number[] {
+  if (!hasChapters(steps)) return [];
+  const numbers = Array.from(new Set(steps.map((step) => step.chapter as number))).sort((a, b) => a - b);
+  return numbers.filter((number) =>
+    steps.filter((step) => step.chapter === number).every((step) => Boolean(saved[step.id])),
+  );
+}
+
+/**
+ * The chapter screen due when the customer moves on from the step at `fromIndex`, or null. It is due
+ * when that step is the last one of its chapter, the whole chapter is saved and the screen has not
+ * been shown yet in this visit (`seen` holds the chapter numbers already shown).
+ */
+export function chapterToShow(
+  steps: readonly ChapterStep[],
+  saved: SavedIds,
+  fromIndex: number,
+  seen: ReadonlySet<number>,
+): number | null {
+  if (!hasChapters(steps)) return null;
+  const step = steps[fromIndex];
+  if (!step || step.chapter === null) return null;
+  const next = steps[fromIndex + 1];
+  if (next && next.chapter === step.chapter) return null;
+  if (seen.has(step.chapter)) return null;
+  return earnedChapters(steps, saved).includes(step.chapter) ? step.chapter : null;
+}

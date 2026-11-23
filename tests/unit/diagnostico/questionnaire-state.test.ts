@@ -4,7 +4,11 @@ import {
   TOTAL_QUESTIONS,
   TRANSITION_MS,
   canAdvance,
+  chapterToShow,
+  earnedChapters,
   firstUnansweredIndex,
+  hasChapters,
+  segmentStates,
   nextChoices,
   progressPercent,
   sameChoices,
@@ -107,5 +111,96 @@ describe("nextChoices", () => {
 
   it("firstUnansweredIndex works on saved choices", () => {
     expect(firstUnansweredIndex(questions, { q1: first(A), q2: { first: A, second: B } })).toBe(2);
+  });
+});
+
+// RF-04: chapters, badges and look progress.
+const steps = Array.from({ length: TOTAL_QUESTIONS }, (_, i) => ({ id: `q${i + 1}`, chapter: Math.floor(i / 5) + 1 }));
+const savedUpTo = (count: number) => Object.fromEntries(steps.slice(0, count).map((step) => [step.id, { first: "a", second: null }]));
+
+describe("chapter helpers", () => {
+  it("hasChapters is true only when every step has a chapter", () => {
+    expect(hasChapters(steps)).toBe(true);
+    expect(hasChapters(steps.map((step) => ({ ...step, chapter: null })))).toBe(false);
+    expect(hasChapters([...steps.slice(0, 14), { id: "x", chapter: null }])).toBe(false);
+    expect(hasChapters([])).toBe(false);
+  });
+
+  it("segmentStates marks the saved steps as answered", () => {
+    const segments = segmentStates(steps, savedUpTo(7), 7);
+    expect(segments).toHaveLength(15);
+    expect(segments.filter((segment) => segment.filled)).toHaveLength(7);
+    expect(segments.filter((segment) => segment.state === "answered")).toHaveLength(7);
+    expect(segments[7]).toMatchObject({ current: true, filled: false, state: "current" });
+    expect(segments[8].state).toBe("pending");
+    expect(segments.map((segment) => segment.chapter)).toEqual(steps.map((step) => step.chapter));
+  });
+
+  it("going back keeps the later segments filled", () => {
+    const segments = segmentStates(steps, savedUpTo(8), 4);
+    expect(segments.filter((segment) => segment.filled)).toHaveLength(8);
+    expect(segments[4]).toMatchObject({ current: true, filled: true, state: "current" });
+    expect(segments[7].state).toBe("answered");
+  });
+
+  it("earnedChapters counts only chapters with all 5 steps saved", () => {
+    expect(earnedChapters(steps, savedUpTo(4))).toEqual([]);
+    expect(earnedChapters(steps, savedUpTo(5))).toEqual([1]);
+    expect(earnedChapters(steps, savedUpTo(9))).toEqual([1]);
+    expect(earnedChapters(steps, savedUpTo(10))).toEqual([1, 2]);
+    expect(earnedChapters(steps, savedUpTo(15))).toEqual([1, 2, 3]);
+    expect(earnedChapters(steps.map((step) => ({ ...step, chapter: null })), savedUpTo(15))).toEqual([]);
+  });
+
+  it("earnedChapters does not depend on the current step", () => {
+    const saved = savedUpTo(10);
+    // The step shown is not an input: the result is the same wherever the customer is.
+    for (let current = 0; current < 15; current++) {
+      expect(earnedChapters(steps, saved)).toEqual([1, 2]);
+      expect(segmentStates(steps, saved, current).filter((segment) => segment.filled)).toHaveLength(10);
+    }
+    // A chapter with an unanswered step in the middle is not earned.
+    const gap = { ...savedUpTo(5) } as Record<string, unknown>;
+    delete gap.q3;
+    expect(earnedChapters(steps, gap)).toEqual([]);
+  });
+
+  it("chapterToShow returns the chapter when advancing from its last step for the first time", () => {
+    expect(chapterToShow(steps, savedUpTo(5), 4, new Set())).toBe(1);
+    expect(chapterToShow(steps, savedUpTo(10), 9, new Set([1]))).toBe(2);
+    // Not the last step of a chapter.
+    expect(chapterToShow(steps, savedUpTo(4), 3, new Set())).toBeNull();
+    expect(chapterToShow(steps, savedUpTo(5), 0, new Set())).toBeNull();
+  });
+
+  it("a chapter screen is never due while the chapter is not completely saved", () => {
+    const gap = { ...savedUpTo(5) } as Record<string, unknown>;
+    delete gap.q5;
+    expect(chapterToShow(steps, gap, 4, new Set())).toBeNull();
+  });
+
+  it("a chapter screen already shown in this visit is not shown again", () => {
+    expect(chapterToShow(steps, savedUpTo(5), 4, new Set([1]))).toBeNull();
+  });
+
+  it("going back and advancing again does not repeat the chapter screen", () => {
+    const seen = new Set<number>();
+    const first = chapterToShow(steps, savedUpTo(5), 4, seen);
+    expect(first).toBe(1);
+    seen.add(first!);
+    // The customer goes back to step 5 and taps "Próxima" again.
+    expect(chapterToShow(steps, savedUpTo(5), 4, seen)).toBeNull();
+  });
+
+  it("the last step shows the chapter 3 screen before completing", () => {
+    expect(chapterToShow(steps, savedUpTo(15), 14, new Set([1, 2]))).toBe(3);
+    // Once it was shown, the next tap completes (no screen is due).
+    expect(chapterToShow(steps, savedUpTo(15), 14, new Set([1, 2, 3]))).toBeNull();
+  });
+
+  it("a set without chapters never shows a chapter screen", () => {
+    const plain = steps.map((step) => ({ ...step, chapter: null }));
+    expect(chapterToShow(plain, savedUpTo(15), 4, new Set())).toBeNull();
+    expect(chapterToShow(plain, savedUpTo(15), 14, new Set())).toBeNull();
   });
 });
