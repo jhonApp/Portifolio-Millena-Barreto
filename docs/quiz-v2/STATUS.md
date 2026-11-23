@@ -7,7 +7,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-22, 39f1268 |
-| RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 0/11 | n/a | in progress | none |
+| RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |
@@ -30,8 +30,18 @@ Last run: 2026-11-22, commit 39f1268 (implement-feature; not yet checked by veri
 - ✓ 12. Incomplete attempt goes to the first unanswered step (answers-lib.test.ts::second choices do not change…, checkout-route.test.ts::an incomplete attempt is refused…)
 
 ### RF-02. Question Set Version 2 and Version Routing
-Last run: none
-- — 11 criteria listed in the spec (Section 7), not run yet
+Last run: 2026-11-23, commit 86ccf3f (implement-feature; not yet checked by verify-feature)
+- ✓ 1. A new attempt is served version 2 with 15 steps in 3 chapters of 5 (questionnaire-v2.test.ts::a new attempt is served version 2...; browser steps 1-2)
+- ✓ 2. An attempt with answers keeps its own version (questionnaire-v2.test.ts::an attempt with answers keeps its own version after the release; browser step 4)
+- ✓ 3. The public set has no style or weight (questionnaire-v2.test.ts::has no style or weight, question-bank.test.ts::public question set contains no style or weight)
+- ✓ 4. A style in 8 or 10 steps cannot be published and the message names it (question-set-rules.test.ts::version 2 profile rejects a style that appears in 8 steps and names it, questionnaire-v2.test.ts::publishing an unbalanced draft is refused...)
+- ✓ 5. Version 2 has 12 regular, 3 duels, each style in 9 steps (questionnaire-v2.test.ts::has 12 questions, 3 duels and 9 steps per style, the SQL and TypeScript validators agree...)
+- ✓ 6. An edited alternative text is shown after publishing, mapping unchanged (questionnaire-v2.test.ts::an edited alternative text is shown after publishing...)
+- ✓ 7. Only texts are editable; a published version is refused (questionnaire-v2.test.ts::the edit functions change text only..., there is no function that changes style...)
+- ✓ 8. Stored version 1 results and scoring input unchanged (questionnaire-v2.test.ts::publishing version 2 does not change a stored version 1 result...; 5 stored results rescored identically)
+- ✓ 9. Same order of alternatives and looks for the same attempt (questionnaire-v2.test.ts::keeps the order of alternatives and duel looks stable...; browser step 6)
+- ✓ 10. No published set: maintenance message, nothing created (questionnaire-v2.test.ts::the loader reports unavailable..., answers-route.test.ts::answers 503...; browser step 5)
+- ✓ 11. RF-01 to RF-02 hand-off: saved first and second choices restored, first unanswered step shown (two-choice-handoff.test.ts)
 
 ### RF-03. Look Duels
 Last run: none
