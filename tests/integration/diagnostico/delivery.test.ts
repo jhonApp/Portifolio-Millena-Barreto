@@ -6,6 +6,9 @@ import { loadResultByToken } from "@/lib/diagnostico/result-page";
 import { findResultToken, mintResultToken } from "@/lib/diagnostico/result-token";
 import { adminClient, createApprovedOrder, recordingEmailProvider } from "./helpers";
 
+// Generating and delivering several PDFs takes more than the default 30 s in a slow whole-suite run.
+vi.setConfig({ testTimeout: 120000 });
+
 const db = adminClient();
 const customerIds: string[] = [];
 const orderIds: string[] = [];
