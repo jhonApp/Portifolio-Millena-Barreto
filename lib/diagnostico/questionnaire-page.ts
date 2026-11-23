@@ -1,15 +1,17 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getAttemptVersionId, getSavedAnswers } from "./answers";
+import { getAttemptVersionId, getSavedChoices } from "./answers";
 import type { Database } from "./database.types";
-import { getPublicQuestionSet } from "./question-bank";
+import { QuestionBankError, getPublicQuestionSet } from "./question-bank";
 import type { PublicQuestionSet } from "./question-types";
-import { firstUnansweredIndex } from "./questionnaire-state";
+import { firstUnansweredIndex, type SavedChoice } from "./questionnaire-state";
 
 export type QuestionnaireInitialState = {
   questionSet: PublicQuestionSet;
-  /** question id -> alternative id, already saved on the server */
+  /** question id -> first alternative id, already saved on the server */
   answers: Record<string, string>;
+  /** question id -> first and optional second alternative id, already saved on the server */
+  choices: Record<string, SavedChoice>;
   /** 0-based index of the question to show first */
   startIndex: number;
 };
@@ -25,6 +27,33 @@ export async function loadQuestionnaire(
 ): Promise<QuestionnaireInitialState> {
   const pinnedVersion = await getAttemptVersionId(db, attemptId);
   const questionSet = await getPublicQuestionSet(db, attemptId, pinnedVersion ?? undefined);
-  const answers = await getSavedAnswers(db, attemptId);
-  return { questionSet, answers, startIndex: firstUnansweredIndex(questionSet.questions, answers) };
+  const choices = await getSavedChoices(db, attemptId);
+  const answers = Object.fromEntries(Object.entries(choices).map(([questionId, choice]) => [questionId, choice.first]));
+  return { questionSet, answers, choices, startIndex: firstUnansweredIndex(questionSet.questions, choices) };
+}
+
+export type QuestionnairePage =
+  | { status: "ready"; initial: QuestionnaireInitialState }
+  // No version is published and the attempt has no answers: show the maintenance message.
+  | { status: "unavailable" }
+  // The attempt points to a version that no longer exists (versions are never deleted).
+  | { status: "expired" };
+
+/**
+ * `loadQuestionnaire` for the page: the two conditions that make the questionnaire impossible to
+ * show are returned as states instead of thrown, so the page can answer them without an error.
+ */
+export async function loadQuestionnairePage(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+): Promise<QuestionnairePage> {
+  try {
+    return { status: "ready", initial: await loadQuestionnaire(db, attemptId) };
+  } catch (error) {
+    if (error instanceof QuestionBankError) {
+      if (error.code === "NO_PUBLISHED_VERSION") return { status: "unavailable" };
+      if (error.code === "VERSION_NOT_FOUND") return { status: "expired" };
+    }
+    throw error;
+  }
 }

@@ -7,7 +7,7 @@ import { handleWebhook } from "@/app/api/diagnostico/webhooks/abacatepay/handler
 import { DIAGNOSIS_BUCKET, diagnosisPdfPath, downloadDiagnosisPdf } from "@/lib/diagnostico/diagnosis-storage";
 import { startGeneration } from "@/lib/diagnostico/generation-hook";
 import { OrderNotApprovedError } from "@/lib/diagnostico/order-guard";
-import { getScoredAnswers, loadQuestionBank } from "@/lib/diagnostico/question-bank";
+import { getScoredAnswers, loadQuestionBank, getScoringRules } from "@/lib/diagnostico/question-bank";
 import { scoreAnswers } from "@/lib/diagnostico/scoring";
 import { adminClient, readPdf, recordingGateway } from "./helpers";
 
@@ -59,7 +59,7 @@ async function saveAnswers(cookie: string, index: (position: number) => number) 
       new Request("http://localhost/api/diagnostico/answers", {
         method: "PUT",
         headers: { "content-type": "application/json", cookie },
-        body: JSON.stringify({ questionId: question.id, alternativeId: question.alternatives[index(question.position)].id }),
+        body: JSON.stringify({ questionId: question.id, alternativeId: question.alternatives[index(question.position) % question.alternatives.length].id }),
       }),
     );
     expect(response.status).toBe(200);
@@ -138,7 +138,7 @@ describe("RF-02, RF-03, RF-04 and RF-06 to RF-07 hand-off", () => {
     const { data: result } = await db.from("results").select("*").eq("order_id", orderId).single();
 
     // RF-03 + RF-04: the points are the scoring engine's output on the answers saved by the route.
-    const expected = scoreAnswers(await getScoredAnswers(db, customer.attemptId));
+    const expected = scoreAnswers(await getScoredAnswers(db, customer.attemptId), await getScoringRules(db, customer.attemptId));
     expect(result!.points).toEqual(expected.points);
     expect(result!.predominant_style).toBe(expected.predominant);
     expect(result!.secondary_style).toBe(expected.secondary);

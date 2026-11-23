@@ -95,7 +95,8 @@ describe("approve_order", () => {
     expect(token.token_hash).toBe("the-hash");
     const days = (new Date(token.expires_at).getTime() - Date.now()) / 86_400_000;
     expect(days).toBeGreaterThan(29.9);
-    expect(days).toBeLessThanOrEqual(30);
+    // The expiry comes from the database clock, the reference from the host clock: allow a small skew (about 3 ms was seen).
+    expect(days).toBeLessThanOrEqual(30 + 1000 / 86_400_000); // one second of tolerance
   });
 
   it("approve_order called twice approves once and creates one token", async () => {

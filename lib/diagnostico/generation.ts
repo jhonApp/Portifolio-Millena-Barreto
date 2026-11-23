@@ -9,7 +9,7 @@ import { uploadDiagnosisPdf as defaultUploadPdf } from "./diagnosis-storage";
 import { getAttemptVersionId } from "./answers";
 import { assertOrderApproved, OrderNotApprovedError } from "./order-guard";
 import { recordAutomationError } from "./automation-errors";
-import { getScoredAnswers } from "./question-bank";
+import { getScoredAnswers, getScoringRules } from "./question-bank";
 import type { DiagnosisContent } from "./schemas/diagnosis-content";
 import { EXPECTED_ANSWERS, ScoringError, scoreAnswers } from "./scoring";
 
@@ -90,10 +90,12 @@ async function runGeneration(db: Db, orderId: string, deps: GenerationDeps): Pro
   let scoring;
   try {
     const answers = await getScoredAnswers(db, attemptId);
-    if (answers.length !== EXPECTED_ANSWERS) {
-      throw new GenerationError("INVALID_ANSWERS", `expected ${EXPECTED_ANSWERS} answers, found ${answers.length}`);
+    // A two-choice question gives two items, so count the answered questions, not the items.
+    const answered = new Set(answers.map((answer) => answer.questionPosition)).size;
+    if (answered !== EXPECTED_ANSWERS) {
+      throw new GenerationError("INVALID_ANSWERS", `expected ${EXPECTED_ANSWERS} answers, found ${answered}`);
     }
-    scoring = scoreAnswers(answers);
+    scoring = scoreAnswers(answers, await getScoringRules(db, attemptId));
   } catch (error) {
     if (error instanceof GenerationError) throw error;
     if (error instanceof ScoringError) throw new GenerationError("INVALID_ANSWERS", error.message);

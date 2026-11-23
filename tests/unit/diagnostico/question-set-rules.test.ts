@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { STYLES, type Style } from "@/lib/diagnostico/constants";
 import type { EditableQuestionSet } from "@/lib/diagnostico/question-types";
 import { styleAppearances, validateQuestionSet } from "@/lib/diagnostico/question-set-rules";
+import { toEditableSet, version2Steps } from "../../support/version2-set";
 
 // Version-1 shape: every question omits a different pair of styles (15 pairs for 15 questions).
 function balancedSet(): EditableQuestionSet {
@@ -98,5 +99,94 @@ describe("validateQuestionSet", () => {
     const codes = validateQuestionSet(set).map((issue) => issue.code);
     expect(codes).toContain("UNKNOWN_STYLE");
     expect(codes).toContain("INVALID_WEIGHT");
+  });
+});
+
+describe("validateQuestionSet with the version 2 profile", () => {
+  const codes = (set: EditableQuestionSet) => validateQuestionSet(set).map((issue) => issue.code);
+
+  it("the version 2 profile accepts the seeded structure", () => {
+    const set = toEditableSet(version2Steps());
+    expect(validateQuestionSet(set)).toEqual([]);
+    for (const style of STYLES) expect(styleAppearances(set)[style]).toBe(9);
+  });
+
+  it("the profile is chosen from the set: a set with a duel uses version 2, any other uses version 1", () => {
+    // Without kinds, a 15 x 4 balanced set is validated as version 1 (see the cases above).
+    expect(validateQuestionSet(balancedSet())).toEqual([]);
+    // The version 2 structure is not a valid version 1 set (its steps are not all 4 alternatives).
+    const asV1 = toEditableSet(version2Steps());
+    for (const question of asV1.questions) delete question.kind;
+    expect(codes(asV1)).toContain("ALTERNATIVE_COUNT");
+  });
+
+  it("version 2 profile rejects a style that appears in 8 steps and names it", () => {
+    const steps = version2Steps();
+    // In step 1 replace one style by a style that step does not have: the first goes to 8, the other to 10.
+    const step = steps[0];
+    const removed = step.styles[0];
+    const added = STYLES.find((style) => !step.styles.includes(style))!;
+    step.styles[0] = added;
+    const issues = validateQuestionSet(toEditableSet(steps)).filter((issue) => issue.code === "STYLE_BALANCE");
+    expect(issues).toHaveLength(2);
+    expect(issues.find((issue) => issue.message.includes(removed))?.message).toContain("8");
+    expect(issues.find((issue) => issue.message.includes(added))?.message).toContain("10");
+  });
+
+  it("rejects a duel outside steps 5, 10 and 15", () => {
+    const steps = version2Steps();
+    steps[4].kind = "choice";
+    steps[4].styles = [...STYLES.slice(0, 4)];
+    steps[3].kind = "duel";
+    steps[3].styles = [...STYLES.slice(0, 2)];
+    const issue = validateQuestionSet(toEditableSet(steps)).find((candidate) => candidate.code === "DUEL_POSITION");
+    expect(issue?.questionPosition).toBe(4);
+  });
+
+  it("rejects a version with two duels or four duels", () => {
+    const fewer = version2Steps();
+    fewer[14].kind = "choice";
+    fewer[14].styles = [...STYLES.slice(0, 4)];
+    expect(codes(toEditableSet(fewer))).toContain("KIND_COUNT");
+    const more = version2Steps();
+    more[0].kind = "duel";
+    more[0].styles = [...STYLES.slice(0, 2)];
+    expect(codes(toEditableSet(more))).toContain("KIND_COUNT");
+  });
+
+  it("rejects a chapter that does not have 5 steps", () => {
+    const steps = version2Steps();
+    steps[0].chapter = 2;
+    const issues = validateQuestionSet(toEditableSet(steps)).filter((issue) => issue.code === "CHAPTER_SIZE");
+    expect(issues.map((issue) => issue.message).join(" ")).toMatch(/capítulo 1 precisa ter 5 etapas \(tem 4\)/);
+    expect(issues).toHaveLength(2);
+  });
+
+  it("rejects a style that is in two duels or in none", () => {
+    const steps = version2Steps();
+    steps[9].styles = ["esportivo_natural", "criativo"]; // esportivo_natural twice, tradicional never
+    const issues = validateQuestionSet(toEditableSet(steps)).filter((issue) => issue.code === "DUEL_STYLES");
+    expect(issues.map((issue) => issue.message).join(" ")).toContain("esportivo_natural");
+    expect(issues.map((issue) => issue.message).join(" ")).toContain("tradicional");
+  });
+
+  it("rejects a duel with four alternatives and a regular question with two", () => {
+    const set = toEditableSet(version2Steps());
+    set.questions[4].alternatives.push(
+      { id: "x1", position: 3, text: "x", style: "criativo", weight: 1 },
+      { id: "x2", position: 4, text: "x", style: "romantico", weight: 1 },
+    );
+    set.questions[0].alternatives.pop();
+    set.questions[0].alternatives.pop();
+    const positions = validateQuestionSet(set)
+      .filter((issue) => issue.code === "ALTERNATIVE_COUNT")
+      .map((issue) => issue.questionPosition);
+    expect(positions).toEqual([1, 5]);
+  });
+
+  it("rejects a weight outside 1 to 3 in a duel", () => {
+    const set = toEditableSet(version2Steps());
+    set.questions[4].alternatives[0].weight = 5;
+    expect(codes(set)).toContain("INVALID_WEIGHT");
   });
 });

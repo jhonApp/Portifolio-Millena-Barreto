@@ -92,7 +92,8 @@ describe("RF-03 to RF-04 hand-off", () => {
     for (const style of STYLES) expect(json, `style key ${style}`).not.toContain(`"${style}"`);
     for (const question of state.questionSet.questions) {
       for (const alternative of question.alternatives) {
-        expect(Object.keys(alternative).sort()).toEqual(["id", "text"]);
+        // The looks of a duel (version 2) also carry image data: an address with the id only (RF-03).
+        expect(Object.keys(alternative).sort()).toEqual(question.kind === "duel" ? ["id", "image", "text"] : ["id", "text"]);
       }
     }
   });

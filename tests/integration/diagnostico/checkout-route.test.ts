@@ -277,6 +277,26 @@ describe("page access (resolveCheckoutAccess)", () => {
     expect(await resolveCheckoutAccess(db, storeFor(attempt.id))).toEqual({ ok: false, redirectTo: INCOMPLETE_PATH });
   });
 
+  it("an incomplete attempt is refused and points to the first unanswered question, whatever its second choices", async () => {
+    const attempt = await completeAttempt(14);
+    // Give every saved answer a second choice (the row count, not the choice count, is what matters).
+    const { data: saved } = await db.from("answers").select("id, alternative_id, question_id").eq("attempt_id", attempt.id);
+    for (const row of saved ?? []) {
+      const { data: other } = await db
+        .from("alternatives")
+        .select("id")
+        .eq("question_id", row.question_id)
+        .neq("id", row.alternative_id)
+        .limit(1)
+        .single();
+      await db.from("answers").update({ second_alternative_id: other!.id }).eq("id", row.id);
+    }
+    expect(await resolveCheckoutAccess(db, storeFor(attempt.id))).toEqual({ ok: false, redirectTo: INCOMPLETE_PATH });
+    const response = await call(checkout, cookieFor(attempt.id));
+    expect(response.status).toBe(409);
+    expect((await response.json()).error.code).toBe("ANSWERS_INCOMPLETE");
+  });
+
   it("resolveCheckoutAccess redirects an attempt with no answers to the questionnaire", async () => {
     const attempt = await completeAttempt(0);
     expect(await resolveCheckoutAccess(db, storeFor(attempt.id))).toEqual({ ok: false, redirectTo: INCOMPLETE_PATH });

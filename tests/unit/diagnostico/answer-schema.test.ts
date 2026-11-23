@@ -32,4 +32,20 @@ describe("answer body schema", () => {
   it("rejects extra types such as numbers", () => {
     expect(parseInput(answerBodySchema, { questionId: 1, alternativeId: 2 }).ok).toBe(false);
   });
+
+  it("accepts a null or absent secondAlternativeId and rejects a non-UUID", () => {
+    const B = "9d2b7e10-5c3f-4a8e-b1d4-0e6f7a8b9c12";
+    expect(parseInput(answerBodySchema, { questionId: Q, alternativeId: A, secondAlternativeId: B })).toEqual({
+      ok: true,
+      data: { questionId: Q, alternativeId: A, secondAlternativeId: B },
+    });
+    expect(parseInput(answerBodySchema, { questionId: Q, alternativeId: A, secondAlternativeId: null }).ok).toBe(true);
+    const bad = parseInput(answerBodySchema, { questionId: Q, alternativeId: A, secondAlternativeId: "abc" }) as {
+      ok: boolean;
+      fields: Record<string, string[]>;
+    };
+    expect(bad.ok).toBe(false);
+    expect(bad.fields.secondAlternativeId).toEqual([ANSWER_MESSAGES.secondAlternativeId]);
+    expect(parseInput(answerBodySchema, { questionId: Q, alternativeId: A, secondAlternativeId: 5 }).ok).toBe(false);
+  });
 });

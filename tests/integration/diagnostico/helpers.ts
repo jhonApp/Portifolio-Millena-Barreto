@@ -4,6 +4,7 @@ import { getDatabaseEnv } from "@/lib/diagnostico/env";
 import type { Database } from "@/lib/diagnostico/database.types";
 import { EmailProviderError, type EmailProvider } from "@/lib/diagnostico/email-provider";
 import { generateDiagnosis } from "@/lib/diagnostico/generation";
+import { type StepSpec, version2Steps } from "../../support/version2-set";
 import { PixGatewayError, type ChargeStatus, type PixCharge, type PixGateway } from "@/lib/diagnostico/pix-gateway";
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
@@ -466,4 +467,227 @@ export async function createCustomerWithAnswers(db: SupabaseClient<Database>, em
     consent_text: "Autorizo",
   });
   return { customerId: customer.id, attemptId: attempt.id, email: customer.email };
+}
+
+export type TwoChoiceFixture = {
+  version: Database["public"]["Tables"]["questionnaire_versions"]["Row"];
+  /** Questions 1 to 3 allow two choices; question 4 allows one. Alternatives are in position order. */
+  questions: {
+    id: string;
+    position: number;
+    maxChoices: number;
+    alternatives: { id: string; position: number; style: Database["public"]["Tables"]["alternatives"]["Row"]["style"] }[];
+  }[];
+};
+
+const FIXTURE_STYLES = ["elegante", "tradicional", "romantico", "esportivo_natural"] as const;
+
+/**
+ * A non-published questionnaire version with the quiz v2 rules (2 points, 1 point, tie-break by
+ * points), 3 questions that allow two choices and 1 that allows one, each with 4 alternatives of
+ * 4 different styles. Version 1 is never touched. Remove it with `cleanupFixture`.
+ */
+export async function createTwoChoiceFixture(db: SupabaseClient<Database>): Promise<TwoChoiceFixture> {
+  const { data: version, error } = await db
+    .from("questionnaire_versions")
+    .insert({
+      version: uniqueVersion(),
+      status: "archived",
+      first_choice_points: 2,
+      second_choice_points: 1,
+      late_tiebreak_basis: "points",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createTwoChoiceFixture: ${error.message}`);
+  const { data: questions, error: questionError } = await db
+    .from("questions")
+    .insert(
+      [1, 2, 3, 4].map((position) => ({
+        version_id: version.id,
+        position,
+        text: `Pergunta de teste ${position}`,
+        max_choices: position === 4 ? 1 : 2,
+      })),
+    )
+    .select();
+  if (questionError) throw new Error(`createTwoChoiceFixture: ${questionError.message}`);
+  const { error: alternativeError } = await db.from("alternatives").insert(
+    questions!.flatMap((question) =>
+      FIXTURE_STYLES.map((style, index) => ({
+        question_id: question.id,
+        position: index + 1,
+        text: `Alternativa ${question.position}.${index + 1}`,
+        style,
+        weight: 1,
+      })),
+    ),
+  );
+  if (alternativeError) throw new Error(`createTwoChoiceFixture: ${alternativeError.message}`);
+  const { data: alternatives } = await db
+    .from("alternatives")
+    .select("id, question_id, position, style")
+    .in("question_id", questions!.map((question) => question.id))
+    .order("position");
+  return {
+    version,
+    questions: questions!
+      .sort((a, b) => a.position - b.position)
+      .map((question) => ({
+        id: question.id,
+        position: question.position,
+        maxChoices: question.max_choices,
+        alternatives: (alternatives ?? [])
+          .filter((alternative) => alternative.question_id === question.id)
+          .map(({ id, position, style }) => ({ id, position, style })),
+      })),
+  };
+}
+
+/**
+ * Pins an attempt to a fixture version by inserting its first answer directly (`save_answer` only
+ * pins to a published version). Uses the first alternative of the first question.
+ */
+export async function pinAttemptToVersion(
+  db: SupabaseClient<Database>,
+  attemptId: string,
+  fixture: TwoChoiceFixture,
+) {
+  const question = fixture.questions[0];
+  const { error } = await db.from("answers").insert({
+    attempt_id: attemptId,
+    version_id: fixture.version.id,
+    question_id: question.id,
+    alternative_id: question.alternatives[0].id,
+  });
+  if (error) throw new Error(`pinAttemptToVersion: ${error.message}`);
+}
+
+/** Deletes the fixture by id: its answers first (alternatives are restricted), then the version. */
+export async function cleanupFixture(db: SupabaseClient<Database>, fixture: TwoChoiceFixture) {
+  await db.from("answers").delete().eq("version_id", fixture.version.id);
+  await db.from("questionnaire_versions").delete().eq("id", fixture.version.id);
+}
+
+/**
+ * Publishes a version for the duration of `fn` and restores the previous state afterwards: the
+ * previously published version is published again (with its original `published_at`) and the
+ * target returns to the status it had. The restore uses direct updates, so it works even when the
+ * previous version would not pass the publish validation (for example a throwaway fixture).
+ */
+export async function publishVersionTemporarily<T>(
+  db: SupabaseClient<Database>,
+  versionId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const { data: previous } = await db
+    .from("questionnaire_versions")
+    .select("id, status, published_at")
+    .eq("status", "published")
+    .maybeSingle();
+  const { data: target } = await db
+    .from("questionnaire_versions")
+    .select("status, published_at")
+    .eq("id", versionId)
+    .single();
+  const { error } = await db.rpc("publish_questionnaire_version", { p_version: versionId });
+  if (error) throw new Error(`publishVersionTemporarily: ${error.message}`);
+  try {
+    return await fn();
+  } finally {
+    await db
+      .from("questionnaire_versions")
+      .update({ status: target?.status ?? "archived", published_at: target?.published_at ?? null })
+      .eq("id", versionId);
+    if (previous) {
+      await db
+        .from("questionnaire_versions")
+        .update({ status: "published", published_at: previous.published_at })
+        .eq("id", previous.id);
+    }
+  }
+}
+
+/**
+ * A throwaway version with the quiz v2 rules and the given structure (the seeded structure of
+ * version 2 by default): every step gets its kind, chapter and `max_choices`, and the texts are
+ * "Pergunta de teste N" and "Alternativa N.M". Remove it with `deleteVersions`.
+ */
+export async function createVersionFromSteps(
+  db: SupabaseClient<Database>,
+  steps: StepSpec[] = version2Steps(),
+  status: "draft" | "archived" = "draft",
+) {
+  const { data: version, error } = await db
+    .from("questionnaire_versions")
+    .insert({
+      version: uniqueVersion(),
+      status,
+      first_choice_points: 2,
+      second_choice_points: 1,
+      late_tiebreak_basis: "points",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createVersionFromSteps: ${error.message}`);
+  const { data: questions, error: questionError } = await db
+    .from("questions")
+    .insert(
+      steps.map((step) => ({
+        version_id: version.id,
+        position: step.position,
+        text: `Pergunta de teste ${step.position}`,
+        kind: step.kind,
+        chapter: step.chapter,
+        max_choices: step.kind === "duel" ? 1 : 2,
+      })),
+    )
+    .select();
+  if (questionError) throw new Error(`createVersionFromSteps: ${questionError.message}`);
+  const { error: alternativeError } = await db.from("alternatives").insert(
+    questions!.flatMap((question) => {
+      const step = steps.find((candidate) => candidate.position === question.position)!;
+      return step.styles.map((style, index) => ({
+        question_id: question.id,
+        position: index + 1,
+        text: `Alternativa ${question.position}.${index + 1}`,
+        style,
+        weight: 1,
+      }));
+    }),
+  );
+  if (alternativeError) throw new Error(`createVersionFromSteps: ${alternativeError.message}`);
+  return version;
+}
+
+/** Deletes throwaway versions by id: their answers first (alternatives are restricted). */
+export async function deleteVersions(db: SupabaseClient<Database>, versionIds: string[]) {
+  if (versionIds.length === 0) return;
+  await db.from("answers").delete().in("version_id", versionIds);
+  await db.from("questionnaire_versions").delete().in("id", versionIds);
+}
+
+/**
+ * Makes version 1 the published version for the tests of a file that are about version 1, whatever
+ * the database holds (after the real release version 2 is live), and returns the function that puts
+ * every status back as it was. Call the returned function in `afterAll`.
+ */
+export async function makeVersionOneLive(db: SupabaseClient<Database>): Promise<() => Promise<void>> {
+  const { data } = await db
+    .from("questionnaire_versions")
+    .select("id, version, status, published_at")
+    .or("version.eq.1,status.eq.published");
+  const saved = data ?? [];
+  const versionOne = saved.find((row) => row.version === 1);
+  if (!versionOne) throw new Error("makeVersionOneLive: version 1 does not exist");
+  if (versionOne.status !== "published") {
+    await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+    await db.from("questionnaire_versions").update({ status: "published" }).eq("id", versionOne.id);
+  }
+  return async () => {
+    await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+    for (const row of saved) {
+      await db.from("questionnaire_versions").update({ status: row.status, published_at: row.published_at }).eq("id", row.id);
+    }
+  };
 }

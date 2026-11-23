@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"answers": {
                   Row: {
-                    "alternative_id": string,"answered_at": string,"attempt_id": string,"id": string,"question_id": string,"version_id": string
+                    "alternative_id": string,"answered_at": string,"attempt_id": string,"id": string,"question_id": string,"second_alternative_id": string | null,"version_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "alternative_id": string,"answered_at"?: string,"attempt_id": string,"id"?: string,"question_id": string,"version_id": string
+                    "alternative_id": string,"answered_at"?: string,"attempt_id": string,"id"?: string,"question_id": string,"second_alternative_id"?: string | null,"version_id": string
                   }
                   Update: {
-                    "alternative_id"?: string,"answered_at"?: string,"attempt_id"?: string,"id"?: string,"question_id"?: string,"version_id"?: string
+                    "alternative_id"?: string,"answered_at"?: string,"attempt_id"?: string,"id"?: string,"question_id"?: string,"second_alternative_id"?: string | null,"version_id"?: string
                   }
                   Relationships: [
                     {
@@ -65,6 +65,12 @@ isOneToOne: false
       foreignKeyName: "answers_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
+      foreignKeyName: "answers_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: false
       referencedRelation: "purchase_attempts"
       referencedColumns: ["id"]
     },{
@@ -73,6 +79,18 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "questions"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "answers_second_alternative_id_fkey"
+      columns: ["second_alternative_id"]
+isOneToOne: false
+      referencedRelation: "alternatives"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "answers_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
     },{
       foreignKeyName: "answers_version_id_fkey"
       columns: ["version_id"]
@@ -114,6 +132,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "consent_records_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: true
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
       foreignKeyName: "consent_records_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: true
@@ -225,6 +249,12 @@ isOneToOne: false
       foreignKeyName: "orders_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
+      foreignKeyName: "orders_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: false
       referencedRelation: "purchase_attempts"
       referencedColumns: ["id"]
     }
@@ -271,31 +301,37 @@ isOneToOne: false
                   ]
                 },"questionnaire_versions": {
                   Row: {
-                    "created_at": string,"id": string,"published_at": string | null,"status": string,"updated_at": string,"version": number
+                    "created_at": string,"first_choice_points": number,"id": string,"late_tiebreak_basis": string,"published_at": string | null,"second_choice_points": number,"status": string,"updated_at": string,"version": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"published_at"?: string | null,"status": string,"updated_at"?: string,"version": number
+                    "created_at"?: string,"first_choice_points"?: number,"id"?: string,"late_tiebreak_basis"?: string,"published_at"?: string | null,"second_choice_points"?: number,"status": string,"updated_at"?: string,"version": number
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"published_at"?: string | null,"status"?: string,"updated_at"?: string,"version"?: number
+                    "created_at"?: string,"first_choice_points"?: number,"id"?: string,"late_tiebreak_basis"?: string,"published_at"?: string | null,"second_choice_points"?: number,"status"?: string,"updated_at"?: string,"version"?: number
                   }
                   Relationships: [
                     
                   ]
                 },"questions": {
                   Row: {
-                    "id": string,"position": number,"text": string,"version_id": string
+                    "chapter": number | null,"id": string,"kind": string,"max_choices": number,"position": number,"text": string,"version_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: string,"position": number,"text": string,"version_id": string
+                    "chapter"?: number | null,"id"?: string,"kind"?: string,"max_choices"?: number,"position": number,"text": string,"version_id": string
                   }
                   Update: {
-                    "id"?: string,"position"?: number,"text"?: string,"version_id"?: string
+                    "chapter"?: number | null,"id"?: string,"kind"?: string,"max_choices"?: number,"position"?: number,"text"?: string,"version_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "questions_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
+    },{
       foreignKeyName: "questions_version_id_fkey"
       columns: ["version_id"]
 isOneToOne: false
@@ -359,6 +395,12 @@ isOneToOne: true
       foreignKeyName: "results_version_id_fkey"
       columns: ["version_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
+    },{
+      foreignKeyName: "results_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
       referencedRelation: "questionnaire_versions"
       referencedColumns: ["id"]
     }
@@ -380,7 +422,15 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "attempt_version_outcomes": {
+                  Row: {
+                    "attempt_id": string,"reached_checkout": boolean | null,"started_at": string | null,"version": number,"version_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "abort_checkout":
@@ -431,8 +481,14 @@ isOneToOne: false
 "paid_customers_due":
 { Args: { "p_limit": number }; Returns: string[]
                            },
+"publish_questionnaire_version":
+{ Args: { "p_version": string }; Returns: undefined
+                           },
 "purge_unpaid_attempts":
 { Args: { "p_limit": number }; Returns: number
+                           },
+"questionnaire_set_issue":
+{ Args: { "p_version": string }; Returns: string
                            },
 "record_webhook_event":
 { Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string
@@ -444,7 +500,7 @@ isOneToOne: false
 { Args: { "p_order": string }; Returns: boolean
                            },
 "save_answer":
-{ Args: { "p_alternative": string,"p_attempt": string,"p_question": string }; Returns: number
+{ Args: { "p_alternative": string,"p_attempt": string,"p_question": string,"p_second"?: string }; Returns: number
                            }
           }
           Enums: {

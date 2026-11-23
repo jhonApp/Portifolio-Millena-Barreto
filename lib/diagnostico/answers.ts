@@ -2,12 +2,28 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { readAttemptIdFromCookies } from "./attempt-session";
 import type { Database } from "./database.types";
+import type { SavedChoice } from "./questionnaire-state";
+
+export type { SavedChoice };
 
 type Db = SupabaseClient<Database>;
 type CookieStore = { get(name: string): { value: string } | undefined };
 
-export type AnswerErrorCode = "ATTEMPT_NOT_FOUND" | "ALTERNATIVE_MISMATCH" | "VERSION_MISMATCH";
-const ANSWER_ERROR_CODES: AnswerErrorCode[] = ["ATTEMPT_NOT_FOUND", "ALTERNATIVE_MISMATCH", "VERSION_MISMATCH"];
+export type AnswerErrorCode =
+  | "ATTEMPT_NOT_FOUND"
+  | "ALTERNATIVE_MISMATCH"
+  | "VERSION_MISMATCH"
+  | "CHOICE_NOT_ALLOWED"
+  | "VERSION_CHANGED"
+  | "UNAVAILABLE";
+const ANSWER_ERROR_CODES: AnswerErrorCode[] = [
+  "ATTEMPT_NOT_FOUND",
+  "ALTERNATIVE_MISMATCH",
+  "VERSION_MISMATCH",
+  "CHOICE_NOT_ALLOWED",
+  "VERSION_CHANGED",
+  "UNAVAILABLE",
+];
 
 export class AnswerError extends Error {
   code: AnswerErrorCode;
@@ -31,17 +47,22 @@ function fail(context: string, message: string): never {
   throw new Error(`${context} failed: ${message}`);
 }
 
-/** Saves (or replaces) the answer to one question. Returns how many questions the attempt answered. */
+/**
+ * Saves (or replaces) the whole answer to one question: the first choice and, optionally, the
+ * second one (null or absent clears it). Returns how many questions the attempt answered.
+ */
 export async function saveAnswer(
   db: Db,
   attemptId: string,
   questionId: string,
   alternativeId: string,
+  secondAlternativeId?: string | null,
 ): Promise<number> {
   const { data, error } = await db.rpc("save_answer", {
     p_attempt: attemptId,
     p_question: questionId,
     p_alternative: alternativeId,
+    ...(secondAlternativeId ? { p_second: secondAlternativeId } : {}),
   });
   if (error) {
     const code = ANSWER_ERROR_CODES.find((candidate) => error.message.includes(candidate));
@@ -59,6 +80,18 @@ export async function getSavedAnswers(db: Db, attemptId: string): Promise<Record
     .eq("attempt_id", attemptId);
   if (error) fail("getSavedAnswers", error.message);
   return Object.fromEntries((data ?? []).map((row) => [row.question_id, row.alternative_id]));
+}
+
+/** question id -> first and second choice, for the answers already saved by the attempt. */
+export async function getSavedChoices(db: Db, attemptId: string): Promise<Record<string, SavedChoice>> {
+  const { data, error } = await db
+    .from("answers")
+    .select("question_id, alternative_id, second_alternative_id")
+    .eq("attempt_id", attemptId);
+  if (error) fail("getSavedChoices", error.message);
+  return Object.fromEntries(
+    (data ?? []).map((row) => [row.question_id, { first: row.alternative_id, second: row.second_alternative_id }]),
+  );
 }
 
 /** The questionnaire version of the attempt, taken from its first saved answer (null without answers). */
