@@ -65,6 +65,12 @@ isOneToOne: false
       foreignKeyName: "answers_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
+      foreignKeyName: "answers_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: false
       referencedRelation: "purchase_attempts"
       referencedColumns: ["id"]
     },{
@@ -79,6 +85,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "alternatives"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "answers_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
     },{
       foreignKeyName: "answers_version_id_fkey"
       columns: ["version_id"]
@@ -120,6 +132,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "consent_records_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: true
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
       foreignKeyName: "consent_records_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: true
@@ -231,6 +249,12 @@ isOneToOne: false
       foreignKeyName: "orders_attempt_id_fkey"
       columns: ["attempt_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["attempt_id"]
+    },{
+      foreignKeyName: "orders_attempt_id_fkey"
+      columns: ["attempt_id"]
+isOneToOne: false
       referencedRelation: "purchase_attempts"
       referencedColumns: ["id"]
     }
@@ -291,17 +315,23 @@ isOneToOne: false
                   ]
                 },"questions": {
                   Row: {
-                    "id": string,"max_choices": number,"position": number,"text": string,"version_id": string
+                    "chapter": number | null,"id": string,"kind": string,"max_choices": number,"position": number,"text": string,"version_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "id"?: string,"max_choices"?: number,"position": number,"text": string,"version_id": string
+                    "chapter"?: number | null,"id"?: string,"kind"?: string,"max_choices"?: number,"position": number,"text": string,"version_id": string
                   }
                   Update: {
-                    "id"?: string,"max_choices"?: number,"position"?: number,"text"?: string,"version_id"?: string
+                    "chapter"?: number | null,"id"?: string,"kind"?: string,"max_choices"?: number,"position"?: number,"text"?: string,"version_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "questions_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
+    },{
       foreignKeyName: "questions_version_id_fkey"
       columns: ["version_id"]
 isOneToOne: false
@@ -365,6 +395,12 @@ isOneToOne: true
       foreignKeyName: "results_version_id_fkey"
       columns: ["version_id"]
 isOneToOne: false
+      referencedRelation: "attempt_version_outcomes"
+      referencedColumns: ["version_id"]
+    },{
+      foreignKeyName: "results_version_id_fkey"
+      columns: ["version_id"]
+isOneToOne: false
       referencedRelation: "questionnaire_versions"
       referencedColumns: ["id"]
     }
@@ -386,7 +422,15 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "attempt_version_outcomes": {
+                  Row: {
+                    "attempt_id": string,"reached_checkout": boolean | null,"started_at": string | null,"version": number,"version_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                }
           }
           Functions: {
             "abort_checkout":
@@ -437,8 +481,14 @@ isOneToOne: false
 "paid_customers_due":
 { Args: { "p_limit": number }; Returns: string[]
                            },
+"publish_questionnaire_version":
+{ Args: { "p_version": string }; Returns: undefined
+                           },
 "purge_unpaid_attempts":
 { Args: { "p_limit": number }; Returns: number
+                           },
+"questionnaire_set_issue":
+{ Args: { "p_version": string }; Returns: string
                            },
 "record_webhook_event":
 { Args: { "p_event_id": string,"p_event_type": string,"p_payload": Json }; Returns: string

@@ -567,3 +567,42 @@ export async function cleanupFixture(db: SupabaseClient<Database>, fixture: TwoC
   await db.from("answers").delete().eq("version_id", fixture.version.id);
   await db.from("questionnaire_versions").delete().eq("id", fixture.version.id);
 }
+
+/**
+ * Publishes a version for the duration of `fn` and restores the previous state afterwards: the
+ * previously published version is published again (with its original `published_at`) and the
+ * target returns to the status it had. The restore uses direct updates, so it works even when the
+ * previous version would not pass the publish validation (for example a throwaway fixture).
+ */
+export async function publishVersionTemporarily<T>(
+  db: SupabaseClient<Database>,
+  versionId: string,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const { data: previous } = await db
+    .from("questionnaire_versions")
+    .select("id, status, published_at")
+    .eq("status", "published")
+    .maybeSingle();
+  const { data: target } = await db
+    .from("questionnaire_versions")
+    .select("status, published_at")
+    .eq("id", versionId)
+    .single();
+  const { error } = await db.rpc("publish_questionnaire_version", { p_version: versionId });
+  if (error) throw new Error(`publishVersionTemporarily: ${error.message}`);
+  try {
+    return await fn();
+  } finally {
+    await db
+      .from("questionnaire_versions")
+      .update({ status: target?.status ?? "archived", published_at: target?.published_at ?? null })
+      .eq("id", versionId);
+    if (previous) {
+      await db
+        .from("questionnaire_versions")
+        .update({ status: "published", published_at: previous.published_at })
+        .eq("id", previous.id);
+    }
+  }
+}

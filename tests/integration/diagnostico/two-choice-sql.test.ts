@@ -129,7 +129,7 @@ describe("save_answer with a second choice", () => {
     const customer = await createCustomer(db);
     customerIds.push(customer.id);
     const attempt = await createAttempt(db, customer.id);
-    expect(await rejectedWith(saveAnswer(db, attempt.id, qid(1), alt(1, 1), alt(1, 2)))).toBe("VERSION_MISMATCH");
+    expect(await rejectedWith(saveAnswer(db, attempt.id, qid(1), alt(1, 1), alt(1, 2)))).toBe("VERSION_CHANGED");
   });
 });
 

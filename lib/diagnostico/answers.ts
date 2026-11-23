@@ -9,14 +9,21 @@ export type { SavedChoice };
 type Db = SupabaseClient<Database>;
 type CookieStore = { get(name: string): { value: string } | undefined };
 
-export type AnswerErrorCode = "ATTEMPT_NOT_FOUND" | "ALTERNATIVE_MISMATCH" | "VERSION_MISMATCH" | "CHOICE_NOT_ALLOWED";
+export type AnswerErrorCode =
+  | "ATTEMPT_NOT_FOUND"
+  | "ALTERNATIVE_MISMATCH"
+  | "VERSION_MISMATCH"
+  | "CHOICE_NOT_ALLOWED"
+  | "VERSION_CHANGED"
+  | "UNAVAILABLE";
 const ANSWER_ERROR_CODES: AnswerErrorCode[] = [
   "ATTEMPT_NOT_FOUND",
   "ALTERNATIVE_MISMATCH",
   "VERSION_MISMATCH",
   "CHOICE_NOT_ALLOWED",
+  "VERSION_CHANGED",
+  "UNAVAILABLE",
 ];
-
 
 export class AnswerError extends Error {
   code: AnswerErrorCode;
