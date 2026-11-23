@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import DuelStep from "@/components/Diagnostico/DuelStep";
 import { COMPLETION_PATH, EXPIRED_PATH, VERSION_CHANGED_PATH } from "@/lib/diagnostico/paths";
 import type { QuestionnaireInitialState } from "@/lib/diagnostico/questionnaire-page";
 import {
@@ -234,7 +235,9 @@ export default function Questionnaire({
           {question.text}
         </h2>
 
-        {multiple ? (
+        {question.kind === "duel" ? (
+          <DuelStep question={question} chosen={chosen} onChoose={choose} />
+        ) : multiple ? (
           <div role="group" aria-labelledby={`question-${question.id}`} aria-describedby={`hint-${question.id}`} className="mt-5 flex flex-col gap-3">
             {question.alternatives.map((alternative) => {
               const rank = chosen?.first === alternative.id ? 1 : chosen?.second === alternative.id ? 2 : 0;
