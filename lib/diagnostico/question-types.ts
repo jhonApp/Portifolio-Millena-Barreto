@@ -23,8 +23,15 @@ export type PublicQuestionSet = {
     kind: QuestionKind;
     /** Chapter 1 to 3 of the step, or null for a version without chapters (version 1). */
     chapter: 1 | 2 | 3 | null;
-    alternatives: { id: string; text: string }[];
+    alternatives: PublicAlternative[];
   }[];
+};
+
+/** An alternative as the customer sees it. Only the looks of a duel carry an image (RF-03). */
+export type PublicAlternative = {
+  id: string;
+  text: string;
+  image?: { src: string; width: number; height: number };
 };
 
 export type QuestionKind = "choice" | "duel";

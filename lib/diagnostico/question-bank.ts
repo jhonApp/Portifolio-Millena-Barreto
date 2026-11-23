@@ -3,8 +3,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { Style } from "./constants";
 import { validateQuestionSet } from "./question-set-rules";
-import type { EditableQuestionSet, PublicQuestionSet, QuestionKind, QuestionSetIssue, ScoredAnswer } from "./question-types";
+import type { EditableQuestionSet, PublicAlternative, PublicQuestionSet, QuestionKind, QuestionSetIssue, ScoredAnswer } from "./question-types";
 import { DEFAULT_RULES, type ScoringRules } from "./scoring";
+import { duelLookImage } from "./duel-looks";
 import { shuffleWithSeed } from "./seeded-shuffle";
 
 type Db = SupabaseClient<Database>;
@@ -84,6 +85,24 @@ export async function getPublicQuestionSet(
     .order("position");
   if (alternativesError) fail("getPublicQuestionSet", alternativesError.message);
 
+  // The looks of a duel get their image data. The style is read only to find the size of the image
+  // and is never copied into the result (RF-03).
+  const duelAlternativeIds = (questions ?? [])
+    .filter((question) => question.kind === "duel")
+    .flatMap((question) => (alternatives ?? []).filter((a) => a.question_id === question.id).map((a) => a.id));
+  const imageByAlternative = new Map<string, NonNullable<PublicAlternative["image"]>>();
+  if (duelAlternativeIds.length > 0) {
+    const { data: styles, error: stylesError } = await db
+      .from("alternatives")
+      .select("id, style")
+      .in("id", duelAlternativeIds);
+    if (stylesError) fail("getPublicQuestionSet", stylesError.message);
+    for (const row of styles ?? []) {
+      const image = duelLookImage(row.id, row.style as Style);
+      if (image) imageByAlternative.set(row.id, image);
+    }
+  }
+
   return {
     versionId: version.id,
     version: version.version,
@@ -97,7 +116,10 @@ export async function getPublicQuestionSet(
       alternatives: shuffleWithSeed(
         (alternatives ?? [])
           .filter((alternative) => alternative.question_id === question.id)
-          .map((alternative) => ({ id: alternative.id, text: alternative.text })),
+          .map((alternative): PublicAlternative => {
+            const image = imageByAlternative.get(alternative.id);
+            return image ? { id: alternative.id, text: alternative.text, image } : { id: alternative.id, text: alternative.text };
+          }),
         `${seed}:${question.id}`,
       ),
     })),

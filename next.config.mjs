@@ -31,6 +31,8 @@ const nextConfig = {
       "/api/diagnostico/webhooks/abacatepay": pdfFiles,
       "/api/diagnostico/payment/check": pdfFiles,
       "/api/diagnostico/jobs/generation": pdfFiles,
+      // The look duels serve the same light copies (RF-03).
+      "/api/diagnostico/duel-look/[alternativeId]": ["./assets/pdf-images/**/*"],
     },
   },
   async headers() {
