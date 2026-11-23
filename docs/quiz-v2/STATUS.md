@@ -10,7 +10,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, d843012 |
-| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 2/3 | 0/5 | n/a | in progress | none |
+| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 3/3 | 0/5 | n/a | in progress | none |
 
 ## Criteria
 
