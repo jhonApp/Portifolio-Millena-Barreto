@@ -9,6 +9,12 @@ export const CHECKOUT_PATH = "/diagnostico-estilo/checkout";
 // Where an attempt with fewer than 15 answers is sent back to (RF-05).
 export const INCOMPLETE_PATH = `${QUESTIONNAIRE_PATH}?aviso=incompleto`;
 export const INCOMPLETE_NOTICE = "Faltam algumas respostas para concluir.";
+// Where a customer whose page is older than a new questionnaire version is sent back to (RF-02).
+// Draft copy for Millena's review.
+export const VERSION_CHANGED_PATH = `${QUESTIONNAIRE_PATH}?aviso=atualizado`;
+export const VERSION_CHANGED_NOTICE = "Atualizamos o questionário. Vamos começar de novo?";
+// Shown instead of the questionnaire while no version is published (RF-02).
+export const QUESTIONNAIRE_UNAVAILABLE_NOTICE = "Estamos ajustando o questionário. Volte em alguns minutos.";
 // Where the visitor goes when the attempt cookie is missing, invalid or expired.
 export const EXPIRED_PATH = `${REGISTRATION_PATH}?sessao=expirada`;
 export const SESSION_EXPIRED_NOTICE = "Sua sessão expirou. Vamos recomeçar rapidinho?";

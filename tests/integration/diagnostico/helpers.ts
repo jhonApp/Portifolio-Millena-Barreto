@@ -4,6 +4,7 @@ import { getDatabaseEnv } from "@/lib/diagnostico/env";
 import type { Database } from "@/lib/diagnostico/database.types";
 import { EmailProviderError, type EmailProvider } from "@/lib/diagnostico/email-provider";
 import { generateDiagnosis } from "@/lib/diagnostico/generation";
+import { type StepSpec, version2Steps } from "../../support/version2-set";
 import { PixGatewayError, type ChargeStatus, type PixCharge, type PixGateway } from "@/lib/diagnostico/pix-gateway";
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
@@ -605,4 +606,63 @@ export async function publishVersionTemporarily<T>(
         .eq("id", previous.id);
     }
   }
+}
+
+/**
+ * A throwaway version with the quiz v2 rules and the given structure (the seeded structure of
+ * version 2 by default): every step gets its kind, chapter and `max_choices`, and the texts are
+ * "Pergunta de teste N" and "Alternativa N.M". Remove it with `deleteVersions`.
+ */
+export async function createVersionFromSteps(
+  db: SupabaseClient<Database>,
+  steps: StepSpec[] = version2Steps(),
+  status: "draft" | "archived" = "draft",
+) {
+  const { data: version, error } = await db
+    .from("questionnaire_versions")
+    .insert({
+      version: uniqueVersion(),
+      status,
+      first_choice_points: 2,
+      second_choice_points: 1,
+      late_tiebreak_basis: "points",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(`createVersionFromSteps: ${error.message}`);
+  const { data: questions, error: questionError } = await db
+    .from("questions")
+    .insert(
+      steps.map((step) => ({
+        version_id: version.id,
+        position: step.position,
+        text: `Pergunta de teste ${step.position}`,
+        kind: step.kind,
+        chapter: step.chapter,
+        max_choices: step.kind === "duel" ? 1 : 2,
+      })),
+    )
+    .select();
+  if (questionError) throw new Error(`createVersionFromSteps: ${questionError.message}`);
+  const { error: alternativeError } = await db.from("alternatives").insert(
+    questions!.flatMap((question) => {
+      const step = steps.find((candidate) => candidate.position === question.position)!;
+      return step.styles.map((style, index) => ({
+        question_id: question.id,
+        position: index + 1,
+        text: `Alternativa ${question.position}.${index + 1}`,
+        style,
+        weight: 1,
+      }));
+    }),
+  );
+  if (alternativeError) throw new Error(`createVersionFromSteps: ${alternativeError.message}`);
+  return version;
+}
+
+/** Deletes throwaway versions by id: their answers first (alternatives are restricted). */
+export async function deleteVersions(db: SupabaseClient<Database>, versionIds: string[]) {
+  if (versionIds.length === 0) return;
+  await db.from("answers").delete().in("version_id", versionIds);
+  await db.from("questionnaire_versions").delete().in("id", versionIds);
 }

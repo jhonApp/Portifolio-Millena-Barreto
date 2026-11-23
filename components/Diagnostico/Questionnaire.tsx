@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { COMPLETION_PATH, EXPIRED_PATH } from "@/lib/diagnostico/paths";
+import { COMPLETION_PATH, EXPIRED_PATH, VERSION_CHANGED_PATH } from "@/lib/diagnostico/paths";
 import type { QuestionnaireInitialState } from "@/lib/diagnostico/questionnaire-page";
 import {
   RETRY_DELAYS_MS,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/diagnostico/questionnaire-state";
 
 type SaveStatus = "saving" | "retrying" | "failed" | "rejected";
-type SendOutcome = "ok" | "expired" | "rejected" | "failed";
+type SendOutcome = "ok" | "expired" | "changed" | "rejected" | "failed";
 
 const MESSAGE_RETRYING = "Não conseguimos salvar sua resposta. Tentando de novo…";
 const MESSAGE_OFFLINE = "Sem conexão. Suas respostas já salvas estão seguras. Tente novamente.";
@@ -86,6 +86,11 @@ export default function Questionnaire({
         });
         if (response.ok) return "ok";
         if (response.status === 403) return "expired";
+        // A new questionnaire version was published under this open page: nothing was saved.
+        if (response.status === 409) {
+          const body = (await response.json().catch(() => null)) as { error?: { code?: string } } | null;
+          if (body?.error?.code === "VERSION_CHANGED") return "changed";
+        }
         // Retrying a request the server rejected cannot help.
         if (response.status >= 400 && response.status < 500) return "rejected";
       } catch {
@@ -111,6 +116,11 @@ export default function Questionnaire({
         const outcome = await send(questionId, target);
         if (outcome === "expired") {
           router.replace(EXPIRED_PATH);
+          return;
+        }
+        if (outcome === "changed") {
+          // The server renders the new version; the screen is keyed by version and starts clean.
+          router.replace(VERSION_CHANGED_PATH);
           return;
         }
         if (outcome === "rejected") {

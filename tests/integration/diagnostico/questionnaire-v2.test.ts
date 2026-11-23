@@ -1,20 +1,34 @@
 import { spawnSync } from "node:child_process";
 import { afterAll, describe, expect, it } from "vitest";
+import { saveAnswer } from "@/lib/diagnostico/answers";
 import { STYLES } from "@/lib/diagnostico/constants";
 import * as questionBank from "@/lib/diagnostico/question-bank";
 import {
   QuestionBankError,
   getPublicQuestionSet,
+  getScoredAnswers,
+  getScoringRules,
   loadQuestionBank,
   publishQuestionnaireVersion,
   updateAlternativeText,
   updateQuestionText,
 } from "@/lib/diagnostico/question-bank";
 import { validateQuestionSet } from "@/lib/diagnostico/question-set-rules";
+import { loadQuestionnaire, loadQuestionnairePage } from "@/lib/diagnostico/questionnaire-page";
+import { scoreAnswers } from "@/lib/diagnostico/scoring";
 import { type StepSpec, version2Steps } from "../../support/version2-set";
-import { adminClient, createFullVersion, publishVersionTemporarily, uniqueVersion } from "./helpers";
+import {
+  adminClient,
+  createAttempt,
+  createCustomer,
+  createFullVersion,
+  createVersionFromSteps,
+  deleteVersions,
+  publishVersionTemporarily,
+} from "./helpers";
 
 const db = adminClient();
+const customerIds: string[] = [];
 const createdVersionIds: string[] = [];
 const UNKNOWN_ID = "00000000-0000-4000-8000-000000000000";
 
@@ -44,47 +58,9 @@ async function publishedVersions() {
 }
 
 /** Inserts a draft version with the given structure (version 2 rules). Deleted in afterAll. */
-async function insertSet(steps: StepSpec[], status: "draft" | "archived" = "draft") {
-  const { data: version, error } = await db
-    .from("questionnaire_versions")
-    .insert({
-      version: uniqueVersion(),
-      status,
-      first_choice_points: 2,
-      second_choice_points: 1,
-      late_tiebreak_basis: "points",
-    })
-    .select()
-    .single();
-  if (error) throw new Error(error.message);
+async function insertSet(steps: StepSpec[]) {
+  const version = await createVersionFromSteps(db, steps);
   createdVersionIds.push(version.id);
-  const { data: questions, error: questionError } = await db
-    .from("questions")
-    .insert(
-      steps.map((step) => ({
-        version_id: version.id,
-        position: step.position,
-        text: `Pergunta de teste ${step.position}`,
-        kind: step.kind,
-        chapter: step.chapter,
-        max_choices: step.kind === "duel" ? 1 : 2,
-      })),
-    )
-    .select();
-  if (questionError) throw new Error(questionError.message);
-  const { error: alternativeError } = await db.from("alternatives").insert(
-    questions!.flatMap((question) => {
-      const step = steps.find((candidate) => candidate.position === question.position)!;
-      return step.styles.map((style, index) => ({
-        question_id: question.id,
-        position: index + 1,
-        text: `Alternativa ${question.position}.${index + 1}`,
-        style,
-        weight: 1,
-      }));
-    }),
-  );
-  if (alternativeError) throw new Error(alternativeError.message);
   return version;
 }
 
@@ -104,7 +80,8 @@ async function sqlIssue(versionId: string): Promise<string | null> {
 }
 
 afterAll(async () => {
-  if (createdVersionIds.length) await db.from("questionnaire_versions").delete().in("id", createdVersionIds);
+  if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
+  await deleteVersions(db, createdVersionIds);
   // Safety net: the shared database must end with version 1 published and version 2 a draft.
   expect(await publishedVersions()).toEqual([1]);
   expect((await versionByNumber(2)).status).toBe("draft");
@@ -414,6 +391,117 @@ describe("editing the texts of a draft", () => {
     // Both take (db, id, text): there is nowhere to pass another field.
     expect(questionBank.updateAlternativeText.length).toBe(3);
     expect(questionBank.updateQuestionText.length).toBe(3);
+  });
+});
+
+async function newAttempt() {
+  const customer = await createCustomer(db);
+  customerIds.push(customer.id);
+  return createAttempt(db, customer.id);
+}
+
+describe("version routing", () => {
+  it("a new attempt is served version 2 with 15 steps in 3 chapters of 5", async () => {
+    const v2 = await versionByNumber(2);
+    const attempt = await newAttempt();
+    await publishVersionTemporarily(db, v2.id, async () => {
+      const state = await loadQuestionnaire(db, attempt.id);
+      expect(state.questionSet.version).toBe(2);
+      expect(state.questionSet.questions).toHaveLength(15);
+      for (const chapter of [1, 2, 3]) {
+        expect(state.questionSet.questions.filter((question) => question.chapter === chapter)).toHaveLength(5);
+      }
+      expect(state.questionSet.questions.filter((question) => question.kind === "duel").map((question) => question.position)).toEqual([5, 10, 15]);
+      expect(state.startIndex).toBe(0);
+      expect(state.choices).toEqual({});
+      const first = (await loadSteps(v2.id))[0];
+      expect(state.questionSet.questions[0].text).toBe(first.text);
+    });
+  });
+
+  it("an attempt with answers keeps its own version after the release", async () => {
+    const v1 = await loadQuestionBank(db, (await versionByNumber(1)).id);
+    const attempt = await newAttempt();
+    for (const question of v1.questions.slice(0, 3)) {
+      await saveAnswer(db, attempt.id, question.id, question.alternatives[0].id);
+    }
+    const v2 = await versionByNumber(2);
+    await publishVersionTemporarily(db, v2.id, async () => {
+      const state = await loadQuestionnaire(db, attempt.id);
+      expect(state.questionSet.version).toBe(1);
+      expect(state.questionSet.questions).toHaveLength(15);
+      expect(state.questionSet.questions.every((question) => question.maxChoices === 1 && question.kind === "choice" && question.chapter === null)).toBe(true);
+      expect(state.startIndex).toBe(3);
+      // It can keep answering on its own (now archived) version.
+      const fourth = v1.questions[3];
+      await expect(saveAnswer(db, attempt.id, fourth.id, fourth.alternatives[1].id)).resolves.toBe(4);
+    });
+  });
+
+  it("a first answer on a version that is no longer published is refused with VERSION_CHANGED and saves nothing", async () => {
+    const v1 = await loadQuestionBank(db, (await versionByNumber(1)).id);
+    const attempt = await newAttempt();
+    const v2 = await versionByNumber(2);
+    await publishVersionTemporarily(db, v2.id, async () => {
+      // The customer's page was loaded on version 1; version 2 is published now.
+      await expect(saveAnswer(db, attempt.id, v1.questions[0].id, v1.questions[0].alternatives[0].id)).rejects.toMatchObject({
+        code: "VERSION_CHANGED",
+      });
+      const { data } = await db.from("answers").select("id").eq("attempt_id", attempt.id);
+      expect(data).toEqual([]);
+      // The new page of the same attempt is version 2 from step 1.
+      const state = await loadQuestionnaire(db, attempt.id);
+      expect(state.questionSet.version).toBe(2);
+      expect(state.startIndex).toBe(0);
+    });
+  });
+
+  it("the loader reports unavailable when no version is published", async () => {
+    const v1 = await loadQuestionBank(db, (await versionByNumber(1)).id);
+    const pinned = await newAttempt();
+    await saveAnswer(db, pinned.id, v1.questions[0].id, v1.questions[0].alternatives[0].id);
+    const fresh = await newAttempt();
+    const { count: attemptsBefore } = await db.from("purchase_attempts").select("id", { count: "exact", head: true });
+
+    const restore = await snapshotPublished();
+    try {
+      await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+      expect(await publishedVersions()).toEqual([]);
+      expect(await loadQuestionnairePage(db, fresh.id)).toEqual({ status: "unavailable" });
+      // An attempt that already has answers keeps its own version.
+      const page = await loadQuestionnairePage(db, pinned.id);
+      expect(page.status).toBe("ready");
+      // A first answer is refused with UNAVAILABLE.
+      await expect(saveAnswer(db, fresh.id, v1.questions[0].id, v1.questions[0].alternatives[0].id)).rejects.toMatchObject({
+        code: "UNAVAILABLE",
+      });
+    } finally {
+      await restore();
+    }
+    // Nothing was created by looking at the page.
+    const { count: attemptsAfter } = await db.from("purchase_attempts").select("id", { count: "exact", head: true });
+    expect(attemptsAfter).toBe(attemptsBefore);
+    expect(await publishedVersions()).toEqual([1]);
+  });
+
+  it("publishing version 2 does not change a stored version 1 result or its scoring input", async () => {
+    const v1 = await loadQuestionBank(db, (await versionByNumber(1)).id);
+    const attempt = await newAttempt();
+    for (const question of v1.questions) {
+      await saveAnswer(db, attempt.id, question.id, question.alternatives[question.position % 4].id);
+    }
+    const scoreNow = async () =>
+      scoreAnswers(await getScoredAnswers(db, attempt.id), await getScoringRules(db, attempt.id));
+    const before = await scoreNow();
+    const { data: resultsBefore } = await db.from("results").select("id, version_id, points, predominant_style, secondary_style").order("id");
+
+    const v2 = await versionByNumber(2);
+    await publishVersionTemporarily(db, v2.id, async () => {
+      expect(await scoreNow()).toEqual(before);
+      const { data: resultsDuring } = await db.from("results").select("id, version_id, points, predominant_style, secondary_style").order("id");
+      expect(resultsDuring).toEqual(resultsBefore);
+    });
+    expect(await scoreNow()).toEqual(before);
   });
 });
 

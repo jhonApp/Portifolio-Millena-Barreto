@@ -2,6 +2,7 @@ import { AnswerError, saveAnswer } from "@/lib/diagnostico/answers";
 import { readAttemptId } from "@/lib/diagnostico/attempt-session";
 import { ConfigError } from "@/lib/diagnostico/env";
 import { ApiError, apiError } from "@/lib/diagnostico/errors";
+import { QUESTIONNAIRE_UNAVAILABLE_NOTICE } from "@/lib/diagnostico/paths";
 import { ANSWER_MESSAGES, answerBodySchema } from "@/lib/diagnostico/schemas/answer";
 import { getSupabaseAdmin } from "@/lib/diagnostico/supabase-server";
 import { parseInput, readJson } from "@/lib/diagnostico/validation";
@@ -39,6 +40,12 @@ export async function PUT(request: Request): Promise<Response> {
     } catch (error) {
       if (error instanceof AnswerError) {
         if (error.code === "ATTEMPT_NOT_FOUND") return apiError("FORBIDDEN", SESSION_EXPIRED, 403);
+        // The customer's page is older than the published questionnaire: nothing was saved.
+        if (error.code === "VERSION_CHANGED") return apiError("VERSION_CHANGED", "O questionário foi atualizado.", 409);
+        if (error.code === "UNAVAILABLE") {
+          console.error("answers route: no questionnaire version is published");
+          return apiError("UNAVAILABLE", QUESTIONNAIRE_UNAVAILABLE_NOTICE, 503);
+        }
         if (error.code === "CHOICE_NOT_ALLOWED") {
           return apiError("VALIDATION_ERROR", "Dados inválidos.", 400, {
             secondAlternativeId: [ANSWER_MESSAGES.secondAlternativeId],

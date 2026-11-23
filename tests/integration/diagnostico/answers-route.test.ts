@@ -205,7 +205,8 @@ describe("PUT /api/diagnostico/answers", () => {
       // A new attempt starts on the published version and cannot answer the archived one.
       const fresh = await newAttempt();
       const onOld = await put({ questionId: q(1).id, alternativeId: q(1).alternatives[0].id }, cookieFor(fresh.id));
-      expect(onOld.status).toBe(400);
+      // (409 VERSION_CHANGED since RF-02: the page of this attempt is older than the publication.)
+      expect(onOld.status).toBe(409);
       const onNew = await put(
         { questionId: other.questions[0].id, alternativeId: other.questions[0].alternatives[0].id },
         cookieFor(fresh.id),
@@ -225,7 +226,8 @@ describe("PUT /api/diagnostico/answers", () => {
       { questionId: archived.questions[0].id, alternativeId: archived.questions[0].alternatives[0].id },
       cookieFor(attempt.id),
     );
-    expect(response.status).toBe(400);
+    // 409 VERSION_CHANGED since RF-02 (it was a 400 before the routing rules).
+    expect(response.status).toBe(409);
     expect(await rows(attempt.id)).toHaveLength(0);
   });
 
@@ -252,6 +254,67 @@ describe("PUT /api/diagnostico/answers", () => {
       process.env.SESSION_SECRET = saved;
     }
     expect(await rows(attempt.id)).toHaveLength(0);
+  });
+});
+
+describe("PUT /api/diagnostico/answers and the published version", () => {
+  it("answers 409 VERSION_CHANGED for a first answer on an unpublished version", async () => {
+    const fixture = await createTwoChoiceFixture(db); // an archived version
+    try {
+      const attempt = await newAttempt();
+      const question = fixture.questions[0];
+      const response = await put(
+        { questionId: question.id, alternativeId: question.alternatives[0].id },
+        cookieFor(attempt.id),
+      );
+      expect(response.status).toBe(409);
+      const json = await response.json();
+      expect(json.error.code).toBe("VERSION_CHANGED");
+      expect(json.error.message).toBe("O questionário foi atualizado.");
+      expect(await rows(attempt.id)).toHaveLength(0);
+    } finally {
+      await db.from("customers").delete().in("id", customerIds);
+      customerIds.length = 0;
+      await cleanupFixture(db, fixture);
+    }
+  });
+
+  it("a pinned attempt keeps saving on an archived version", async () => {
+    const fixture = await createTwoChoiceFixture(db);
+    try {
+      const attempt = await newAttempt();
+      await pinAttemptToVersion(db, attempt.id, fixture);
+      const question = fixture.questions[1];
+      const response = await put(
+        { questionId: question.id, alternativeId: question.alternatives[0].id },
+        cookieFor(attempt.id),
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ answeredCount: 2 });
+    } finally {
+      await db.from("customers").delete().in("id", customerIds);
+      customerIds.length = 0;
+      await cleanupFixture(db, fixture);
+    }
+  });
+
+  it("answers 503 when no version is published", async () => {
+    const attempt = await newAttempt();
+    const { data: published } = await db.from("questionnaire_versions").select("id").eq("status", "published").single();
+    await setStatus(published!.id, "archived");
+    try {
+      const response = await put(
+        { questionId: q(1).id, alternativeId: q(1).alternatives[0].id },
+        cookieFor(attempt.id),
+      );
+      expect(response.status).toBe(503);
+      const json = await response.json();
+      expect(json.error.code).toBe("UNAVAILABLE");
+      expect(json.error.message).toBe("Estamos ajustando o questionário. Volte em alguns minutos.");
+      expect(await rows(attempt.id)).toHaveLength(0);
+    } finally {
+      await setStatus(published!.id, "published");
+    }
   });
 });
 
