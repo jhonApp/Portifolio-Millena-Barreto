@@ -9,7 +9,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-23, c43a824 |
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
-| RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | implemented | 2026-11-23, 4df29ad |
+| RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, d843012 |
 | RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |
 
 ## Criteria
@@ -59,18 +59,18 @@ Last run: 2026-11-23, commit 5465c78 (verify-feature, re-check after approval, c
 Gates schema and dependencies approved by the owner on 2026-11-23. Lint, typecheck, unit (294), the whole integration suite (441) and the browser script (steps 1 to 8, rerun on this commit) pass.
 
 ### RF-04. Chapters, Badges and Look Progress
-Last run: 2026-11-23, commit 4df29ad (implement-feature; not yet checked by verify-feature)
-- ✓ 1. After the 5th step of a chapter is saved, "Próxima" shows the badge, the message and "Continuar" (questionnaire-state.test.ts::chapterToShow returns the chapter…, chapter-screen-view.test.ts; browser steps 1-2)
-- ✓ 2. The message has no style name, percentage or score and is the same for everyone (chapters.test.ts, chapter-screen-view.test.ts)
-- ✓ 3. 7 answered steps give 7 filled segments, group 1 complete, its piece drawn (questionnaire-state.test.ts, look-progress-view.test.ts; browser)
-- ✓ 4. Going back keeps the earned badges (questionnaire-state.test.ts::earnedChapters does not depend on the current step; browser)
-- ✓ 5. A returning customer sees the bar and badges of her saved answers (chapters-handoff.test.ts; browser reload at step 6, no chapter screen)
-- ✓ 6. At 360 px no horizontal scroll, "Capítulo N de 3" readable, chapter screen fits 640 px (look-progress-view.test.ts; browser)
-- ✓ 7. Reduced motion: the badge appears with no animation (chapter-screen-view.test.ts; browser: opacity 1, transform none)
-- ✓ 8. "Concluir" shows the third badge, then the completion page (questionnaire-state.test.ts::the last step shows the chapter 3 screen…; browser)
+Last run: 2026-11-23, commit d843012 (verify-feature, re-check after approval, closing cycle 1; see docs/quiz-v2/RF-04-chapters-badges-and-look-progress/evaluation.md)
+- ✓ 1. After the 5th step of a chapter is saved, "Próxima" shows the badge, the message and "Continuar" (questionnaire-state and chapter-screen-view tests; browser step 1)
+- ✓ 2. The message has no style name, percentage or score and is the same for everyone (chapters and chapter-screen-view tests; browser step 2)
+- ✓ 3. 7 answered steps give 7 filled segments, group 1 complete, its piece drawn (look-progress-view test; browser step 5, version 1 fallback step 9)
+- ✓ 4. Going back keeps the earned badges (questionnaire-state test; browser step 4)
+- ✓ 5. A returning customer sees the bar and badges of her saved answers (chapters-handoff, real database; browser step 5)
+- ✓ 6. At 360 px no horizontal scroll, "Capítulo N de 3" readable, chapter screen fits 640 px (look-progress-view test; browser: scrollWidth 360, button ends at y 468)
+- ✓ 7. Reduced motion: the badge appears with no animation (chapter-screen-view test; browser: opacity 1, no transform under `reduce`)
+- ✓ 8. "Concluir" shows the third badge, then the completion page (questionnaire-state test; browser step 8)
 - ✓ 9. RF-02 to RF-04 hand-off (chapters-handoff.test.ts, real version 2)
 - ✓ 10. RF-01 to RF-04 hand-off (chapters-handoff.test.ts, real saved answers)
-Unit 317, integration 443 (version 1 and version 2 published), tsc and next build clean.
+Lint, typecheck, unit (317) and the whole integration suite (443) pass; browser script steps 1 to 9 ok. Gates schema and dependencies approved by the owner on 2026-11-23.
 
 ### RF-05. Completion Comparison by Questionnaire Version
 Last run: none
