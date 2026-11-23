@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { saveAnswer } from "@/lib/diagnostico/answers";
 import { STYLES } from "@/lib/diagnostico/constants";
 import * as questionBank from "@/lib/diagnostico/question-bank";
@@ -24,6 +24,7 @@ import {
   createFullVersion,
   createVersionFromSteps,
   deleteVersions,
+  makeVersionOneLive,
   publishVersionTemporarily,
 } from "./helpers";
 
@@ -79,12 +80,23 @@ async function sqlIssue(versionId: string): Promise<string | null> {
   return data;
 }
 
+// These tests are about the transition from version 1 to version 2, so they start with version 1
+// published whatever the database holds (after the real release version 2 is live) and put the
+// statuses back at the end.
+let restoreLive: () => Promise<void>;
+let version2StatusAtStart = "draft";
+
+beforeAll(async () => {
+  restoreLive = await makeVersionOneLive(db);
+  version2StatusAtStart = (await versionByNumber(2)).status;
+});
+
 afterAll(async () => {
   if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
   await deleteVersions(db, createdVersionIds);
-  // Safety net: the shared database must end with version 1 published and version 2 a draft.
+  // Safety net: the tests leave version 1 published, as they set it up.
   expect(await publishedVersions()).toEqual([1]);
-  expect((await versionByNumber(2)).status).toBe("draft");
+  await restoreLive();
 });
 
 // Version 1 questions copied to version 2 and the step they take.
@@ -215,7 +227,7 @@ describe("publishing", () => {
     });
     // Restored: version 1 published again, version 2 a draft.
     expect(await publishedVersions()).toEqual([1]);
-    expect((await versionByNumber(2)).status).toBe("draft");
+    expect((await versionByNumber(2)).status).toBe(version2StatusAtStart);
   });
 
   it("two publications at once leave exactly one version published", async () => {

@@ -10,6 +10,7 @@ import {
   createFullVersion,
   cleanupFixture,
   createTwoChoiceFixture,
+  makeVersionOneLive,
   pinAttemptToVersion,
   type TwoChoiceFixture,
 } from "./helpers";
@@ -49,13 +50,19 @@ async function setStatus(id: string, status: "draft" | "published" | "archived")
   if (error) throw new Error(error.message);
 }
 
+// The tests of this file use version 1 as the published version: they pin it as live (after the
+// release of version 2 it is archived) and put the statuses back at the end.
+let restoreLive: () => Promise<void>;
+
 beforeAll(async () => {
+  restoreLive = await makeVersionOneLive(db);
   bank = await loadQuestionBank(db);
 });
 
 afterAll(async () => {
   if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
   if (versionIds.length) await db.from("questionnaire_versions").delete().in("id", versionIds);
+  await restoreLive();
 });
 
 describe("PUT /api/diagnostico/answers", () => {

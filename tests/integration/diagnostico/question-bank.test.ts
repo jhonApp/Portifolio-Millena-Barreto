@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -11,7 +11,7 @@ import {
 } from "@/lib/diagnostico/question-bank";
 import { styleAppearances, validateQuestionSet } from "@/lib/diagnostico/question-set-rules";
 import { scoreAnswers } from "@/lib/diagnostico/scoring";
-import { adminClient, createAttempt, createCustomer, uniqueVersion } from "./helpers";
+import { adminClient, createAttempt, createCustomer, makeVersionOneLive, uniqueVersion } from "./helpers";
 
 const db = adminClient();
 const versionIds: string[] = [];
@@ -71,9 +71,18 @@ async function publishedVersionOne() {
   return data.id as string;
 }
 
+// These tests are about version 1 as the published version: they pin it as live (after the release
+// of version 2 it is archived) and put the statuses back at the end.
+let restoreLive: () => Promise<void>;
+
+beforeAll(async () => {
+  restoreLive = await makeVersionOneLive(db);
+});
+
 afterAll(async () => {
   if (customerIds.length) await db.from("customers").delete().in("id", customerIds);
   if (versionIds.length) await db.from("questionnaire_versions").delete().in("id", versionIds);
+  await restoreLive();
 });
 
 describe("seeded questionnaire version 1", () => {

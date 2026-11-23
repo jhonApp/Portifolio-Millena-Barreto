@@ -124,11 +124,18 @@ describe("generateDiagnosis", () => {
     const choose = (position: number) => (position * 7) % 4;
     const { orderId } = await newOrder({ choose });
     await generateDiagnosis(db, orderId, { deps: okDeps() });
+    // The rules of the published version: version 1 today (one point per answer), version 2 after
+    // its release (two points per first choice). Either way the order score must match the engine.
     const expected = scoreAnswers(
       bank.questions.map((q) => {
         const alt = q.alternatives[choose(q.position) % q.alternatives.length];
         return { questionPosition: q.position, style: alt.style, weight: alt.weight };
       }),
+      {
+        firstPoints: bank.rules!.firstChoicePoints,
+        secondPoints: bank.rules!.secondChoicePoints,
+        lateBasis: bank.rules!.lateTiebreakBasis,
+      },
     );
     const [result] = await results(orderId);
     expect(result.points).toEqual(expected.points);

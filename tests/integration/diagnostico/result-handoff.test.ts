@@ -55,7 +55,7 @@ async function purchase(fullName: string, choose: (position: number) => number) 
       new Request("http://localhost/api/diagnostico/answers", {
         method: "PUT",
         headers: { "content-type": "application/json", cookie },
-        body: JSON.stringify({ questionId: question.id, alternativeId: question.alternatives[choose(question.position)].id }),
+        body: JSON.stringify({ questionId: question.id, alternativeId: question.alternatives[choose(question.position) % question.alternatives.length].id }),
       }),
     );
     expect(saved.status).toBe(200);

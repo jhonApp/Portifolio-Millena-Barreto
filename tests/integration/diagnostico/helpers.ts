@@ -666,3 +666,28 @@ export async function deleteVersions(db: SupabaseClient<Database>, versionIds: s
   await db.from("answers").delete().in("version_id", versionIds);
   await db.from("questionnaire_versions").delete().in("id", versionIds);
 }
+
+/**
+ * Makes version 1 the published version for the tests of a file that are about version 1, whatever
+ * the database holds (after the real release version 2 is live), and returns the function that puts
+ * every status back as it was. Call the returned function in `afterAll`.
+ */
+export async function makeVersionOneLive(db: SupabaseClient<Database>): Promise<() => Promise<void>> {
+  const { data } = await db
+    .from("questionnaire_versions")
+    .select("id, version, status, published_at")
+    .or("version.eq.1,status.eq.published");
+  const saved = data ?? [];
+  const versionOne = saved.find((row) => row.version === 1);
+  if (!versionOne) throw new Error("makeVersionOneLive: version 1 does not exist");
+  if (versionOne.status !== "published") {
+    await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+    await db.from("questionnaire_versions").update({ status: "published" }).eq("id", versionOne.id);
+  }
+  return async () => {
+    await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+    for (const row of saved) {
+      await db.from("questionnaire_versions").update({ status: row.status, published_at: row.published_at }).eq("id", row.id);
+    }
+  };
+}
