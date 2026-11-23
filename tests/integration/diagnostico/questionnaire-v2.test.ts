@@ -187,7 +187,9 @@ describe("the public set of version 2", () => {
     expect(set.questions).toHaveLength(15);
     for (const question of set.questions) {
       expect(Object.keys(question).sort()).toEqual(["alternatives", "chapter", "id", "kind", "maxChoices", "position", "text"]);
-      for (const alternative of question.alternatives) expect(Object.keys(alternative).sort()).toEqual(["id", "text"]);
+      // Only the looks of a duel carry image data (RF-03); it holds an address, never a style.
+      const expectedKeys = question.kind === "duel" ? ["id", "image", "text"] : ["id", "text"];
+      for (const alternative of question.alternatives) expect(Object.keys(alternative).sort()).toEqual(expectedKeys);
     }
     expect(set.questions.filter((question) => question.kind === "duel").map((question) => question.position)).toEqual([5, 10, 15]);
     expect(set.questions.map((question) => question.chapter)).toEqual([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]);
