@@ -1,5 +1,49 @@
 # Evaluation: RF-01 Two-Choice Answers and Weighted Scoring
 
+## Cycle 2 of 2: failed evaluation
+Date: 2026-11-23
+Commit evaluated: 2d9b992, branch feat/result-consultancy-cta, base 13420c5
+Judging: model-assisted (complexity medium, two gates fired)
+Overrides: `approved: schema`, `approved: dependencies` (owner, 2026-11-23, kept for this cycle at the owner's choice "same as cycle 1"; the diff since cycle 1 touches no migration and no manifest)
+Changes since cycle 1 (63d0543..HEAD): one test (`payment-sql.test.ts`, one second of tolerance) and docs. No production code.
+
+### Deterministic checks
+| Check | Result | Evidence |
+|---|---|---|
+| Full suite (lint, typecheck, tests) | fail | `npm run lint` exit 0 (6 old warnings). `npm run typecheck` exit 0. `npm test` (unit): 43 files, 294/294. `npm run test:integration` (whole suite): 40 files passed, 1 failed; 440/441. The failure is `generation-job.test.ts › the job processes at most five orders per run` (not an RF-01 test): `Test timed out in 30000ms`. The whole run took 692 s against 371 s in the run of the implement step, so the machine was slow. The file passed 3 of 3 reruns on its own (17 to 22 s for 8 tests) |
+| Finding 1 of cycle 1 | fixed | `payment-sql.test.ts` passed in the whole run. The change is `<= 30 + 1000 / 86_400_000` (one second); the lower bound `> 29.9` is unchanged, so the test still proves a 30 day expiry |
+| Named tests exist and ran | pass | Same tests as cycle 1, all passed in this run (unit and integration) |
+| Test diff against the base | pass | Only new change: the tolerance above (judged: it does not loosen what the test proves). No skip, todo or xfail, no removed assertion |
+| Architecture contracts | pass | No architecture-test configuration |
+| Component Overview | pass | Unchanged since cycle 1 (no production file in the diff): all 21 files exist |
+| Live evidence | n/a | Spec: no live checks |
+
+### Criteria
+- ✓ 1 to 12: every mapped test passed fresh in this cycle (unit 294/294; integration 440/441, the one failure is outside the RF-01 tests). The browser evidence of cycle 1 is carried over, not repeated: no production file changed after it, and the verdict would not change (see below). This is the only reason the browser steps are not fresh.
+
+Criteria: 12/12. The status is `failed evaluation` because of the deterministic check above, not because of a criterion.
+
+### Application run
+Not repeated. The owner chose to run everything as in cycle 1, but the cycle already ended in `failed evaluation` after the whole-suite check, and the product code is identical to the commit whose browser run is recorded in cycle 1, so publishing version 2 in the shared database again would add risk and no verdict change. Version 1 stays published and version 2 draft (ids and dates equal to the snapshot), customers 7 before and after. The test suite left 7 more archived versions with random version numbers (`uniqueVersion()` in the tests' `helpers.ts`; 183 to 190 in total, 181 or more from earlier runs since 2026-11-21): that is the suite's own residue, left as is.
+
+### Gates
+- schema: fired (migration `20260101000018_two_choice_answers.sql`). Approved by the owner on 2026-11-23.
+- dependencies: fired (`package.json` changed since the base). Approved by the owner on 2026-11-23.
+- security, adr, architecture-contract: not fired.
+
+### Findings
+1. `generation-job.test.ts › the job processes at most five orders per run` (not an RF-01 test, not changed by RF-01) timed out at 30 s once in the whole integration suite, in a run that took almost twice as long as the previous one. It passes alone in 3 of 3 reruns. Like finding 1 of cycle 1, it is a flaky test whose result depends on the load of the machine: the whole suite takes 6 to 12 minutes and its tests have a fixed 30 s limit. Fix hint: give that test a larger timeout, or find why it needs more than 30 s under load (it creates 7 orders and runs the job).
+2. Spec wording, carried from cycle 1 (findings 2 and 3): the test name `retry delays stay…` and the incomplete-attempt notice text. Not a defect of the code.
+
+### Soft-fails
+- No disposable per-session database (as in cycle 1), so verification script step 9 was checked on a duel in cycle 1.
+- Browser run not repeated in this cycle (see Application run).
+
+### What I did not verify
+- Everything listed in cycle 1, and a fresh browser run at 2d9b992.
+
+Next step: this was the second cycle, so no third cycle can run. The owner decides: fix the flaky test (a change outside RF-01), then a new `verify-feature` will stop with `needs human` ("two cycles failed") and the owner decides whether to accept the feature.
+
 ## Cycle 1 of 2: failed evaluation
 Date: 2026-11-23
 Commit evaluated: 63d0543, branch feat/result-consultancy-cta, base 13420c5
