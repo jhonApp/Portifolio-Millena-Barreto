@@ -12,6 +12,8 @@ export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   test: {
     environment: "node",
+    // threads and forks fail with "Vitest failed to find the current suite" on Vitest 5.1 + Node 24.
+    pool: "vmThreads",
     include: ["tests/integration/**/*.test.ts"],
     setupFiles: ["tests/setup/load-env.ts", "tests/setup/email-simulation.ts", "tests/setup/clean-detached-orders.ts"],
     testTimeout: 30000,
