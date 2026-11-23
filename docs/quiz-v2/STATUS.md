@@ -8,7 +8,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-22, 39f1268 |
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
-| RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | implemented | 2026-11-23, 24926c3 |
+| RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |
 
@@ -44,7 +44,7 @@ Last run: 2026-11-23, commit 86ccf3f (implement-feature; not yet checked by veri
 - ✓ 11. RF-01 to RF-02 hand-off: saved first and second choices restored, first unanswered step shown (two-choice-handoff.test.ts)
 
 ### RF-03. Look Duels
-Last run: 2026-11-23, commit 24926c3 (implement-feature rework after evaluation cycle 1; not yet re-checked by verify-feature)
+Last run: 2026-11-23, commit 5465c78 (verify-feature, re-check after approval, closing cycle 2; see docs/quiz-v2/RF-03-look-duels/evaluation.md)
 - ✓ 1. Steps 5, 10 and 15 each show 2 looks and one can be selected (tests and browser steps 1, 4, 8)
 - ✓ 2. Tapping a look shows border and checkmark, enables forward, saves (test and browser step 3)
 - ✓ 3. The chosen look's style gets 2 points, the other 0 (duel-handoff, real database)
@@ -55,7 +55,7 @@ Last run: 2026-11-23, commit 24926c3 (implement-feature rework after evaluation 
 - ✓ 8. Screen reader names each look neutrally with its state (test; browser step 4 accessibility tree, keyboard)
 - ✓ 9. RF-02 to RF-03 hand-off (duel-handoff, nothing mocked)
 - ✓ 10. RF-01 to RF-03 hand-off (duel-handoff, real database)
-Rework: integration config now uses the vmThreads pool (82c86ba), PDF call to action test has a 30 s timeout (24926c3). Still open for the owner: lint has no ESLint config, gates schema and dependencies (from RF-01/RF-02 commits), spec step 3 wording.
+Gates schema and dependencies approved by the owner on 2026-11-23. Lint, typecheck, unit (294), the whole integration suite (441) and the browser script (steps 1 to 8, rerun on this commit) pass.
 
 ### RF-04. Chapters, Badges and Look Progress
 Last run: none
