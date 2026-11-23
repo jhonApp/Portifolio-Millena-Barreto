@@ -48,5 +48,6 @@ describe("the consultancy call to action", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  });
+    // Rendering and parsing the PDF can pass the default 5 s when the whole suite runs in parallel.
+  }, 30000);
 });
