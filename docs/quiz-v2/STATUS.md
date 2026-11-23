@@ -10,7 +10,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, d843012 |
-| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 3/3 | 0/5 | n/a | in progress | none |
+| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 3/3 | 5/5 | n/a | implemented | 2026-11-23, 8be5bf7 |
 
 ## Criteria
 
@@ -73,5 +73,10 @@ Last run: 2026-11-23, commit d843012 (verify-feature, re-check after approval, c
 Lint, typecheck, unit (317) and the whole integration suite (443) pass; browser script steps 1 to 9 ok. Gates schema and dependencies approved by the owner on 2026-11-23.
 
 ### RF-05. Completion Comparison by Questionnaire Version
-Last run: none
-- — 5 criteria listed in the spec (Section 7), not run yet
+Last run: 2026-11-23, commit 8be5bf7 (implement-feature; not yet checked by verify-feature)
+- ✓ 1. 120 attempts, 60 at the checkout: 120, 60 and 50% (version-comparison.test.ts::120 started and 60 at the checkout give 50.0%, formatTable shows 120, 60 and 50,0%)
+- ✓ 2. Fewer than 100 attempts is marked "poucos dados"; exactly 100 is not (version-comparison.test.ts)
+- ✓ 3. More than 5 points below version 1 carries the warning; exactly 5 does not (version-comparison.test.ts, unrounded difference)
+- ✓ 4. Only the view is read, nothing is written or tracked (quiz-compare-script.test.ts::the module and the script only select…, neither file calls insert…)
+- ✓ 5. RF-02 to RF-05 hand-off: each attempt counted once under its version, with its checkout reach (version-comparison-handoff.test.ts, real view, both versions)
+Unit 346, integration 444 (version 1 and version 2 published), tsc and next build clean. Manual check: the command matched a direct count in the database (7 started, 5 at the checkout).
