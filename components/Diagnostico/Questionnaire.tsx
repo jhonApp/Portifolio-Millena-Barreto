@@ -3,15 +3,18 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import ChapterScreen from "@/components/Diagnostico/ChapterScreen";
 import DuelStep from "@/components/Diagnostico/DuelStep";
+import LookProgress from "@/components/Diagnostico/LookProgress";
+import { chapterFor } from "@/lib/diagnostico/chapters";
 import { COMPLETION_PATH, EXPIRED_PATH, VERSION_CHANGED_PATH } from "@/lib/diagnostico/paths";
 import type { QuestionnaireInitialState } from "@/lib/diagnostico/questionnaire-page";
 import {
   RETRY_DELAYS_MS,
   TRANSITION_MS,
   canAdvance,
+  chapterToShow,
   nextChoices,
-  progressPercent,
   sameChoices,
   type SavedChoice,
 } from "@/lib/diagnostico/questionnaire-state";
@@ -47,6 +50,9 @@ export default function Questionnaire({
   const [selected, setSelected] = useState<Record<string, SavedChoice>>(initial.choices);
   const [saved, setSaved] = useState<Record<string, SavedChoice>>(initial.choices);
   const [status, setStatus] = useState<Record<string, SaveStatus | undefined>>({});
+  // The chapter screen on display (RF-04) and the ones already shown in this visit: a reload starts empty.
+  const [chapterOpen, setChapterOpen] = useState<number | null>(null);
+  const chaptersSeen = useRef<Set<number>>(new Set());
 
   // One save in flight per question: a tap made meanwhile is sent after it, so an older state
   // never overwrites a newer one on the server.
@@ -170,6 +176,17 @@ export default function Questionnaire({
 
   function forward() {
     if (forwardDisabled) return;
+    // The last step of a chapter shows its badge first (once per chapter and per visit).
+    const due = chapterToShow(questions, saved, index, chaptersSeen.current);
+    if (due !== null) {
+      chaptersSeen.current.add(due);
+      setChapterOpen(due);
+      return;
+    }
+    leave();
+  }
+
+  function leave() {
     if (isLast) {
       router.push(COMPLETION_PATH);
       return;
@@ -177,7 +194,13 @@ export default function Questionnaire({
     go(1);
   }
 
+  function continueFromChapter() {
+    setChapterOpen(null);
+    leave();
+  }
+
   const duration = reduceMotion ? 0 : TRANSITION_MS / 1000;
+  const openChapter = chapterOpen === null ? undefined : chapterFor(chapterOpen);
 
   // The card is marked by a border and by text ("1ª escolha"), never by color alone.
   const cardClass = (isSelected: boolean) =>
@@ -192,33 +215,26 @@ export default function Questionnaire({
           {notice}
         </p>
       ) : null}
-      <h1 className="font-primary text-[36px] leading-none text-primary xl:text-[56px]">
-        Vamos descobrir o seu estilo?
-      </h1>
-      <p className="mt-3 text-sm text-secondary">
-        Responda com sinceridade. Escolha a alternativa que mais representa você, não aquela que você
-        acredita que deveria escolher.
-      </p>
-
-      <div className="mt-8">
-        <p className="mb-2 text-sm font-medium text-primary">
-          Pergunta {index + 1} de {total}
+      {openChapter ? null : (
+        <>
+        <h1 className="font-primary text-[36px] leading-none text-primary xl:text-[56px]">
+          Vamos descobrir o seu estilo?
+        </h1>
+        <p className="mt-3 text-sm text-secondary">
+          Responda com sinceridade. Escolha a alternativa que mais representa você, não aquela que você
+          acredita que deveria escolher.
         </p>
-        <div
-          role="progressbar"
-          aria-label="Progresso do questionário"
-          aria-valuemin={1}
-          aria-valuemax={total}
-          aria-valuenow={index + 1}
-          className="h-2 w-full overflow-hidden rounded-full bg-neutral-200"
-        >
-          <div
-            className="h-full rounded-full bg-accent transition-[width]"
-            style={{ width: `${progressPercent(index, total)}%`, transitionDuration: `${duration * 1000}ms` }}
-          />
-        </div>
+        </>
+      )}
+
+      <div className={openChapter ? "mt-4" : "mt-8"}>
+        <LookProgress steps={questions} saved={saved} currentIndex={index} transitionMs={duration * 1000} />
       </div>
 
+      {openChapter ? (
+        <ChapterScreen chapter={openChapter} reduceMotion={Boolean(reduceMotion)} onContinue={continueFromChapter} />
+      ) : (
+      <>
       <motion.div
         key={question.id}
         initial={{ opacity: 0, x: reduceMotion ? 0 : direction * 24 }}
@@ -331,6 +347,8 @@ export default function Questionnaire({
           {isLast ? "Concluir" : "Próxima"}
         </button>
       </div>
+      </>
+      )}
     </section>
   );
 }
