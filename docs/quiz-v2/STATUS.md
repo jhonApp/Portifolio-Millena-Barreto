@@ -7,7 +7,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-22, 39f1268 |
-| RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 1/4 | 0/11 | n/a | in progress | none |
+| RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 2/4 | 0/11 | n/a | in progress | none |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |

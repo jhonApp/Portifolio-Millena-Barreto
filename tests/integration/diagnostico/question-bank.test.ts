@@ -160,7 +160,7 @@ describe("public question set", () => {
     const set = await getPublicQuestionSet(db, randomUUID());
     expect(set.questions).toHaveLength(15);
     for (const question of set.questions) {
-      expect(Object.keys(question).sort()).toEqual(["alternatives", "id", "maxChoices", "position", "text"]);
+      expect(Object.keys(question).sort()).toEqual(["alternatives", "chapter", "id", "kind", "maxChoices", "position", "text"]);
       expect(question.maxChoices).toBe(1); // version 1: one choice per question
       for (const alternative of question.alternatives) {
         expect(Object.keys(alternative).sort()).toEqual(["id", "text"]);

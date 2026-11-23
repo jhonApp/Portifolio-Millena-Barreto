@@ -15,6 +15,8 @@ function build(maxChoices: 1 | 2, choice?: SavedChoice): QuestionnaireInitialSta
     position: index + 1,
     text: `Pergunta ${index + 1}`,
     maxChoices,
+    kind: "choice" as const,
+    chapter: null,
     alternatives: [1, 2, 3, 4].map((n) => ({ id: `q${index + 1}a${n}`, text: `Alternativa ${n}` })),
   }));
   const choices = choice ? { q1: choice } : {};

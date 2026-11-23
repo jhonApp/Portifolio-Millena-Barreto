@@ -1,8 +1,22 @@
+import { spawnSync } from "node:child_process";
 import { afterAll, describe, expect, it } from "vitest";
 import { STYLES } from "@/lib/diagnostico/constants";
-import { adminClient, publishVersionTemporarily } from "./helpers";
+import * as questionBank from "@/lib/diagnostico/question-bank";
+import {
+  QuestionBankError,
+  getPublicQuestionSet,
+  loadQuestionBank,
+  publishQuestionnaireVersion,
+  updateAlternativeText,
+  updateQuestionText,
+} from "@/lib/diagnostico/question-bank";
+import { validateQuestionSet } from "@/lib/diagnostico/question-set-rules";
+import { type StepSpec, version2Steps } from "../../support/version2-set";
+import { adminClient, createFullVersion, publishVersionTemporarily, uniqueVersion } from "./helpers";
 
 const db = adminClient();
+const createdVersionIds: string[] = [];
+const UNKNOWN_ID = "00000000-0000-4000-8000-000000000000";
 
 async function versionByNumber(version: number) {
   const { data, error } = await db.from("questionnaire_versions").select("*").eq("version", version).single();
@@ -28,6 +42,73 @@ async function publishedVersions() {
   const { data } = await db.from("questionnaire_versions").select("version").eq("status", "published");
   return (data ?? []).map((row) => row.version);
 }
+
+/** Inserts a draft version with the given structure (version 2 rules). Deleted in afterAll. */
+async function insertSet(steps: StepSpec[], status: "draft" | "archived" = "draft") {
+  const { data: version, error } = await db
+    .from("questionnaire_versions")
+    .insert({
+      version: uniqueVersion(),
+      status,
+      first_choice_points: 2,
+      second_choice_points: 1,
+      late_tiebreak_basis: "points",
+    })
+    .select()
+    .single();
+  if (error) throw new Error(error.message);
+  createdVersionIds.push(version.id);
+  const { data: questions, error: questionError } = await db
+    .from("questions")
+    .insert(
+      steps.map((step) => ({
+        version_id: version.id,
+        position: step.position,
+        text: `Pergunta de teste ${step.position}`,
+        kind: step.kind,
+        chapter: step.chapter,
+        max_choices: step.kind === "duel" ? 1 : 2,
+      })),
+    )
+    .select();
+  if (questionError) throw new Error(questionError.message);
+  const { error: alternativeError } = await db.from("alternatives").insert(
+    questions!.flatMap((question) => {
+      const step = steps.find((candidate) => candidate.position === question.position)!;
+      return step.styles.map((style, index) => ({
+        question_id: question.id,
+        position: index + 1,
+        text: `Alternativa ${question.position}.${index + 1}`,
+        style,
+        weight: 1,
+      }));
+    }),
+  );
+  if (alternativeError) throw new Error(alternativeError.message);
+  return version;
+}
+
+/** Puts the published version back as it was, whatever a test did to the statuses. */
+async function snapshotPublished() {
+  const { data } = await db.from("questionnaire_versions").select("id, published_at").eq("status", "published").single();
+  return async () => {
+    await db.from("questionnaire_versions").update({ status: "archived" }).eq("status", "published");
+    await db.from("questionnaire_versions").update({ status: "published", published_at: data!.published_at }).eq("id", data!.id);
+  };
+}
+
+async function sqlIssue(versionId: string): Promise<string | null> {
+  const { data, error } = await db.rpc("questionnaire_set_issue", { p_version: versionId });
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+afterAll(async () => {
+  if (createdVersionIds.length) await db.from("questionnaire_versions").delete().in("id", createdVersionIds);
+  // Safety net: the shared database must end with version 1 published and version 2 a draft.
+  expect(await publishedVersions()).toEqual([1]);
+  expect((await versionByNumber(2)).status).toBe("draft");
+});
 
 // Version 1 questions copied to version 2 and the step they take.
 const COPIED = [
@@ -109,12 +190,42 @@ describe("the seeded version 2", () => {
   });
 });
 
-describe("publishing", () => {
-  afterAll(async () => {
-    // Safety net: the shared database must end with version 1 published and version 2 a draft.
-    expect(await publishedVersions()).toEqual([1]);
-  });
+describe("the public set of version 2", () => {
+  it("has no style or weight", async () => {
+    const v2 = await versionByNumber(2);
+    const set = await getPublicQuestionSet(db, "seed-privacy", v2.id);
+    expect(set).toMatchObject({ versionId: v2.id, version: 2 });
+    expect(set.questions).toHaveLength(15);
+    for (const question of set.questions) {
+      expect(Object.keys(question).sort()).toEqual(["alternatives", "chapter", "id", "kind", "maxChoices", "position", "text"]);
+      for (const alternative of question.alternatives) expect(Object.keys(alternative).sort()).toEqual(["id", "text"]);
+    }
+    expect(set.questions.filter((question) => question.kind === "duel").map((question) => question.position)).toEqual([5, 10, 15]);
+    expect(set.questions.map((question) => question.chapter)).toEqual([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3]);
+    // No style or weight key anywhere (alternative texts may use a style word, so only keys are checked).
+    const json = JSON.stringify(set);
+    expect(json).not.toContain('"weight"');
+    expect(json).not.toContain('"style"');  });
 
+  it("keeps the order of alternatives and duel looks stable for the same attempt", async () => {
+    const v2 = await versionByNumber(2);
+    const first = await getPublicQuestionSet(db, "attempt-seed-1", v2.id);
+    const second = await getPublicQuestionSet(db, "attempt-seed-1", v2.id);
+    expect(second).toEqual(first);
+    const duel = first.questions.find((question) => question.kind === "duel")!;
+    expect(duel.alternatives.map((alternative) => alternative.text).sort()).toEqual(["Look A", "Look B"]);
+    // Another attempt may get another order, but every step still has the same alternatives.
+    const other = await getPublicQuestionSet(db, "attempt-seed-2", v2.id);
+    for (const question of first.questions) {
+      const twin = other.questions.find((candidate) => candidate.id === question.id)!;
+      expect(twin.alternatives.map((alternative) => alternative.id).sort()).toEqual(
+        question.alternatives.map((alternative) => alternative.id).sort(),
+      );
+    }
+  });
+});
+
+describe("publishing", () => {
   it("is atomic: exactly one version is published afterwards", async () => {
     const v2 = await versionByNumber(2);
     await publishVersionTemporarily(db, v2.id, async () => {
@@ -128,5 +239,226 @@ describe("publishing", () => {
     // Restored: version 1 published again, version 2 a draft.
     expect(await publishedVersions()).toEqual([1]);
     expect((await versionByNumber(2)).status).toBe("draft");
+  });
+
+  it("two publications at once leave exactly one version published", async () => {
+    const restore = await snapshotPublished();
+    try {
+      const a = await insertSet(version2Steps());
+      const b = await insertSet(version2Steps());
+      const results = await Promise.allSettled([
+        publishQuestionnaireVersion(db, a.id),
+        publishQuestionnaireVersion(db, b.id),
+      ]);
+      expect(results.every((result) => result.status === "fulfilled")).toBe(true);
+      const published = await publishedVersions();
+      expect(published).toHaveLength(1);
+      expect([a.version, b.version]).toContain(published[0]);
+    } finally {
+      await restore();
+    }
+  });
+
+  it("publishing an unbalanced draft is refused and the live version stays", async () => {
+    const steps = version2Steps();
+    const step = steps[0];
+    const removed = step.styles[0];
+    step.styles[0] = STYLES.find((style) => !step.styles.includes(style))!;
+    const draft = await insertSet(steps);
+
+    const error = await publishQuestionnaireVersion(db, draft.id).catch((caught) => caught);
+    expect(error).toBeInstanceOf(QuestionBankError);
+    expect(error.code).toBe("INVALID_SET");
+    expect(error.issues.map((issue: { message: string }) => issue.message).join(" ")).toContain(removed);
+
+    // The database refuses it too, with the rule and the style in the message.
+    const { error: sqlError } = await db.rpc("publish_questionnaire_version", { p_version: draft.id });
+    expect(sqlError?.message).toMatch(/^INVALID_SET: STYLE_BALANCE: [a-z_]+ appears in (8|10) steps, expected 9$/);
+
+    expect(await publishedVersions()).toEqual([1]);
+    expect((await versionByNumber(draft.version)).status).toBe("draft");
+  });
+
+  it("publishing twice and an unknown version fail with their codes", async () => {
+    const draft = await insertSet(version2Steps());
+    await publishVersionTemporarily(db, draft.id, async () => {
+      await expect(publishQuestionnaireVersion(db, draft.id)).rejects.toMatchObject({ code: "VERSION_ALREADY_PUBLISHED" });
+      const { error } = await db.rpc("publish_questionnaire_version", { p_version: draft.id });
+      expect(error?.message).toContain("VERSION_ALREADY_PUBLISHED");
+    });
+    await expect(publishQuestionnaireVersion(db, UNKNOWN_ID)).rejects.toMatchObject({ code: "VERSION_NOT_FOUND" });
+    const { error } = await db.rpc("publish_questionnaire_version", { p_version: UNKNOWN_ID });
+    expect(error?.message).toContain("VERSION_NOT_FOUND");
+  });
+
+  it("version 1 can be published again as a rollback", async () => {
+    const draft = await insertSet(version2Steps());
+    const v1 = await versionByNumber(1);
+    await publishVersionTemporarily(db, draft.id, async () => {
+      expect(await publishedVersions()).toEqual([draft.version]);
+      const result = await publishQuestionnaireVersion(db, v1.id);
+      expect(result).toEqual({ published: 1, archived: draft.version });
+      expect(await publishedVersions()).toEqual([1]);
+    });
+    expect(await publishedVersions()).toEqual([1]);
+  });
+});
+
+describe("the SQL and TypeScript validators", () => {
+  it("agree on valid and broken fixtures", async () => {
+    const cases: Record<string, (steps: StepSpec[]) => StepSpec[]> = {
+      valid: (steps) => steps,
+      "a style in 8 steps": (steps) => {
+        steps[0].styles[0] = STYLES.find((style) => !steps[0].styles.includes(style))!;
+        return steps;
+      },
+      "a duel at step 4": (steps) => {
+        steps[4] = { ...steps[4], kind: "choice", styles: [...STYLES.slice(0, 4)] };
+        steps[3] = { ...steps[3], kind: "duel", styles: [...STYLES.slice(0, 2)] };
+        return steps;
+      },
+      "two duels": (steps) => {
+        steps[14] = { ...steps[14], kind: "choice", styles: [...STYLES.slice(0, 4)] };
+        return steps;
+      },
+      "a chapter of 4 steps": (steps) => {
+        steps[0].chapter = 2;
+        return steps;
+      },
+      "a style in two duels": (steps) => {
+        steps[9].styles = ["esportivo_natural", "criativo"];
+        return steps;
+      },
+      "a duel with one alternative": (steps) => {
+        steps[4].styles = [steps[4].styles[0]];
+        return steps;
+      },
+      "14 steps": (steps) => steps.slice(0, 14),
+    };
+    for (const [name, mutate] of Object.entries(cases)) {
+      const draft = await insertSet(mutate(version2Steps()));
+      const issues = validateQuestionSet(await loadQuestionBank(db, draft.id));
+      const issue = await sqlIssue(draft.id);
+      expect(issue === null, `${name}: SQL says ${issue}`).toBe(issues.length === 0);
+      if (issue !== null) expect(issues.map((candidate) => candidate.code), name).toContain(issue.split(":")[0]);
+    }
+
+    // Version 1 profile: the real version 1 is valid for both; a 15 x 4 set with 4 styles is not.
+    const v1 = await versionByNumber(1);
+    expect(await sqlIssue(v1.id)).toBeNull();
+    expect(validateQuestionSet(await loadQuestionBank(db, v1.id))).toEqual([]);
+    const unbalanced = await createFullVersion(db, "archived");
+    createdVersionIds.push(unbalanced.version.id);
+    expect(await sqlIssue(unbalanced.version.id)).toMatch(/^STYLE_IMBALANCE/);
+    expect(validateQuestionSet(await loadQuestionBank(db, unbalanced.version.id)).map((issue) => issue.code)).toContain(
+      "STYLE_IMBALANCE",
+    );
+  });
+});
+
+describe("editing the texts of a draft", () => {
+  it("an edited alternative text is shown after publishing and its style and weight are unchanged", async () => {
+    const draft = await insertSet(version2Steps());
+    const before = await loadQuestionBank(db, draft.id);
+    const target = before.questions[1].alternatives[2];
+    await updateAlternativeText(db, target.id, "  Texto revisado pela Millena.  ");
+    await updateQuestionText(db, before.questions[1].id, "Pergunta revisada?");
+
+    await publishVersionTemporarily(db, draft.id, async () => {
+      const served = await getPublicQuestionSet(db, "any-attempt");
+      expect(served.version).toBe(draft.version);
+      const question = served.questions[1];
+      expect(question.text).toBe("Pergunta revisada?");
+      expect(question.alternatives.find((alternative) => alternative.id === target.id)?.text).toBe("Texto revisado pela Millena.");
+    });
+
+    const after = await loadQuestionBank(db, draft.id);
+    expect(after.questions[1].alternatives[2]).toMatchObject({
+      id: target.id,
+      text: "Texto revisado pela Millena.",
+      style: target.style,
+      weight: target.weight,
+      position: target.position,
+    });
+    const mapping = (set: typeof before) =>
+      set.questions.map((question) => question.alternatives.map((alternative) => [alternative.style, alternative.weight, alternative.position]));
+    expect(mapping(after)).toEqual(mapping(before));
+  });
+
+  it("the edit functions change text only and refuse a published version", async () => {
+    const draft = await insertSet(version2Steps());
+    const bank = await loadQuestionBank(db, draft.id);
+    const alternativeId = bank.questions[0].alternatives[0].id;
+    const questionId = bank.questions[0].id;
+
+    await expect(updateAlternativeText(db, alternativeId, "   ")).rejects.toMatchObject({ code: "INVALID_TEXT" });
+    await expect(updateQuestionText(db, questionId, "x".repeat(301))).rejects.toMatchObject({ code: "INVALID_TEXT" });
+    await expect(updateQuestionText(db, UNKNOWN_ID, "ok")).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    await publishVersionTemporarily(db, draft.id, async () => {
+      await expect(updateAlternativeText(db, alternativeId, "novo texto")).rejects.toMatchObject({ code: "VERSION_NOT_DRAFT" });
+      await expect(updateQuestionText(db, questionId, "nova pergunta")).rejects.toMatchObject({ code: "VERSION_NOT_DRAFT" });
+    });
+    const unchanged = await loadQuestionBank(db, draft.id);
+    expect(unchanged.questions[0].text).toBe(bank.questions[0].text);
+    expect(unchanged.questions[0].alternatives[0].text).toBe(bank.questions[0].alternatives[0].text);
+
+    // Version 1 (archived or published) is never editable either.
+    const v1 = await loadQuestionBank(db, (await versionByNumber(1)).id);
+    await expect(updateQuestionText(db, v1.questions[0].id, "novo")).rejects.toMatchObject({ code: "VERSION_NOT_DRAFT" });
+  });
+
+  it("there is no function that changes style, weight, kind, chapter or position", () => {
+    const editors = Object.keys(questionBank).filter((name) => /^(update|set|change|move|reorder|delete|remove)/i.test(name));
+    expect(editors.sort()).toEqual(["updateAlternativeText", "updateQuestionText"]);
+    // Both take (db, id, text): there is nowhere to pass another field.
+    expect(questionBank.updateAlternativeText.length).toBe(3);
+    expect(questionBank.updateQuestionText.length).toBe(3);
+  });
+});
+
+describe("the publish command", () => {
+  function run(...args: string[]) {
+    const result = spawnSync(process.execPath, ["scripts/publish-questionnaire-version.mjs", ...args], {
+      cwd: process.cwd(),
+      env: process.env,
+      encoding: "utf8",
+    });
+    return { code: result.status, out: `${result.stdout}${result.stderr}` };
+  }
+
+  it("prints the published and the archived version, and refuses a version that is already published", async () => {
+    const restore = await snapshotPublished();
+    try {
+      const draft = await insertSet(version2Steps());
+      const ok = run(String(draft.version));
+      expect(ok.code).toBe(0);
+      expect(ok.out).toContain(`published version ${draft.version}, archived version 1`);
+      expect(await publishedVersions()).toEqual([draft.version]);
+
+      const again = run(String(draft.version));
+      expect(again.code).toBe(1);
+      expect(again.out).toContain("already published");
+    } finally {
+      await restore();
+    }
+    expect(await publishedVersions()).toEqual([1]);
+  });
+
+  it("exits with a non-zero code and names the rule and the style for an invalid draft", async () => {
+    const steps = version2Steps();
+    steps[0].styles[0] = STYLES.find((style) => !steps[0].styles.includes(style))!;
+    const draft = await insertSet(steps);
+    const result = run(String(draft.version));
+    expect(result.code).toBe(1);
+    expect(result.out).toMatch(/INVALID_SET: STYLE_BALANCE: [a-z_]+ appears in (8|10) steps, expected 9/);
+    expect(await publishedVersions()).toEqual([1]);
+  });
+
+  it("exits with a usage error without a version number and with an error for an unknown one", () => {
+    expect(run().code).toBe(2);
+    const unknown = run("987654");
+    expect(unknown.code).toBe(1);
+    expect(unknown.out).toContain("does not exist");
   });
 });

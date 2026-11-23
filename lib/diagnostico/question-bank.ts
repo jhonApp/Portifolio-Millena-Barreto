@@ -2,28 +2,46 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { Style } from "./constants";
-import type { EditableQuestionSet, PublicQuestionSet, ScoredAnswer } from "./question-types";
+import { validateQuestionSet } from "./question-set-rules";
+import type { EditableQuestionSet, PublicQuestionSet, QuestionKind, QuestionSetIssue, ScoredAnswer } from "./question-types";
 import { DEFAULT_RULES, type ScoringRules } from "./scoring";
 import { shuffleWithSeed } from "./seeded-shuffle";
 
 type Db = SupabaseClient<Database>;
 
-export class QuestionBankError extends Error {
-  code: "NO_PUBLISHED_VERSION" | "VERSION_NOT_FOUND";
+export type QuestionBankErrorCode =
+  | "NO_PUBLISHED_VERSION"
+  | "VERSION_NOT_FOUND"
+  | "VERSION_ALREADY_PUBLISHED"
+  | "VERSION_NOT_DRAFT"
+  | "INVALID_SET"
+  | "INVALID_TEXT"
+  | "NOT_FOUND";
 
-  constructor(code: "NO_PUBLISHED_VERSION" | "VERSION_NOT_FOUND", message: string) {
+export class QuestionBankError extends Error {
+  code: QuestionBankErrorCode;
+  /** The broken rules, for INVALID_SET. */
+  issues: QuestionSetIssue[];
+
+  constructor(code: QuestionBankErrorCode, message: string, issues: QuestionSetIssue[] = []) {
     super(message);
     this.name = "QuestionBankError";
     this.code = code;
+    this.issues = issues;
   }
 }
+
+/** Largest accepted text of a question or an alternative (inferred, spec Section 1). */
+export const MAX_TEXT_LENGTH = 300;
 
 function fail(context: string, message: string): never {
   throw new Error(`${context} failed: ${message}`);
 }
 
 async function loadVersionRow(db: Db, versionId?: string) {
-  const query = db.from("questionnaire_versions").select("id, version, status");
+  const query = db
+    .from("questionnaire_versions")
+    .select("id, version, status, first_choice_points, second_choice_points, late_tiebreak_basis");
   const { data, error } = versionId
     ? await query.eq("id", versionId).maybeSingle()
     : await query.eq("status", "published").maybeSingle();
@@ -53,7 +71,7 @@ export async function getPublicQuestionSet(
 
   const { data: questions, error: questionsError } = await db
     .from("questions")
-    .select("id, position, text, max_choices")
+    .select("id, position, text, max_choices, kind, chapter")
     .eq("version_id", version.id)
     .order("position");
   if (questionsError) fail("getPublicQuestionSet", questionsError.message);
@@ -74,6 +92,8 @@ export async function getPublicQuestionSet(
       position: question.position,
       text: question.text,
       maxChoices: question.max_choices === 2 ? 2 : 1,
+      kind: (question.kind === "duel" ? "duel" : "choice") as QuestionKind,
+      chapter: question.chapter === 1 || question.chapter === 2 || question.chapter === 3 ? question.chapter : null,
       alternatives: shuffleWithSeed(
         (alternatives ?? [])
           .filter((alternative) => alternative.question_id === question.id)
@@ -168,7 +188,7 @@ export async function loadQuestionBank(db: Db, versionId?: string): Promise<Edit
 
   const { data: questions, error: questionsError } = await db
     .from("questions")
-    .select("id, position, text")
+    .select("id, position, text, max_choices, kind, chapter")
     .eq("version_id", version.id)
     .order("position");
   if (questionsError) fail("loadQuestionBank", questionsError.message);
@@ -185,10 +205,18 @@ export async function loadQuestionBank(db: Db, versionId?: string): Promise<Edit
     versionId: version.id,
     version: version.version,
     status: version.status as EditableQuestionSet["status"],
+    rules: {
+      firstChoicePoints: version.first_choice_points,
+      secondChoicePoints: version.second_choice_points,
+      lateTiebreakBasis: version.late_tiebreak_basis === "points" ? "points" : "answers",
+    },
     questions: (questions ?? []).map((question) => ({
       id: question.id,
       position: question.position,
       text: question.text,
+      kind: (question.kind === "duel" ? "duel" : "choice") as QuestionKind,
+      chapter: question.chapter,
+      maxChoices: question.max_choices === 2 ? 2 : 1,
       alternatives: (alternatives ?? [])
         .filter((alternative) => alternative.question_id === question.id)
         .map((alternative) => ({
@@ -200,4 +228,92 @@ export async function loadQuestionBank(db: Db, versionId?: string): Promise<Edit
         })),
     })),
   };
+}
+
+/**
+ * Publishes a version: it must pass the structural rules of its profile (checked here for readable
+ * messages and again, authoritatively, by the SQL function). The published version, if any, is
+ * archived in the same transaction. Returns the number published and the number archived.
+ */
+export async function publishQuestionnaireVersion(
+  db: Db,
+  versionId: string,
+): Promise<{ published: number; archived: number | null }> {
+  const bank = await loadQuestionBank(db, versionId);
+  if (bank.status === "published") {
+    throw new QuestionBankError("VERSION_ALREADY_PUBLISHED", `Version ${bank.version} is already published.`);
+  }
+  const issues = validateQuestionSet(bank);
+  if (issues.length > 0) {
+    throw new QuestionBankError("INVALID_SET", issues[0].message, issues);
+  }
+
+  const { data: current, error: currentError } = await db
+    .from("questionnaire_versions")
+    .select("version")
+    .eq("status", "published")
+    .maybeSingle();
+  if (currentError) fail("publishQuestionnaireVersion", currentError.message);
+
+  const { error } = await db.rpc("publish_questionnaire_version", { p_version: versionId });
+  if (error) {
+    if (error.message.includes("VERSION_ALREADY_PUBLISHED")) {
+      throw new QuestionBankError("VERSION_ALREADY_PUBLISHED", `Version ${bank.version} is already published.`);
+    }
+    if (error.message.includes("VERSION_NOT_FOUND")) {
+      throw new QuestionBankError("VERSION_NOT_FOUND", "Questionnaire version not found.");
+    }
+    if (error.message.includes("INVALID_SET")) {
+      throw new QuestionBankError("INVALID_SET", error.message);
+    }
+    fail("publishQuestionnaireVersion", error.message);
+  }
+  return { published: bank.version, archived: current?.version ?? null };
+}
+
+function cleanText(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length === 0 || trimmed.length > MAX_TEXT_LENGTH) {
+    throw new QuestionBankError("INVALID_TEXT", `The text must have 1 to ${MAX_TEXT_LENGTH} characters.`);
+  }
+  return trimmed;
+}
+
+async function requireDraft(db: Db, versionId: string) {
+  const { data, error } = await db.from("questionnaire_versions").select("status").eq("id", versionId).single();
+  if (error) fail("requireDraft", error.message);
+  if (data.status !== "draft") {
+    throw new QuestionBankError("VERSION_NOT_DRAFT", "Only a draft version can be edited.");
+  }
+}
+
+/** Changes only the text of a question of a draft version. */
+export async function updateQuestionText(db: Db, questionId: string, text: string): Promise<void> {
+  const clean = cleanText(text);
+  const { data: question, error } = await db
+    .from("questions")
+    .select("version_id")
+    .eq("id", questionId)
+    .maybeSingle();
+  if (error) fail("updateQuestionText", error.message);
+  if (!question) throw new QuestionBankError("NOT_FOUND", "Question not found.");
+  await requireDraft(db, question.version_id);
+  const { error: updateError } = await db.from("questions").update({ text: clean }).eq("id", questionId);
+  if (updateError) fail("updateQuestionText", updateError.message);
+}
+
+/** Changes only the text of an alternative of a draft version (style, weight and order are fixed). */
+export async function updateAlternativeText(db: Db, alternativeId: string, text: string): Promise<void> {
+  const clean = cleanText(text);
+  const { data: alternative, error } = await db
+    .from("alternatives")
+    .select("questions(version_id)")
+    .eq("id", alternativeId)
+    .maybeSingle();
+  if (error) fail("updateAlternativeText", error.message);
+  const versionId = (alternative as { questions: { version_id: string } | null } | null)?.questions?.version_id;
+  if (!versionId) throw new QuestionBankError("NOT_FOUND", "Alternative not found.");
+  await requireDraft(db, versionId);
+  const { error: updateError } = await db.from("alternatives").update({ text: clean }).eq("id", alternativeId);
+  if (updateError) fail("updateAlternativeText", updateError.message);
 }
