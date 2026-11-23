@@ -8,7 +8,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-22, 39f1268 |
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
-| RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | implemented | 2026-11-23, 14db61d |
+| RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | implemented | 2026-11-23, 24926c3 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
 | RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |
 
@@ -44,17 +44,18 @@ Last run: 2026-11-23, commit 86ccf3f (implement-feature; not yet checked by veri
 - ✓ 11. RF-01 to RF-02 hand-off: saved first and second choices restored, first unanswered step shown (two-choice-handoff.test.ts)
 
 ### RF-03. Look Duels
-Last run: 2026-11-23, commit 14db61d (implement-feature; not yet checked by verify-feature)
-- ✓ 1. Steps 5, 10 and 15 each show 2 looks and one can be selected (duel-public-set.test.ts::version 2 has three duels..., duel-step-view.test.ts::a duel renders a radio group with two options; browser steps 1, 2, 8)
-- ✓ 2. Tapping a look shows border and checkmark, enables forward, saves (duel-step-view.test.ts::the selected look shows the checkmark and the checked state; browser step 3)
-- ✓ 3. The chosen look's style gets 2 points, the other 0 (duel-handoff.test.ts::a duel choice gives exactly 2 points...)
-- ✓ 4. No style name or key in address, alt text or response (duel-public-set.test.ts::the public set has no style key, weight or file name, duel-look-route.test.ts::no response header or body names a style, duel-step-view.test.ts::the markup has no style name; browser step 5)
-- ✓ 5. At 360 px stacked, whole, uncropped, no horizontal scroll (duel-step-view.test.ts::the looks are stacked below 480 px...; browser steps 1-2)
-- ✓ 6. A look that fails to load shows a neutral block and stays answerable (duel-step-view.test.ts::a look without an image...; browser step 6, which found and fixed a pre-hydration failure)
-- ✓ 7. Reduced motion: no slide or fade (existing useReducedMotion; browser step 7)
-- ✓ 8. Screen reader names each look neutrally with its state (duel-step-view.test.ts::each look has the neutral alt text and a radio input with its name; browser step 4 accessibility tree)
-- ✓ 9. RF-02 to RF-03 hand-off (duel-handoff.test.ts::a duel step of the real version 2 carries its two looks...)
-- ✓ 10. RF-01 to RF-03 hand-off (duel-handoff.test.ts::a duel choice gives exactly 2 points...)
+Last run: 2026-11-23, commit 24926c3 (implement-feature rework after evaluation cycle 1; not yet re-checked by verify-feature)
+- ✓ 1. Steps 5, 10 and 15 each show 2 looks and one can be selected (tests and browser steps 1, 4, 8)
+- ✓ 2. Tapping a look shows border and checkmark, enables forward, saves (test and browser step 3)
+- ✓ 3. The chosen look's style gets 2 points, the other 0 (duel-handoff, real database)
+- ✓ 4. No style name or key in address, alt text or response (3 tests; browser step 5, route headers)
+- ✓ 5. At 360 px stacked, whole, uncropped, no horizontal scroll (test; browser step 2, ratios match the files)
+- ✓ 6. A look that fails to load shows a neutral block and stays answerable (test; browser step 6)
+- ✓ 7. Reduced motion: no slide or fade (browser step 7: no opacity or transform change)
+- ✓ 8. Screen reader names each look neutrally with its state (test; browser step 4 accessibility tree, keyboard)
+- ✓ 9. RF-02 to RF-03 hand-off (duel-handoff, nothing mocked)
+- ✓ 10. RF-01 to RF-03 hand-off (duel-handoff, real database)
+Rework: integration config now uses the vmThreads pool (82c86ba), PDF call to action test has a 30 s timeout (24926c3). Still open for the owner: lint has no ESLint config, gates schema and dependencies (from RF-01/RF-02 commits), spec step 3 wording.
 
 ### RF-04. Chapters, Badges and Look Progress
 Last run: none
