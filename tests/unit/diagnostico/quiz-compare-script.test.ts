@@ -2,7 +2,10 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
+
+// Each test starts one or more Node processes: allow more than the default 5 s on a busy machine.
+vi.setConfig({ testTimeout: 30000 });
 
 const root = process.cwd();
 const script = path.join(root, "scripts", "quiz-compare.mjs");
