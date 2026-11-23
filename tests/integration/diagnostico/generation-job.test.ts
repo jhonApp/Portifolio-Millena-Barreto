@@ -132,7 +132,8 @@ describe("GET /api/diagnostico/jobs/generation", () => {
     // The rest wait for the next minute.
     const second = await handleGenerationJob(jobRequest(`Bearer ${SECRET}`), deps());
     expect((await second.json()).processed).toBe(2);
-  });
+    // It creates 7 orders and generates 7 results, which passed the default 30 s once on a slow machine.
+  }, 120000);
 
   it("overlapping job runs do not double-generate", async () => {
     const orderId = await newOrder();
