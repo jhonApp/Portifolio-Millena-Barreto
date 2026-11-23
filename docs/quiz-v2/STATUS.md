@@ -6,7 +6,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-22, 39f1268 |
+| RF-01 | Two-Choice Answers and Weighted Scoring | 1 | none | yes | 4/4 | 12/12 | n/a | implemented | 2026-11-23, 5d76b9c |
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 0/3 | 0/10 | n/a | spec ready | none |
@@ -15,7 +15,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 ## Criteria
 
 ### RF-01. Two-Choice Answers and Weighted Scoring
-Last run: 2026-11-22, commit 39f1268 (implement-feature; not yet checked by verify-feature)
+Last run: 2026-11-23, on top of commit 63d0543 (implement-feature rework after verify-feature cycle 1 of 2; see docs/quiz-v2/RF-01-two-choice-answers-and-weighted-scoring/evaluation.md)
 - ✓ 1. One tap marks "1ª escolha" and enables "Próxima" (questionnaire-state.test.ts::nextChoices: a first tap…, questionnaire-two-choice-view.test.ts; browser steps 1-2)
 - ✓ 2. A different card becomes "2ª escolha" and is saved (answers-route.test.ts::saves a second choice…, two-choice-sql.test.ts::saves a first and a second choice in one row; browser steps 3-4)
 - ✓ 3. Tapping "2ª escolha" removes it (questionnaire-state.test.ts, answers-route.test.ts::a null secondAlternativeId clears…; browser step 5)
@@ -28,6 +28,7 @@ Last run: 2026-11-22, commit 39f1268 (implement-feature; not yet checked by veri
 - ✓ 10. A version 1 attempt scores as before (scoring-two-choice.test.ts::default rules…1000 random attempts; scoring.test.ts and generation-handoff.test.ts unchanged and green; 5 stored diagnoses rescored identically)
 - ✓ 11. Failed save: offline message and advancing blocked (questionnaire-state.test.ts::retry delays…; browser step 8)
 - ✓ 12. Incomplete attempt goes to the first unanswered step (answers-lib.test.ts::second choices do not change…, checkout-route.test.ts::an incomplete attempt is refused…)
+All 12 criteria pass. Finding 1 of the evaluation is fixed: the RF-06 payment-sql 30 day expiry test now allows one second of clock skew (full suite green: unit 294/294, integration 441/441). Findings 2 and 3 are spec wording only and were left to the spec owner. Not re-verified yet: run verify-feature (cycle 2 of 2). Gates schema and dependencies approved by the owner on 2026-11-23.
 
 ### RF-02. Question Set Version 2 and Version Routing
 Last run: 2026-11-23, commit 86ccf3f (implement-feature; not yet checked by verify-feature)
