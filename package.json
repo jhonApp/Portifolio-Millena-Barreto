@@ -14,6 +14,7 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "quiz:publish": "node scripts/publish-questionnaire-version.mjs",
+    "quiz:compare": "node scripts/quiz-compare.mjs",
     "db:types": "supabase gen types typescript --local > lib/diagnostico/database.types.ts"
   },
   "dependencies": {
