@@ -9,7 +9,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 | RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | success | 2026-11-24, 8d38ccf |
 | RF-02 | Answer Saving Feedback | 1 | none | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, c0a43bc |
 | RF-03 | Question Transition Loading | 2 | RF-01 | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, e6cec36 |
-| RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |
+| RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 3/3 | 8/8 | n/a | implemented | 2026-11-24, 929d926 |
 
 ## Criteria
 
@@ -50,12 +50,13 @@ Last run: 2026-11-24, commit e6cec36 (implement-feature)
 Unit: all pass except 2 pre-existing files (assets/pdf-images moved outside this run). `tsc` and `next build` pass. Browser steps 1 to 7 passed; 8 (version 1), 9 (1280 px layout) and the full 15-step wait sum were not run.
 
 ### RF-04. Checkout Hand-off Loading
-Last run: none (spec written 2026-11-24)
-- — 1. After the chapter 3 badge, "Preparando seu diagnóstico…" and the line show within 100 ms until the completion page renders (no run yet)
-- — 2. "RECEBER MEU DIAGNÓSTICO" shows "Preparando seu Pix…" and the line within 100 ms until the checkout renders (no run yet)
-- — 3. A double tap starts no second navigation (no run yet)
-- — 4. After 15 s without the next page, the message and "Tentar novamente" appear and repeat the navigation (no run yet)
-- — 5. An expired attempt goes to the registration page with the notice and no loading screen stays (no run yet)
-- — 6. Reduced motion: static line and visible text on both screens (no run yet)
-- — 7. A version 1 attempt reaches the completion page and the checkout as today (no run yet)
-- — 8. RF-01 to RF-04 hand-off: the screen is the RF-01 line, static under reduced motion (no run yet)
+Last run: 2026-11-24, commit 929d926 (implement-feature)
+- ✓ 1. After the chapter 3 badge, "Preparando seu diagnóstico…" and the line show within 100 ms until the completion page renders (handoff-view.test.ts::HandoffLoading shows the label as a status with the line; loading.test.ts::handoffView is loading while pending and not timed out; browser: loading at 0 ms after the badge end, completion page after the 3 s delay)
+- ✓ 2. "RECEBER MEU DIAGNÓSTICO" shows "Preparando seu Pix…" and the line within 100 ms until the checkout renders (handoff-view.test.ts::CheckoutLink renders a link to the checkout with the original look; browser: 17 to 27 ms after the click)
+- ✓ 3. A double tap starts no second navigation (browser: double and single click made the same requests to the checkout)
+- ✓ 4. After 15 s without the next page the message and "Tentar novamente" appear and repeat the navigation (loading.test.ts::handoffView is failed once it timed out while pending; handoff-view.test.ts::HandoffError shows the message and Tentar novamente; browser: error 15 s after the 2 s badge, retry reached the completion page; the checkout time-out was not run)
+- ✓ 5. An expired attempt goes to the registration page with the notice and no loading screen stays (browser: cookies cleared during the checkout wait, landed on ?sessao=expirada with the notice and no loading screen; the incomplete-attempt part was not run)
+- ✓ 6. Reduced motion: static line and visible text (handoff-view.test.ts::HandoffLoading is the static line under reduced motion; browser: data-animated false, one status)
+- ✓ 7. A version 1 attempt reaches the completion page and the checkout as today (attempt-version.test.ts::an attempt without answers has no version, an attempt keeps version 1 after version 2 is published; browser step 8 not run)
+- ✓ 8. RF-01 to RF-04 hand-off: the screen is the RF-01 line, static under reduced motion (handoff-view.test.ts::the RF-01 to RF-04 hand-off: the hand-off screen is the real loading line, static under reduced motion)
+Unit: all pass except 2 pre-existing files (assets/pdf-images moved outside this run). Integration 435/447: 4 failures from the same moved assets and 8 time-outs (generation, privacy-sql) in files this feature did not touch; the new attempt-version.test.ts passes. `tsc` and `next build` pass. Browser steps 1 to 4, 5 (completion part), 6 (expired part) and 7 passed; steps 8, 9 and the checkout time-out were not run.
