@@ -3,6 +3,7 @@ import path from "node:path";
 import { Document, Font, Image, Link, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { CONSULTANCY_CTA } from "./consultancy-cta";
 import { STYLES, STYLE_LABELS, type Style } from "./constants";
+import { PDF_IMAGE_FILES } from "./pdf-image-files";
 import type { DiagnosisContent } from "./schemas/diagnosis-content";
 
 // The PDF of the diagnosis: A4, eight parts in the order of the PRD (RF-07), with the colors and
@@ -22,13 +23,16 @@ export const PART_TITLES = {
 } as const;
 
 /**
- * The light editorial copy of a style image (assets/pdf-images/<style>.jpg, built by
- * scripts/generate-pdf-images.mjs from the owner's images). A style whose file is missing has no image:
- * the PDF still renders, so a missing file never fails a paid diagnosis.
+ * The light editorial copy of a style image: the file PDF_IMAGE_FILES names inside the images folder
+ * (assets/pdf-images), or <style>.jpg at its root as scripts/generate-pdf-images.mjs writes it. A style
+ * whose file is missing has no image: the PDF still renders, so a missing file never fails a paid diagnosis.
  */
 export function pdfStyleImage(style: Style, dir: string = defaultImagesDir()): string | null {
-  const file = path.join(dir, `${style}.jpg`);
-  return existsSync(file) ? file : null;
+  for (const name of [PDF_IMAGE_FILES[style], `${style}.jpg`]) {
+    const file = path.join(dir, name);
+    if (existsSync(file)) return file;
+  }
+  return null;
 }
 
 /** The optional photo of pieces or accessories of a style (<style>-pecas.jpg, <style>-acessorios.jpg); null until the owner sends it. */
