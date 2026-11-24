@@ -85,6 +85,15 @@ describe("the questionnaire screen with two choices", () => {
     expect(html).not.toContain('data-slot="saving"');
   });
 
+  it("a version 2 question set opens on the question, with no transition line", () => {
+    const html = render(build(2, { first: "q1a2", second: null }));
+    expect(html).toContain("Pergunta 1");
+    expect(html).not.toContain("loading-line");
+    expect(html).not.toContain("Carregando próxima pergunta");
+    // Both navigation buttons are enabled-or-gated by the saved answer, never by the transition.
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>[^<]*<span class="grid">/);
+  });
+
   it("a version 2 question set renders the forward button with its reserved labels", () => {
     const html = render(build(2));
     expect(html).toContain('data-slot="saving"');
