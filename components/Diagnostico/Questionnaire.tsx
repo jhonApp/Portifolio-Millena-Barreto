@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ChapterScreen from "@/components/Diagnostico/ChapterScreen";
 import DuelStep from "@/components/Diagnostico/DuelStep";
+import ForwardButton from "@/components/Diagnostico/ForwardButton";
+import { HandoffError, HandoffLoading } from "@/components/Diagnostico/HandoffScreen";
 import LookProgress from "@/components/Diagnostico/LookProgress";
+import QuestionTransition from "@/components/Diagnostico/QuestionTransition";
+import { useHandoffNavigation } from "@/components/Diagnostico/use-handoff-navigation";
 import { chapterFor } from "@/lib/diagnostico/chapters";
+import { HANDOFF_COMPLETION_LABEL, LABEL_SAVING, QUESTION_TRANSITION_MS, scheduleAdvance } from "@/lib/diagnostico/loading";
 import { COMPLETION_PATH, EXPIRED_PATH, VERSION_CHANGED_PATH } from "@/lib/diagnostico/paths";
 import type { QuestionnaireInitialState } from "@/lib/diagnostico/questionnaire-page";
 import {
@@ -16,10 +21,12 @@ import {
   chapterToShow,
   nextChoices,
   sameChoices,
+  showsSavingFeedback,
+  usesTransitionLine,
+  type SaveStatus,
   type SavedChoice,
 } from "@/lib/diagnostico/questionnaire-state";
 
-type SaveStatus = "saving" | "retrying" | "failed" | "rejected";
 type SendOutcome = "ok" | "expired" | "changed" | "rejected" | "failed";
 
 const MESSAGE_RETRYING = "Não conseguimos salvar sua resposta. Tentando de novo…";
@@ -40,6 +47,8 @@ export default function Questionnaire({
   notice?: string;
 }) {
   const router = useRouter();
+  // The move to the completion page waits on a loading screen on version 2 (RF-04).
+  const handoff = useHandoffNavigation(COMPLETION_PATH);
   const reduceMotion = useReducedMotion();
   const { questions } = initial.questionSet;
   const total = questions.length;
@@ -53,6 +62,12 @@ export default function Questionnaire({
   // The chapter screen on display (RF-04) and the ones already shown in this visit: a reload starts empty.
   const [chapterOpen, setChapterOpen] = useState<number | null>(null);
   const chaptersSeen = useRef<Set<number>>(new Set());
+  // The 500 ms loading line between two questions (RF-03). The ref closes the gap between two taps
+  // made before the state update renders; the height keeps the page from jumping during the line.
+  const [transitioning, setTransitioning] = useState(false);
+  const [transitionHeight, setTransitionHeight] = useState<number | undefined>(undefined);
+  const transitionLock = useRef(false);
+  const questionRef = useRef<HTMLDivElement>(null);
 
   // One save in flight per question: a tap made meanwhile is sent after it, so an older state
   // never overwrites a newer one on the server.
@@ -68,8 +83,11 @@ export default function Questionnaire({
   const multiple = question.maxChoices === 2;
   const questionStatus = status[question.id];
   const pending = questionStatus !== undefined;
+  // "Salvando…" on the forward button: version 2 only, while the save or a retry is in flight (RF-02).
+  const feedbackOn = initial.questionSet.version >= 2;
+  const saving = showsSavingFeedback(initial.questionSet.version, questionStatus);
   const allSaved = questions.every((item) => Boolean(saved[item.id]));
-  const forwardDisabled = !canAdvance(question.id, saved) || pending || (isLast && !allSaved);
+  const forwardDisabled = !canAdvance(question.id, saved) || pending || (isLast && !allSaved) || transitioning;
 
   // Move the focus to the question heading after a navigation (not on the first render).
   useEffect(() => {
@@ -168,6 +186,18 @@ export default function Questionnaire({
     void persist(question.id, next);
   }
 
+  // Waits QUESTION_TRANSITION_MS on the line, then moves on. The cleanup cancels the wait when the
+  // screen unmounts (and between the two effect runs of React strict mode in development).
+  useEffect(() => {
+    if (!transitioning) return;
+    return scheduleAdvance(QUESTION_TRANSITION_MS, () => {
+      setTransitioning(false);
+      transitionLock.current = false;
+      go(1);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transitioning]);
+
   function go(step: 1 | -1) {
     navigated.current = true;
     setDirection(step);
@@ -175,7 +205,7 @@ export default function Questionnaire({
   }
 
   function forward() {
-    if (forwardDisabled) return;
+    if (forwardDisabled || transitionLock.current) return;
     // The last step of a chapter shows its badge first (once per chapter and per visit).
     const due = chapterToShow(questions, saved, index, chaptersSeen.current);
     if (due !== null) {
@@ -188,15 +218,35 @@ export default function Questionnaire({
 
   function leave() {
     if (isLast) {
-      router.push(COMPLETION_PATH);
+      if (initial.questionSet.version >= 2) handoff.go();
+      else router.push(COMPLETION_PATH);
+      return;
+    }
+    if (usesTransitionLine(initial.questionSet.version, questions, index, Boolean(reduceMotion))) {
+      transitionLock.current = true;
+      setTransitionHeight(questionRef.current?.offsetHeight);
+      setTransitioning(true);
       return;
     }
     go(1);
   }
 
-  function continueFromChapter() {
+  // Called by the chapter screen once its wait is over (no tap involved).
+  function advanceFromChapter() {
     setChapterOpen(null);
     leave();
+  }
+
+  if (handoff.view !== "idle") {
+    return (
+      <section className="mx-auto max-w-[640px] py-4 xl:py-10">
+        {handoff.view === "loading" ? (
+          <HandoffLoading label={HANDOFF_COMPLETION_LABEL} reduceMotion={Boolean(reduceMotion)} />
+        ) : (
+          <HandoffError onRetry={handoff.go} />
+        )}
+      </section>
+    );
   }
 
   const duration = reduceMotion ? 0 : TRANSITION_MS / 1000;
@@ -232,10 +282,16 @@ export default function Questionnaire({
       </div>
 
       {openChapter ? (
-        <ChapterScreen chapter={openChapter} reduceMotion={Boolean(reduceMotion)} onContinue={continueFromChapter} />
+        <ChapterScreen chapter={openChapter} reduceMotion={Boolean(reduceMotion)} onDone={advanceFromChapter} />
       ) : (
       <>
+      {transitioning ? (
+        <div className="mt-8 flex items-center" style={{ minHeight: transitionHeight }}>
+          <QuestionTransition />
+        </div>
+      ) : (
       <motion.div
+        ref={questionRef}
         key={question.id}
         initial={{ opacity: 0, x: reduceMotion ? 0 : direction * 24 }}
         animate={{ opacity: 1, x: 0 }}
@@ -303,8 +359,10 @@ export default function Questionnaire({
           </p>
         ) : null}
       </motion.div>
+      )}
 
       <div className="mt-4 min-h-[48px]" aria-live="polite">
+        {feedbackOn && questionStatus === "saving" ? <span className="sr-only">{LABEL_SAVING}</span> : null}
         {questionStatus === "retrying" ? (
           <p role="status" className="text-sm text-secondary">
             {MESSAGE_RETRYING}
@@ -330,22 +388,35 @@ export default function Questionnaire({
         {index > 0 ? (
           <button
             type="button"
-            onClick={() => go(-1)}
-            className="btn border border-neutral-300 text-sm font-semibold uppercase tracking-wider text-primary"
+            onClick={() => {
+              if (!transitionLock.current) go(-1);
+            }}
+            disabled={transitioning}
+            className="btn border border-neutral-300 text-sm font-semibold uppercase tracking-wider text-primary disabled:opacity-50"
           >
             Anterior
           </button>
         ) : (
           <span />
         )}
-        <button
-          type="button"
-          onClick={forward}
-          disabled={forwardDisabled}
-          className="btn btn-accent text-sm font-semibold uppercase tracking-wider disabled:opacity-50"
-        >
-          {isLast ? "Concluir" : "Próxima"}
-        </button>
+        {feedbackOn ? (
+          <ForwardButton
+            label={isLast ? "Concluir" : "Próxima"}
+            saving={saving}
+            disabled={forwardDisabled}
+            reduceMotion={Boolean(reduceMotion)}
+            onClick={forward}
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={forward}
+            disabled={forwardDisabled}
+            className="btn btn-accent text-sm font-semibold uppercase tracking-wider disabled:opacity-50"
+          >
+            {isLast ? "Concluir" : "Próxima"}
+          </button>
+        )}
       </div>
       </>
       )}

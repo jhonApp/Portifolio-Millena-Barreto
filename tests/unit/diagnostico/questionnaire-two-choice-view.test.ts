@@ -74,6 +74,30 @@ describe("the questionnaire screen with two choices", () => {
 
   it('keeps "Próxima" disabled until the first choice is saved on the server', () => {
     const html = render(build(2));
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>.*?data-slot="label"[^>]*>Próxima</);
+  });
+
+  it("a version 1 question set keeps the plain forward button", () => {
+    const initial = build(2);
+    const html = render({ ...initial, questionSet: { ...initial.questionSet, version: 1 } });
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Próxima<\/button>/);
+    expect(html).not.toContain("Salvando");
+    expect(html).not.toContain('data-slot="saving"');
+  });
+
+  it("a version 2 question set opens on the question, with no transition line", () => {
+    const html = render(build(2, { first: "q1a2", second: null }));
+    expect(html).toContain("Pergunta 1");
+    expect(html).not.toContain("loading-line");
+    expect(html).not.toContain("Carregando próxima pergunta");
+    // Both navigation buttons are enabled-or-gated by the saved answer, never by the transition.
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>[^<]*<span class="grid">/);
+  });
+
+  it("a version 2 question set renders the forward button with its reserved labels", () => {
+    const html = render(build(2));
+    expect(html).toContain('data-slot="saving"');
+    for (const text of ["Próxima", "Concluir", "Salvando…"]) expect(html).toContain(text);
+    expect(html).toContain('data-saving="false"');
   });
 });

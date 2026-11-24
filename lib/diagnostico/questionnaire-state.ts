@@ -8,6 +8,17 @@ export const RETRY_DELAYS_MS = [500, 1500, 3000] as const;
 // Slide-and-fade between questions (PRD RF-04 Experience).
 export const TRANSITION_MS = 300;
 
+/** The save status of a question while it is not confirmed (undefined once it is). */
+export type SaveStatus = "saving" | "retrying" | "failed" | "rejected";
+
+/**
+ * True when the forward button shows "Salvando…" (loading feedback RF-02): only on version 2 and
+ * only while a save or one of its retries is in flight. `failed` and `rejected` keep the normal text.
+ */
+export function showsSavingFeedback(version: number, status: SaveStatus | undefined): boolean {
+  return version >= 2 && (status === "saving" || status === "retrying");
+}
+
 /** The choices of one question: the first one and the optional second one (alternative ids). */
 export type SavedChoice = { first: string; second: string | null };
 
@@ -106,6 +117,26 @@ export function earnedChapters(steps: readonly ChapterStep[], saved: SavedIds): 
   return numbers.filter((number) =>
     steps.filter((step) => step.chapter === number).every((step) => Boolean(saved[step.id])),
   );
+}
+
+/** True when the step at `index` is the last of its chapter (the next step has another chapter, or none). */
+export function isLastStepOfChapter(steps: readonly ChapterStep[], index: number): boolean {
+  const next = steps[index + 1];
+  return !next || next.chapter !== steps[index]?.chapter;
+}
+
+/**
+ * True when moving forward from the step at `index` shows the 500 ms loading line (RF-03): only on
+ * version 2, without reduced motion, and not on the last step of a chapter (the badge screen has
+ * its own wait). It goes by position, so it also holds when the badge was already shown.
+ */
+export function usesTransitionLine(
+  version: number,
+  steps: readonly ChapterStep[],
+  index: number,
+  reduceMotion: boolean,
+): boolean {
+  return version >= 2 && !reduceMotion && !isLastStepOfChapter(steps, index);
 }
 
 /**

@@ -10,7 +10,7 @@ The IDs RF-01 to RF-05 here are the ones of the quiz v2 PRD. They are not the RF
 | RF-02 | Question Set Version 2 and Version Routing | 2 | RF-01 | yes | 4/4 | 11/11 | n/a | implemented | 2026-11-23, 86ccf3f |
 | RF-03 | Look Duels | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, 5465c78 |
 | RF-04 | Chapters, Badges and Look Progress | 3 | RF-01, RF-02 | yes | 3/3 | 10/10 | n/a | success | 2026-11-23, d843012 |
-| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 0/3 | 0/5 | n/a | spec ready | none |
+| RF-05 | Completion Comparison by Questionnaire Version | 3 | RF-02 | yes | 3/3 | 5/5 | n/a | failed evaluation | 2026-11-23, 00bc755 |
 
 ## Criteria
 
@@ -73,5 +73,10 @@ Last run: 2026-11-23, commit d843012 (verify-feature, re-check after approval, c
 Lint, typecheck, unit (317) and the whole integration suite (443) pass; browser script steps 1 to 9 ok. Gates schema and dependencies approved by the owner on 2026-11-23.
 
 ### RF-05. Completion Comparison by Questionnaire Version
-Last run: none
-- — 5 criteria listed in the spec (Section 7), not run yet
+Last run: 2026-11-23, commit 00bc755 (verify-feature, re-check after approval, closing cycle 1; see docs/quiz-v2/RF-05-completion-comparison-by-questionnaire-version/evaluation.md)
+- ✓ 1. 120 attempts, 60 at the checkout: 120, 60 and 50% (version-comparison tests; real command matched a SQL count, 7 and 5)
+- ✓ 2. Fewer than 100 attempts is marked "poucos dados"; exactly 100 is not (version-comparison tests; real command)
+- ✓ 3. More than 5 points below version 1 carries the warning; exactly 5 does not (version-comparison tests)
+- ✓ 4. Only the view is read, nothing is written or tracked (quiz-compare-script tests; own grep)
+- ✓ 5. RF-02 to RF-05 hand-off (version-comparison-handoff.test.ts, real view, both versions)
+Gates schema and dependencies approved by the owner on 2026-11-23. Failed evaluation on a deterministic check outside RF-05: the whole integration suite had 443/444, the timeout (30 s) of delivery.test.ts > `runDueDeliveries sends a due retry and skips one that is not due` (passes alone, 26/26); it failed in 2 of 4 whole-suite runs. Fix: a larger timeout for that test, then verify again.

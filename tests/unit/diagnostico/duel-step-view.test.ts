@@ -123,13 +123,14 @@ describe("the questionnaire screen at a duel step", () => {
     expect(html).not.toContain("Se mais de uma opção combina");
     expect(html).not.toContain("1ª escolha");
     // The forward button is enabled: the choice is already saved on the server.
-    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Próxima<\/button>/);
+    expect(html).toContain('data-slot="label"');
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>(<span class="grid">)?<span data-slot="label"/);
   });
 
   it("keeps Próxima disabled while the duel has no saved choice", () => {
     const initial = state();
     initial.choices = {};
     const html = renderToStaticMarkup(createElement(Questionnaire, { initial }));
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Próxima<\/button>/);
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*><span class="grid"><span data-slot="label"[^>]*>Próxima</);
   });
 });

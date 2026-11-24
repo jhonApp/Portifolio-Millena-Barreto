@@ -1,4 +1,4 @@
-// Generates, from docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json:
+// Generates, from docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.json:
 //   - supabase/migrations/20260101000011_seed_content_v1.sql  (the seed of content version 1)
 //   - supabase/migrations/20260101000014_secondary_style_text.sql  (the text of a style as the secondary one)
 //   - supabase/migrations/20260101000017_fewer_name_repeats.sql  (the texts that changed after migrations 11 and 14)
@@ -6,11 +6,11 @@
 // Migrations 11 and 14 are released and never change. They are built from content-source.v1-applied.json,
 // a frozen copy of the texts exactly as those two migrations applied them. Edit content-source.json for
 // new wording: the difference between the two files is what migration 17 updates in version 1.
-//   - docs/RF-07-diagnosis-content-and-pdf-generation/content-source.md  (readable copy for Millena's review)
+//   - docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.md  (readable copy for Millena's review)
 // Run: node scripts/generate-content-seed.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 
-const DOCS = "docs/RF-07-diagnosis-content-and-pdf-generation";
+const DOCS = "docs/questions/RF-07-diagnosis-content-and-pdf-generation";
 const content = JSON.parse(readFileSync(`${DOCS}/content-source.json`, "utf8"));
 const applied = JSON.parse(readFileSync(`${DOCS}/content-source.v1-applied.json`, "utf8"));
 const STYLES = ["esportivo_natural", "tradicional", "elegante", "romantico", "criativo", "dramatico"];

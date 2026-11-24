@@ -6,7 +6,7 @@ import { composeDiagnosis, type ContentTemplate } from "@/lib/diagnostico/diagno
 // The first name appears at most twice in the text of a diagnosis, for every pair of styles. The cover of the
 // PDF and the greeting of the e-mail are outside the diagnosis text and do not count.
 
-const source = JSON.parse(readFileSync("docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"));
+const source = JSON.parse(readFileSync("docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"));
 
 function templates(): ContentTemplate[] {
   const list: ContentTemplate[] = [];
@@ -98,7 +98,7 @@ describe("the first name in the diagnosis text", () => {
 
   it("the texts keep their size: a rewritten paragraph is the old one without the name", () => {
     const applied = JSON.parse(
-      readFileSync("docs/RF-07-diagnosis-content-and-pdf-generation/content-source.v1-applied.json", "utf8"),
+      readFileSync("docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.v1-applied.json", "utf8"),
     );
     const lower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
     for (const key of Object.keys(source.pairs)) {

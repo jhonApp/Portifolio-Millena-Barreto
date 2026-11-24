@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import CheckoutLink from "@/components/Diagnostico/CheckoutLink";
+import { getAttemptVersion } from "@/lib/diagnostico/answers";
 import { resolveCheckoutAccess } from "@/lib/diagnostico/checkout";
 import { formatPrice } from "@/lib/diagnostico/checkout-state";
 import { PRICE_CENTS } from "@/lib/diagnostico/constants";
@@ -19,6 +21,8 @@ export const metadata: Metadata = {
 export default async function CompletionPage() {
   const access = await resolveCheckoutAccess(getSupabaseAdmin(), cookies());
   if (!access.ok) redirect((access as { redirectTo: string }).redirectTo);
+  // Version 2 attempts wait on a loading screen while the checkout opens; version 1 keeps the plain link.
+  const version = await getAttemptVersion(getSupabaseAdmin(), access.attemptId);
 
   return (
     <section className="mx-auto max-w-[560px] py-4 xl:py-12">
@@ -37,12 +41,16 @@ export default async function CompletionPage() {
         <li>Valor: {formatPrice(PRICE_CENTS)}</li>
       </ul>
 
-      <Link
-        href={CHECKOUT_PATH}
-        className="btn btn-accent mt-8 w-full text-center text-sm font-semibold uppercase tracking-wider"
-      >
-        RECEBER MEU DIAGNÓSTICO
-      </Link>
+      {version !== null && version >= 2 ? (
+        <CheckoutLink />
+      ) : (
+        <Link
+          href={CHECKOUT_PATH}
+          className="btn btn-accent mt-8 w-full text-center text-sm font-semibold uppercase tracking-wider"
+        >
+          RECEBER MEU DIAGNÓSTICO
+        </Link>
+      )}
     </section>
   );
 }
