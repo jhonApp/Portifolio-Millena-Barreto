@@ -8,6 +8,17 @@ export const RETRY_DELAYS_MS = [500, 1500, 3000] as const;
 // Slide-and-fade between questions (PRD RF-04 Experience).
 export const TRANSITION_MS = 300;
 
+/** The save status of a question while it is not confirmed (undefined once it is). */
+export type SaveStatus = "saving" | "retrying" | "failed" | "rejected";
+
+/**
+ * True when the forward button shows "Salvando…" (loading feedback RF-02): only on version 2 and
+ * only while a save or one of its retries is in flight. `failed` and `rejected` keep the normal text.
+ */
+export function showsSavingFeedback(version: number, status: SaveStatus | undefined): boolean {
+  return version >= 2 && (status === "saving" || status === "retrying");
+}
+
 /** The choices of one question: the first one and the optional second one (alternative ids). */
 export type SavedChoice = { first: string; second: string | null };
 

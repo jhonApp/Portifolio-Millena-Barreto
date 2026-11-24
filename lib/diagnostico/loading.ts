@@ -6,6 +6,10 @@ export const CHAPTER_ADVANCE_MS = 2000;
 // Draft copy for Millena's review.
 export const CHAPTER_ADVANCE_LABEL = "Preparando a próxima etapa…";
 
+// The forward button while the answer of the step is being saved (RF-02).
+// Draft copy for Millena's review.
+export const LABEL_SAVING = "Salvando…";
+
 /**
  * Calls `callback` once after `ms` milliseconds. Returns a function that cancels it; cancelling
  * after the callback ran, or twice, does nothing.

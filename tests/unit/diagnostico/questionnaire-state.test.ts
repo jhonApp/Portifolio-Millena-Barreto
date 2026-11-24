@@ -9,6 +9,7 @@ import {
   firstUnansweredIndex,
   hasChapters,
   segmentStates,
+  showsSavingFeedback,
   nextChoices,
   progressPercent,
   sameChoices,
@@ -56,6 +57,29 @@ describe("questionnaire state helpers", () => {
     const all = Object.fromEntries(questions.map((q) => [q.id, "a"]));
     expect(firstUnansweredIndex(questions, all)).toBe(14);
     expect(firstUnansweredIndex([], {})).toBe(0);
+  });
+});
+
+describe("showsSavingFeedback", () => {
+  it("showsSavingFeedback is true for saving and retrying on version 2", () => {
+    expect(showsSavingFeedback(2, "saving")).toBe(true);
+    expect(showsSavingFeedback(2, "retrying")).toBe(true);
+    expect(showsSavingFeedback(3, "saving")).toBe(true);
+  });
+
+  it("showsSavingFeedback is false for failed and rejected", () => {
+    expect(showsSavingFeedback(2, "failed")).toBe(false);
+    expect(showsSavingFeedback(2, "rejected")).toBe(false);
+  });
+
+  it("showsSavingFeedback is false once the status is cleared", () => {
+    expect(showsSavingFeedback(2, undefined)).toBe(false);
+  });
+
+  it("showsSavingFeedback is always false on version 1", () => {
+    for (const status of ["saving", "retrying", "failed", "rejected", undefined] as const) {
+      expect(showsSavingFeedback(1, status)).toBe(false);
+    }
   });
 });
 
