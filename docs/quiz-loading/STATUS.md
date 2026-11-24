@@ -6,7 +6,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 1/2 | 0/8 | n/a | in progress | none |
+| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 0/8 | n/a | in progress | none |
 | RF-02 | Answer Saving Feedback | 1 | none | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-03 | Question Transition Loading | 2 | RF-01 | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |

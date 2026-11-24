@@ -194,7 +194,8 @@ export default function Questionnaire({
     go(1);
   }
 
-  function continueFromChapter() {
+  // Called by the chapter screen once its wait is over (no tap involved).
+  function advanceFromChapter() {
     setChapterOpen(null);
     leave();
   }
@@ -232,7 +233,7 @@ export default function Questionnaire({
       </div>
 
       {openChapter ? (
-        <ChapterScreen chapter={openChapter} reduceMotion={Boolean(reduceMotion)} onContinue={continueFromChapter} />
+        <ChapterScreen chapter={openChapter} reduceMotion={Boolean(reduceMotion)} onDone={advanceFromChapter} />
       ) : (
       <>
       <motion.div

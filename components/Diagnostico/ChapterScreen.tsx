@@ -2,30 +2,40 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
+import LoadingLine from "@/components/Diagnostico/LoadingLine";
 import type { Chapter } from "@/lib/diagnostico/chapters";
+import { CHAPTER_ADVANCE_LABEL, CHAPTER_ADVANCE_MS, scheduleAdvance } from "@/lib/diagnostico/loading";
 
 // A badge animates in over 600 ms at most; with reduced motion it appears at once.
 const BADGE_ANIMATION_S = 0.6;
 
 /**
- * The pause at the end of a chapter (RF-04): the badge, a one-line message and "Continuar". It is a
- * region named by the badge; its title takes the focus when it opens. The message is the same for
- * every customer and never names a style, a percentage or a score.
+ * The pause at the end of a chapter (quiz v2 RF-04): the badge, a one-line message and a loading
+ * line. It is a region named by the badge; its title takes the focus when it opens. The screen
+ * moves on by itself after CHAPTER_ADVANCE_MS (loading feedback RF-01): there is no button and no
+ * way to skip the wait. The message is the same for every customer and never names a style, a
+ * percentage or a score.
  */
 export default function ChapterScreen({
   chapter,
   reduceMotion,
-  onContinue,
+  onDone,
 }: {
   chapter: Chapter;
   reduceMotion: boolean;
-  onContinue: () => void;
+  onDone: () => void;
 }) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  // Read through a ref so a re-render of the parent never restarts the wait.
+  const doneRef = useRef(onDone);
+  doneRef.current = onDone;
 
   useEffect(() => {
     titleRef.current?.focus();
   }, []);
+
+  // The cleanup cancels the wait when the screen leaves, so nothing runs on an unmounted screen.
+  useEffect(() => scheduleAdvance(CHAPTER_ADVANCE_MS, () => doneRef.current()), []);
 
   const titleId = `chapter-${chapter.number}-title`;
   return (
@@ -62,9 +72,9 @@ export default function ChapterScreen({
         {chapter.badge}
       </h2>
       <p className="max-w-[420px] text-base text-secondary">{chapter.message}</p>
-      <button type="button" onClick={onContinue} className="btn btn-accent mt-2 text-sm font-semibold uppercase tracking-wider">
-        Continuar
-      </button>
+      <div className="mt-2 w-full max-w-[420px]">
+        <LoadingLine label={CHAPTER_ADVANCE_LABEL} durationMs={CHAPTER_ADVANCE_MS} reduceMotion={reduceMotion} />
+      </div>
     </section>
   );
 }
