@@ -6,10 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import ChapterScreen from "@/components/Diagnostico/ChapterScreen";
 import DuelStep from "@/components/Diagnostico/DuelStep";
 import ForwardButton from "@/components/Diagnostico/ForwardButton";
+import { HandoffError, HandoffLoading } from "@/components/Diagnostico/HandoffScreen";
 import LookProgress from "@/components/Diagnostico/LookProgress";
 import QuestionTransition from "@/components/Diagnostico/QuestionTransition";
+import { useHandoffNavigation } from "@/components/Diagnostico/use-handoff-navigation";
 import { chapterFor } from "@/lib/diagnostico/chapters";
-import { LABEL_SAVING, QUESTION_TRANSITION_MS, scheduleAdvance } from "@/lib/diagnostico/loading";
+import { HANDOFF_COMPLETION_LABEL, LABEL_SAVING, QUESTION_TRANSITION_MS, scheduleAdvance } from "@/lib/diagnostico/loading";
 import { COMPLETION_PATH, EXPIRED_PATH, VERSION_CHANGED_PATH } from "@/lib/diagnostico/paths";
 import type { QuestionnaireInitialState } from "@/lib/diagnostico/questionnaire-page";
 import {
@@ -45,6 +47,8 @@ export default function Questionnaire({
   notice?: string;
 }) {
   const router = useRouter();
+  // The move to the completion page waits on a loading screen on version 2 (RF-04).
+  const handoff = useHandoffNavigation(COMPLETION_PATH);
   const reduceMotion = useReducedMotion();
   const { questions } = initial.questionSet;
   const total = questions.length;
@@ -214,7 +218,8 @@ export default function Questionnaire({
 
   function leave() {
     if (isLast) {
-      router.push(COMPLETION_PATH);
+      if (initial.questionSet.version >= 2) handoff.go();
+      else router.push(COMPLETION_PATH);
       return;
     }
     if (usesTransitionLine(initial.questionSet.version, questions, index, Boolean(reduceMotion))) {
@@ -230,6 +235,18 @@ export default function Questionnaire({
   function advanceFromChapter() {
     setChapterOpen(null);
     leave();
+  }
+
+  if (handoff.view !== "idle") {
+    return (
+      <section className="mx-auto max-w-[640px] py-4 xl:py-10">
+        {handoff.view === "loading" ? (
+          <HandoffLoading label={HANDOFF_COMPLETION_LABEL} reduceMotion={Boolean(reduceMotion)} />
+        ) : (
+          <HandoffError onRetry={handoff.go} />
+        )}
+      </section>
+    );
   }
 
   const duration = reduceMotion ? 0 : TRANSITION_MS / 1000;
