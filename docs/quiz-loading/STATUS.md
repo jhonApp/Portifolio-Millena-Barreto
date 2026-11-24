@@ -6,7 +6,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 0/8 | n/a | in progress | none |
+| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, 091b130 |
 | RF-02 | Answer Saving Feedback | 1 | none | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-03 | Question Transition Loading | 2 | RF-01 | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |
@@ -14,15 +14,16 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 ## Criteria
 
 ### RF-01. Loading Line and Chapter Auto-Advance
-Last run: none (spec written 2026-11-23)
-- — 1. Badge screen shows the badge, the message and a loading line, with no "Continuar" (no run yet)
-- — 2. The next question opens on its own after 2 s (no run yet)
-- — 3. After the chapter 3 badge the customer goes to the completion path with no tap (no run yet)
-- — 4. A tap, Enter, Space or Esc does nothing and does not shorten the wait (no run yet)
-- — 5. Reduced motion: static full line, the screen still moves on after 2 s (no run yet)
-- — 6. A screen reader announces "Preparando a próxima etapa…" once as a status (no run yet)
-- — 7. A reload during the badge screen does not show it again (no run yet)
-- — 8. Version 1 shows no loading line and no auto-advance (no run yet)
+Last run: 2026-11-24, commit 091b130 (implement-feature; not yet checked by verify-feature)
+- ✓ 1. Badge screen shows the badge, the message and a loading line, with no "Continuar" (chapter-screen-view.test.ts::shows the badge, the message and the loading line, with no button; browser step 1: 0 buttons, line 312 x 4 px)
+- ✓ 2. The next question opens on its own after 2 s (loading.test.ts::scheduleAdvance calls back once after 2000 ms and not before; browser: badge gone at 2001 ms)
+- ✓ 3. After the chapter 3 badge the customer goes to the completion path with no tap (questionnaire-state.test.ts::the last step shows the chapter 3 screen before completing; browser: /concluido reached, 3.9 s including the dev compile of the page)
+- ✓ 4. A tap, Enter, Space or Esc does nothing and does not shorten the wait (chapter-screen-view.test.ts::has no interactive element besides the focusable title; browser: still on the badge after the inputs, gone at 2001 ms)
+- ✓ 5. Reduced motion: static full line, the screen still moves on after 2 s (chapter-screen-view.test.ts::the loading line is static under reduced motion, loading-line-view.test.ts::a static line is drawn full without animation; browser at 1280 px: both data-animated false, line 420 of 420 px, next question at 2.4 s)
+- ✓ 6. A screen reader announces "Preparando a próxima etapa…" once as a status (loading-line-view.test.ts::the label is a status and shows no percentage; browser accessibility tree: one status)
+- ✓ 7. A reload during the badge screen does not show it again (questionnaire-state.test.ts::a chapter screen already shown in this visit is not shown again; browser: after the reload no badge and "Pergunta 11 de 15")
+- ✓ 8. Version 1 shows no loading line and no auto-advance (questionnaire-state.test.ts::a set without chapters never shows a chapter screen; the browser check on version 1 was not run, see the notes below)
+Unit 356/356, `tsc` and `next build` pass. The whole integration suite was not green in two full runs on a slow local Supabase (5 and 18 failures: 30 s timeouts, plus `question-bank.test.ts` reading `docs/RF-03-question-bank-and-scoring-engine/questionnaire-source.md`, which was moved to `docs/questions/` outside this run); the failing files pass when run in smaller groups or alone. Browser step 8 (version 1) was not run: publishing version 1 again would archive version 2, which the owner asked to keep published locally.
 
 ### RF-02. Answer Saving Feedback
 Last run: none (spec written 2026-11-24)
