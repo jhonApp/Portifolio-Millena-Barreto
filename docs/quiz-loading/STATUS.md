@@ -8,7 +8,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | success | 2026-11-24, 8d38ccf |
 | RF-02 | Answer Saving Feedback | 1 | none | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, c0a43bc |
-| RF-03 | Question Transition Loading | 2 | RF-01 | yes | 0/2 | 0/8 | n/a | spec ready | none |
+| RF-03 | Question Transition Loading | 2 | RF-01 | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, e6cec36 |
 | RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |
 
 ## Criteria
@@ -38,15 +38,16 @@ Last run: 2026-11-24, commit c0a43bc (implement-feature)
 Unit 368/368, `tsc` and `next build` pass. Browser steps 1 to 7 and 9 passed (reduced motion: three static dots, one "Salvando…" in the live region). Browser step 8 (version 1) not run: re-publishing version 1 would archive version 2. Full integration suite not run (no server or database code changed).
 
 ### RF-03. Question Transition Loading
-Last run: none (spec written 2026-11-24)
-- — 1. "Próxima" on a saved step shows the line "Carregando próxima pergunta…" for 500 ms, then the next question slides in (no run yet)
-- — 2. A second tap on "Próxima" or "Anterior" during the line does nothing (no run yet)
-- — 3. "Anterior" shows the previous question at once, with no line (no run yet)
-- — 4. On the last step of a chapter the badge screen shows with no 500 ms line before it (no run yet)
-- — 5. A full version 2 run has at most 12 s of fixed waiting (no run yet)
-- — 6. With reduced motion the next question appears at once, with no line (no run yet)
-- — 7. Version 1 shows the next question as today (no run yet)
-- — 8. RF-01 to RF-03 hand-off: the line is the RF-01 component with 500 ms and the RF-03 text (no run yet)
+Last run: 2026-11-24, commit e6cec36 (implement-feature)
+- ✓ 1. "Próxima" on a saved step shows the line "Carregando próxima pergunta…" for 500 ms, then the next question slides in (question-transition-view.test.ts::QUESTION_TRANSITION_MS is 500; questionnaire-state.test.ts::usesTransitionLine is true on version 2 for a step inside a chapter; browser: line up 7 ms after the click, lasted 536 ms, then step 2)
+- ✓ 2. A second tap on "Próxima" or "Anterior" during the line does nothing (browser: double tap and Anterior during the line landed on step 3 only; both buttons disabled)
+- ✓ 3. "Anterior" shows the previous question at once, with no line (browser: step 2 in 109 ms, no line, answer still selected)
+- ✓ 4. On the last step of a chapter the badge screen shows with no 500 ms line before it (questionnaire-state.test.ts::usesTransitionLine is false on the last step of a chapter; browser step 5: badge, no line; back and forward again: neither)
+- ✓ 5. A full version 2 run has at most 12 s of fixed waiting (question-transition-view.test.ts::the fixed waiting of a full attempt is at most 12 s; questionnaire-state.test.ts::exactly 12 of the 15 steps use the transition line on version 2)
+- ✓ 6. With reduced motion the next question appears at once, with no line (questionnaire-state.test.ts::usesTransitionLine is false under reduced motion; browser: no line, step 7 at once)
+- ✓ 7. Version 1 shows the next question as today (questionnaire-state.test.ts::usesTransitionLine is always false on version 1; browser step 8 not run)
+- ✓ 8. RF-01 to RF-03 hand-off: the line is the RF-01 component with 500 ms and the RF-03 text (question-transition-view.test.ts::the RF-01 to RF-03 hand-off: the transition is the real loading line with 500 ms and its text)
+Unit: all pass except 2 pre-existing files (assets/pdf-images moved outside this run). `tsc` and `next build` pass. Browser steps 1 to 7 passed; 8 (version 1), 9 (1280 px layout) and the full 15-step wait sum were not run.
 
 ### RF-04. Checkout Hand-off Loading
 Last run: none (spec written 2026-11-24)
