@@ -74,6 +74,21 @@ describe("the questionnaire screen with two choices", () => {
 
   it('keeps "Próxima" disabled until the first choice is saved on the server', () => {
     const html = render(build(2));
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>.*?data-slot="label"[^>]*>Próxima</);
+  });
+
+  it("a version 1 question set keeps the plain forward button", () => {
+    const initial = build(2);
+    const html = render({ ...initial, questionSet: { ...initial.questionSet, version: 1 } });
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Próxima<\/button>/);
+    expect(html).not.toContain("Salvando");
+    expect(html).not.toContain('data-slot="saving"');
+  });
+
+  it("a version 2 question set renders the forward button with its reserved labels", () => {
+    const html = render(build(2));
+    expect(html).toContain('data-slot="saving"');
+    for (const text of ["Próxima", "Concluir", "Salvando…"]) expect(html).toContain(text);
+    expect(html).toContain('data-saving="false"');
   });
 });
