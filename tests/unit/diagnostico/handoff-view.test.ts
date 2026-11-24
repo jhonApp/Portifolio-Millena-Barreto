@@ -1,11 +1,24 @@
 import { createElement, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { vi } from "vitest";
+import CheckoutLink from "@/components/Diagnostico/CheckoutLink";
 import { HandoffError, HandoffLoading } from "@/components/Diagnostico/HandoffScreen";
 import LoadingLine from "@/components/Diagnostico/LoadingLine";
 import { HANDOFF_CHECKOUT_LABEL, HANDOFF_COMPLETION_LABEL, HANDOFF_ERROR_MESSAGE } from "@/lib/diagnostico/loading";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: () => {}, replace: () => {} }) }));
+
 describe("the hand-off screens", () => {
+  it("CheckoutLink renders a link to the checkout with the original look", () => {
+    const html = renderToStaticMarkup(createElement(CheckoutLink));
+    expect(html).toMatch(/<a [^>]*href="\/diagnostico-estilo\/checkout"/);
+    expect(html).toContain("btn btn-accent mt-8 w-full text-center text-sm font-semibold uppercase tracking-wider");
+    expect(html).toContain("RECEBER MEU DIAGNÓSTICO");
+    expect(html).not.toContain("Preparando");
+    expect(html).not.toContain("loading-line");
+  });
+
   it("HandoffLoading shows the label as a status with the line", () => {
     const html = renderToStaticMarkup(createElement(HandoffLoading, { label: HANDOFF_COMPLETION_LABEL, reduceMotion: false }));
     expect(html).toContain('data-testid="loading-line"');
