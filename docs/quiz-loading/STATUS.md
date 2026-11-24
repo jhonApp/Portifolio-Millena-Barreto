@@ -7,7 +7,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
 | RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | success | 2026-11-24, 8d38ccf |
-| RF-02 | Answer Saving Feedback | 1 | none | yes | 0/2 | 0/8 | n/a | spec ready | none |
+| RF-02 | Answer Saving Feedback | 1 | none | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, c0a43bc |
 | RF-03 | Question Transition Loading | 2 | RF-01 | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |
 
@@ -26,15 +26,16 @@ Last run: 2026-11-24, commit 8d38ccf (verify-feature, cycle 2 of 2; see evaluati
 Unit 356/356, integration 444/444, `tsc`, lint and `next build` pass. Browser steps 1 to 9 passed in cycle 2, including version 1 (version 2 restored afterwards).
 
 ### RF-02. Answer Saving Feedback
-Last run: none (spec written 2026-11-24)
-- — 1. Tapping an alternative shows the spinner and "Salvando…", disabled until the server confirms (no run yet)
-- — 2. A fast confirmation returns the button to "Próxima", enabled, with no minimum display time (no run yet)
-- — 3. On a throttled network "Salvando…" shows within 100 ms and stays until the save ends (no run yet)
-- — 4. During the retries "Salvando…" stays on and the retry message shows (no run yet)
-- — 5. After the last retry fails the button is "Próxima", disabled, with the offline message and "Tentar novamente" (no run yet)
-- — 6. A look duel shows the same saving state (no run yet)
-- — 7. The button keeps its width and height in the saving and normal states (no run yet)
-- — 8. Version 1 keeps the button as today (no run yet)
+Last run: 2026-11-24, commit c0a43bc (implement-feature)
+- ✓ 1. Tapping an alternative shows the spinner and "Salvando…", disabled until the server confirms (forward-button-view.test.ts::shows the spinner and "Salvando…" and is disabled while saving; browser: saving, disabled, "SALVANDO…")
+- ✓ 2. A fast confirmation returns the button to "Próxima", enabled, with no minimum display time (forward-button-view.test.ts::shows the normal label, enabled, when it is not saving; browser: back to "PRÓXIMA" enabled)
+- ✓ 3. On a throttled network "Salvando…" shows within 100 ms and stays until the save ends (browser: 14 ms from the click to the saving state in the DOM; stayed through the 1.5 s delay)
+- ✓ 4. During the retries "Salvando…" stays on and the retry message shows (questionnaire-state.test.ts::showsSavingFeedback is true for saving and retrying on version 2; browser at 2.2 s: saving plus the retry message)
+- ✓ 5. After the last retry fails the button is "Próxima", disabled, with the offline message and "Tentar novamente" (questionnaire-state.test.ts::showsSavingFeedback is false for failed and rejected; browser: failed after 6 s, then the retry button restored the enabled "Próxima")
+- ✓ 6. A look duel shows the same saving state (same ForwardButton and rule; browser on step 5: "SALVANDO…", disabled)
+- ✓ 7. The button keeps its width and height in the saving and normal states (forward-button-view.test.ts::reserves the width of every label so the size does not change; browser at 360 px: 159.9 x 48 in both states)
+- ✓ 8. Version 1 keeps the button as today (questionnaire-state.test.ts::showsSavingFeedback is always false on version 1; questionnaire-two-choice-view.test.ts::a version 1 question set keeps the plain forward button; browser step 8 not run)
+Unit 368/368, `tsc` and `next build` pass. Browser steps 1 to 7 and 9 passed (reduced motion: three static dots, one "Salvando…" in the live region). Browser step 8 (version 1) not run: re-publishing version 1 would archive version 2. Full integration suite not run (no server or database code changed).
 
 ### RF-03. Question Transition Loading
 Last run: none (spec written 2026-11-24)
