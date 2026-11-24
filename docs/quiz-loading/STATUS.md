@@ -6,7 +6,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 
 | ID | Feature | Wave | Depends on | Spec | Phases | Criteria | Live | Status | Verified at |
 |---|---|---|---|---|---|---|---|---|---|
-| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | implemented | 2026-11-24, beb6ce3 |
+| RF-01 | Loading Line and Chapter Auto-Advance | 1 | none | yes | 2/2 | 8/8 | n/a | success | 2026-11-24, 8d38ccf |
 | RF-02 | Answer Saving Feedback | 1 | none | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-03 | Question Transition Loading | 2 | RF-01 | yes | 0/2 | 0/8 | n/a | spec ready | none |
 | RF-04 | Checkout Hand-off Loading | 2 | RF-01 | yes | 0/3 | 0/8 | n/a | spec ready | none |
@@ -14,7 +14,7 @@ The IDs RF-01 to RF-04 here are the ones of the quiz loading feedback PRD. They 
 ## Criteria
 
 ### RF-01. Loading Line and Chapter Auto-Advance
-Last run: 2026-11-24, commit beb6ce3 (implement-feature rework after the failed evaluation of cycle 1; not yet re-checked by verify-feature)
+Last run: 2026-11-24, commit 8d38ccf (verify-feature, cycle 2 of 2; see evaluation.md)
 - ✓ 1. Badge screen shows the badge, the message and a loading line, with no "Continuar" (chapter-screen-view.test.ts::shows the badge, the message and the loading line, with no button; browser step 1: 0 buttons, line 312 x 4 px)
 - ✓ 2. The next question opens on its own after 2 s (loading.test.ts::scheduleAdvance calls back once after 2000 ms and not before; browser: badge gone at 2001 ms)
 - ✓ 3. After the chapter 3 badge the customer goes to the completion path with no tap (questionnaire-state.test.ts::the last step shows the chapter 3 screen before completing; browser: /concluido reached, 3.9 s including the dev compile of the page)
@@ -23,7 +23,7 @@ Last run: 2026-11-24, commit beb6ce3 (implement-feature rework after the failed 
 - ✓ 6. A screen reader announces "Preparando a próxima etapa…" once as a status (loading-line-view.test.ts::the label is a status and shows no percentage; browser accessibility tree: one status)
 - ✓ 7. A reload during the badge screen does not show it again (questionnaire-state.test.ts::a chapter screen already shown in this visit is not shown again; browser: after the reload no badge and "Pergunta 11 de 15")
 - ✓ 8. Version 1 shows no loading line and no auto-advance (questionnaire-state.test.ts::a set without chapters never shows a chapter screen; browser step 8: no chapter screen or line on version 1, version 2 restored afterwards)
-Rework: the flaky `delivery.test.ts` setup now retries the generation and names any other outcome; the full integration run passed that file (26/26). Code of the feature unchanged since the verified commit. Open items outside this feature: with the owner's uncommitted move of `docs/RF-0X` to `docs/questions/` in the working tree, 3 unit suites and `question-bank.test.ts` fail with ENOENT on the old paths (they pass on the committed tree).
+Unit 356/356, integration 444/444, `tsc`, lint and `next build` pass. Browser steps 1 to 9 passed in cycle 2, including version 1 (version 2 restored afterwards).
 
 ### RF-02. Answer Saving Feedback
 Last run: none (spec written 2026-11-24)

@@ -1,5 +1,59 @@
 # Evaluation: RF-01 Loading Line and Chapter Auto-Advance
 
+## Cycle 2 of 2: success
+Date: 2026-11-24
+Commit evaluated: 8d38ccf, branch feat/result-consultancy-cta, base 13420c5 (merge-base with master). Since cycle 1 only tests, a script and docs changed (beb6ce3 delivery test helper, 4f29293 docs move, 8d38ccf test paths); the feature code is the same. Unrelated uncommitted changes were stashed (`stash@{0}`, "pre-verify RF-01 cycle 2") with the owner's approval.
+Judging: model-assisted for the browser evidence
+Overrides: none
+Owner input: approved step 8 (version 1 in the browser) for this run, 2026-11-24.
+
+### Deterministic checks
+| Check | Result | Evidence |
+|---|---|---|
+| Full suite (lint, typecheck, tests) | pass | `tsc --noEmit` exit 0, `next lint` no error (only the 4 old warnings in files this feature does not touch), `next build` exit 0, unit 50 files 356/356, integration 43 files 444/444 (the flaky `delivery.test.ts` of cycle 1 passed inside the whole run) |
+| Named tests exist and ran | pass | Same files and functions as cycle 1; all passed in the unit run |
+| Test diff against the base | pass | No deleted test, no new skip or todo. Cycle 2 changes: `delivery.test.ts` helper now retries the generation and names any other outcome, assertions unchanged; five files read their docs from `docs/questions/` |
+| Architecture contracts | pass | No architecture test configuration changed |
+| Component Overview | pass | Unchanged since cycle 1 |
+| Live evidence | n/a | No live check in the spec |
+
+### Criteria
+- ✓ 1. Badge screen shows the badge, the message and a loading line, with no "Continuar" (chapter-screen-view.test.ts::shows the badge, the message and the loading line, with no button; browser: 0 buttons, line 312 x 4 px at 360 px)
+- ✓ 2. The next question opens on its own after 2 s (loading.test.ts::scheduleAdvance calls back once after 2000 ms and not before; browser: chapter 1 badge 2010 ms, chapter 2 badge 2019 ms at 360 px, 2009 ms at 1280 px with reduced motion)
+- ✓ 3. After the chapter 3 badge the customer reaches the completion path with no tap (questionnaire-state.test.ts::the last step shows the chapter 3 screen before completing; browser: `/diagnostico-estilo/concluido` reached with no tap, 7.7 s including the dev compile of that page)
+- ✓ 4. A tap, Enter, Space or Esc does nothing and does not shorten the wait (chapter-screen-view.test.ts::has no interactive element besides the focusable title; browser: all four inputs on the chapter 2 badge, it still left after 2019 ms)
+- ✓ 5. Reduced motion: static full line, still moves on after 2 s (chapter-screen-view.test.ts::the loading line is static under reduced motion, loading-line-view.test.ts::a static line is drawn full without animation; browser at 1280 px: both `data-animated` false, line 420 of 420 px, next question after 2009 ms)
+- ✓ 6. A screen reader announces "Preparando a próxima etapa…" once as a status (loading-line-view.test.ts::the label is a status and shows no percentage; browser: one `role=status` with that text, 0 progressbars on the badge screen)
+- ✓ 7. A reload during the badge does not show it again (questionnaire-state.test.ts::a chapter screen already shown in this visit is not shown again; browser: after the reload no badge and "Pergunta 11 de 15", still no badge 2.5 s later)
+- ✓ 8. Version 1 shows no loading line and no auto-advance (questionnaire-state.test.ts::a set without chapters never shows a chapter screen; browser step 8: "Pergunta 1 de 15", no chapter label, one progressbar, no chapter screen and no line through 6 answers, which cross the step 5 to 6 boundary)
+
+### Application run
+- Dev server on port 3003, local Supabase with version 2 published, three throwaway customers (`verify-rf01-c2a`, `-c2b`, `-c2c` at `@example.test`) left in the local database.
+- Verification script steps 1 to 7 and 9: ok (attempt A at 360 px with motion; attempt B at 1280 px with reduced motion; no horizontal scroll, text readable).
+- Verification script, step 8: ok. Version 2 was archived and version 1 published by SQL in one transaction (`published_at` untouched), then restored the same way: version 1 archived, version 2 published, `published_at` equal to the values before.
+- Extra check by the evaluator: none beyond the script. Step 6 was read from the DOM (`role=status` and progressbar counts), not from a full accessibility tree.
+
+### Gates
+- security: not fired
+- schema: not fired
+- adr: not fired
+- architecture-contract: not fired
+- dependencies: not fired
+(Computed on the feature and rework commits, 0dc2f33..8d38ccf, without docs. Against the whole branch since the merge-base, `schema` and `dependencies` would fire because of other features of quiz v2.)
+
+### Findings
+none
+
+### Soft-fails
+none
+
+### What I did not verify
+- The full accessibility tree of the badge screen; the DOM was read instead.
+- Real-device timing: the timings come from a headless Chromium on a dev server.
+- Quiz loading RF-02 to RF-04, which consume this feature's line, are not implemented yet; their hand-off tests belong to them.
+
+---
+
 ## Cycle 1 of 2: failed evaluation
 Date: 2026-11-24
 Commit evaluated: 709f46d, branch feat/result-consultancy-cta, base 13420c5 (merge-base with master). 709f46d only adds docs (PRD, specs, plans) on top of the implementation commits c8d55ba and 091b130. Unrelated docs changes were stashed (`stash@{0}`, "pre-verify RF-01") with the owner's approval.
