@@ -106,6 +106,15 @@ export async function getAttemptVersionId(db: Db, attemptId: string): Promise<st
   return data?.version_id ?? null;
 }
 
+/** The number of the questionnaire version of the attempt (null without answers). */
+export async function getAttemptVersion(db: Db, attemptId: string): Promise<number | null> {
+  const versionId = await getAttemptVersionId(db, attemptId);
+  if (!versionId) return null;
+  const { data, error } = await db.from("questionnaire_versions").select("version").eq("id", versionId).maybeSingle();
+  if (error) fail("getAttemptVersion", error.message);
+  return data?.version ?? null;
+}
+
 export async function getAnswerProgress(db: Db, attemptId: string): Promise<AnswerProgress> {
   const pinned = await getAttemptVersionId(db, attemptId);
 

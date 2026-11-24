@@ -1,5 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CHAPTER_ADVANCE_LABEL, CHAPTER_ADVANCE_MS, scheduleAdvance } from "@/lib/diagnostico/loading";
+import {
+  CHAPTER_ADVANCE_LABEL,
+  CHAPTER_ADVANCE_MS,
+  HANDOFF_FILL_MS,
+  HANDOFF_FILL_TO,
+  HANDOFF_TIMEOUT_MS,
+  handoffView,
+  scheduleAdvance,
+} from "@/lib/diagnostico/loading";
 
 describe("the loading module", () => {
   beforeEach(() => {
@@ -43,5 +51,24 @@ describe("the loading module", () => {
       cancel();
     }).not.toThrow();
     expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it("the hand-off constants are 8000, 0.9 and 15000", () => {
+    expect(HANDOFF_FILL_MS).toBe(8000);
+    expect(HANDOFF_FILL_TO).toBe(0.9);
+    expect(HANDOFF_TIMEOUT_MS).toBe(15000);
+  });
+
+  it("handoffView is idle when it is not pending", () => {
+    expect(handoffView(false, false)).toBe("idle");
+    expect(handoffView(false, true)).toBe("idle");
+  });
+
+  it("handoffView is loading while pending and not timed out", () => {
+    expect(handoffView(true, false)).toBe("loading");
+  });
+
+  it("handoffView is failed once it timed out while pending", () => {
+    expect(handoffView(true, true)).toBe("failed");
   });
 });
