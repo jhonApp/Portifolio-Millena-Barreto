@@ -13,7 +13,7 @@ import type { ScoringResult } from "@/lib/diagnostico/scoring";
 
 // The templates come from the same source file the seed migration is generated from.
 const source = JSON.parse(
-  readFileSync("docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"),
+  readFileSync("docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"),
 ) as {
   styles: Record<Style, { result: string; secondary: string; pieces_intro: string; accessories_intro: string; guidance: string; pieces: string[]; accessories: string[] }>;
   pairs: Record<string, string>;

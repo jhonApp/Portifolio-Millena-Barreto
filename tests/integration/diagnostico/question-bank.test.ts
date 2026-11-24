@@ -130,7 +130,7 @@ describe("seeded questionnaire version 1", () => {
 
   it("seeded original alternatives match questionnaire-source.md", async () => {
     const source = readFileSync(
-      path.join(process.cwd(), "docs/RF-03-question-bank-and-scoring-engine/questionnaire-source.md"),
+      path.join(process.cwd(), "docs/questions/RF-03-question-bank-and-scoring-engine/questionnaire-source.md"),
       "utf8",
     );
     const body = source.slice(

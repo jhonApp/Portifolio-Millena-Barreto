@@ -8,7 +8,7 @@ import { pdfSlotImage, pdfStyleImage } from "@/lib/diagnostico/diagnosis-pdf";
 import { renderDiagnosisPdf } from "@/lib/diagnostico/render-diagnosis-pdf";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
 
-const source = JSON.parse(readFileSync("docs/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"));
+const source = JSON.parse(readFileSync("docs/questions/RF-07-diagnosis-content-and-pdf-generation/content-source.json", "utf8"));
 const REAL_DIR = path.join(process.cwd(), "assets", "pdf-images");
 const ALL = STYLES as readonly Style[];
 
