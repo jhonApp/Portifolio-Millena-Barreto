@@ -10,6 +10,8 @@ import {
   hasChapters,
   segmentStates,
   showsSavingFeedback,
+  isLastStepOfChapter,
+  usesTransitionLine,
   nextChoices,
   progressPercent,
   sameChoices,
@@ -80,6 +82,42 @@ describe("showsSavingFeedback", () => {
     for (const status of ["saving", "retrying", "failed", "rejected", undefined] as const) {
       expect(showsSavingFeedback(1, status)).toBe(false);
     }
+  });
+});
+
+describe("usesTransitionLine", () => {
+  const chapterSteps = Array.from({ length: TOTAL_QUESTIONS }, (_, i) => ({ id: `q${i + 1}`, chapter: Math.floor(i / 5) + 1 }));
+
+  it("usesTransitionLine is true on version 2 for a step inside a chapter", () => {
+    expect(usesTransitionLine(2, chapterSteps, 1, false)).toBe(true);
+    expect(usesTransitionLine(2, chapterSteps, 0, false)).toBe(true);
+    expect(usesTransitionLine(2, chapterSteps, 13, false)).toBe(true);
+  });
+
+  it("usesTransitionLine is false on the last step of a chapter", () => {
+    for (const index of [4, 9, 14]) expect(usesTransitionLine(2, chapterSteps, index, false)).toBe(false);
+  });
+
+  it("usesTransitionLine is false under reduced motion", () => {
+    expect(usesTransitionLine(2, chapterSteps, 1, true)).toBe(false);
+  });
+
+  it("usesTransitionLine is always false on version 1", () => {
+    const plain = chapterSteps.map((step) => ({ ...step, chapter: null }));
+    for (let index = 0; index < TOTAL_QUESTIONS; index++) {
+      expect(usesTransitionLine(1, plain, index, false)).toBe(false);
+      expect(usesTransitionLine(1, chapterSteps, index, false)).toBe(false);
+    }
+  });
+
+  it("isLastStepOfChapter is true for steps 5, 10 and 15 and false for the others", () => {
+    const last = chapterSteps.map((_, index) => isLastStepOfChapter(chapterSteps, index));
+    expect(last.flatMap((value, index) => (value ? [index + 1] : []))).toEqual([5, 10, 15]);
+  });
+
+  it("exactly 12 of the 15 steps use the transition line on version 2", () => {
+    const count = chapterSteps.filter((_, index) => usesTransitionLine(2, chapterSteps, index, false)).length;
+    expect(count).toBe(12);
   });
 });
 

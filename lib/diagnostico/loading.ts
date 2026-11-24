@@ -10,6 +10,11 @@ export const CHAPTER_ADVANCE_LABEL = "Preparando a próxima etapa…";
 // Draft copy for Millena's review.
 export const LABEL_SAVING = "Salvando…";
 
+// The fixed pause between two questions of the same chapter (RF-03).
+export const QUESTION_TRANSITION_MS = 500;
+// Draft copy for Millena's review.
+export const QUESTION_TRANSITION_LABEL = "Carregando próxima pergunta…";
+
 /**
  * Calls `callback` once after `ms` milliseconds. Returns a function that cancels it; cancelling
  * after the callback ran, or twice, does nothing.
