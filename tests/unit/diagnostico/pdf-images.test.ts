@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { STYLES, type Style } from "@/lib/diagnostico/constants";
 import { composeDiagnosis, type ContentTemplate } from "@/lib/diagnostico/diagnosis-composer";
 import { pdfSlotImage, pdfStyleImage } from "@/lib/diagnostico/diagnosis-pdf";
+import { PDF_IMAGE_FILES } from "@/lib/diagnostico/pdf-image-files";
 import { renderDiagnosisPdf } from "@/lib/diagnostico/render-diagnosis-pdf";
 import type { DiagnosisContent } from "@/lib/diagnostico/schemas/diagnosis-content";
 
@@ -75,9 +76,10 @@ beforeAll(() => {
   mkdirSync(emptyDir);
   mkdirSync(slotDir);
   for (const style of ALL) {
-    copyFileSync(path.join(REAL_DIR, `${style}.jpg`), path.join(slotDir, `${style}.jpg`));
-    copyFileSync(path.join(REAL_DIR, `${style}.jpg`), path.join(slotDir, `${style}-pecas.jpg`));
-    copyFileSync(path.join(REAL_DIR, `${style}.jpg`), path.join(slotDir, `${style}-acessorios.jpg`));
+    const real = path.join(REAL_DIR, PDF_IMAGE_FILES[style]);
+    copyFileSync(real, path.join(slotDir, `${style}.jpg`));
+    copyFileSync(real, path.join(slotDir, `${style}-pecas.jpg`));
+    copyFileSync(real, path.join(slotDir, `${style}-acessorios.jpg`));
   }
 });
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
@@ -108,7 +110,7 @@ describe("the images of the diagnosis PDF", () => {
   it("only the secondary image missing leaves the rest in place", async () => {
     const dir = path.join(scratch, "no-secondary");
     mkdirSync(dir);
-    copyFileSync(path.join(REAL_DIR, "romantico.jpg"), path.join(dir, "romantico.jpg"));
+    copyFileSync(path.join(REAL_DIR, PDF_IMAGE_FILES.romantico), path.join(dir, "romantico.jpg"));
     const pdf = await renderDiagnosisPdf(compose("romantico", "dramatico"), { customerName: "Maria Souza Lima", imagesDir: dir });
     expect(await imagesPerPage(pdf)).toEqual([1, 1, 0, 1, 0, 0, 0, 0]);
   }, 60_000);
